@@ -14,21 +14,6 @@ MySetting files, XML databases and the main Rekordbox 6 database.
 *Note*: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
 
-
-
-1. [Installation](#installation)
-2. [Usage](#usage)
-   - [Configuration](#configuration)
-   - [Rekordbox XML](#rekordbox-xml)
-   - [Rekordbox ANLZ files](#rekordbox-anlz-files)
-   - [Rekordbox MySettings](#rekordbox-mysettings)
-   - [Rekordbox 6 database](#rekordbox-6-database)
-3. [File formats](#file-formats)
-4. [Contributing](#contributing)
-5. [Related Projects](#related-projects)
-6. [Thank Yous](#thank-yous)
-
-
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
 |----|:------------------------------------------------------------------------------------------------------------------|
 
@@ -51,6 +36,8 @@ Some features need additional dependencies (see the [Rekordbox 6 database](#reko
 
 
 ## Usage
+
+[![Docs][docs-badge]][documentation]
 
 [Read the documentation on ReadTheDocs!][documentation]
 
@@ -182,7 +169,8 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 So far I did not find a reliable dependency for using SQLCipher
 with Python on Windows. For now, SQLCipher can be used with the included DLL's by replacing
-the Python SQLite DLL's:
+the Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
+StackOverflow discussion):
 
 1) rename `sqlcipher.dll` to `sqlite3.dll` and replace the existing file in the Python DLLs folder with it
 2) copy `libcrypto-1_1.dll` into the Python DLLs folder (optional, should work without)
@@ -263,6 +251,7 @@ appreciated on MacOS.
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
+[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat&logo=readthedocs
 [python-badge]: https://img.shields.io/badge/python-3.7%20|%203.8%20|%203.9-blue?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [license-badge]: https://img.shields.io/badge/license-MIT-lightgrey?style=flat
