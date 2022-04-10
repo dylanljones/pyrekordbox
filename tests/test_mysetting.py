@@ -10,8 +10,6 @@ from pyrekordbox.mysettings.file import compute_checksum
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
 
-ver = 6
-
 
 def _read_setting(type_, key, value):
     file = type_.upper() + ".DAT"
@@ -319,7 +317,7 @@ def test_mysetting2_channel_fader_curve_long():
 def test_mysetting_checksum():
     file_types = "MYSETTING.DAT", "MYSETTING2.DAT", "DJMMYSETTING.DAT"
 
-    root = os.path.join(TEST_ROOT, f"rekordbox {6}", "mysettings")
+    root = os.path.join(TEST_ROOT, "mysettings")
     for root, _, files in os.walk(root):
         for name in files:
             if name not in file_types:
