@@ -2,8 +2,9 @@
 # pyrekordbox
 
 [![Tests][tests-badge]][tests-link]
-![python][python-badge]
-![platform][platform-badge]
+[![Python][python-badge]][pypi-link]
+[![Platform][platform-badge]][pypi-link]
+[![Status][status-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
 
@@ -248,17 +249,17 @@ appreciated on MacOS.
   https://github.com/gabek/supbox
 
 
-
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
-[tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat&logo=readthedocs
-[python-badge]: https://img.shields.io/badge/python-3.7%20|%203.8%20|%203.9-blue?style=flat
+[python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
-[license-badge]: https://img.shields.io/badge/license-MIT-lightgrey?style=flat
-[license-link]: LICENSE
+[status-badge]: https://img.shields.io/pypi/status/pyrekordbox
+[license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
+[pypi-link]: https://pypi.org/project/pyrekordbox/
+[license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
+[tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
-
 
 [documentation]: https://pyrekordbox.readthedocs.io/en/latest/
 [db6-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/db6.html
