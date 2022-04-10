@@ -52,6 +52,8 @@ Some features need additional dependencies (see the [Rekordbox 6 database](#reko
 
 ## Usage
 
+[![Docs][docs-badge]][documentation]
+
 [Read the documentation on ReadTheDocs!][documentation]
 
 ### Configuration
@@ -263,6 +265,7 @@ appreciated on MacOS.
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
+[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat&logo=readthedocs
 [python-badge]: https://img.shields.io/badge/python-3.7%20|%203.8%20|%203.9-blue?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [license-badge]: https://img.shields.io/badge/license-MIT-lightgrey?style=flat
