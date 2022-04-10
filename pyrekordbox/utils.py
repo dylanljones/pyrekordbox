@@ -95,7 +95,8 @@ def get_pioneer_app_dir(path=""):
             app_data = os.path.join(home, "Library", "Application Support")
         else:
             # Linux: not supported
-            raise logger.warning(f"OS {sys.platform} not supported!")
+            logger.warning(f"OS {sys.platform} not supported!")
+            app_data = ""
 
         # Pioneer app data
         path = os.path.join(app_data, "Pioneer")
