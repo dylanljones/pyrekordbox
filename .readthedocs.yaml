@@ -5,9 +5,12 @@ build:
     apt_packages:
       - graphviz
 
+
 python:
   version: 3.8
   install:
+    - method: setuptools
+      path: .
     - requirements: docs/source/requirements.txt
     - requirements: requirements.txt
 
