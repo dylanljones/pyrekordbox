@@ -7,16 +7,9 @@
 import os
 import re
 from . import structs
-from .file import MySettingFile, MySetting2File, DjmMySettingFile, DevSettingFile
+from .file import FILES, MySettingFile, MySetting2File, DjmMySettingFile, DevSettingFile
 
 RE_MYSETTING = re.compile(".*SETTING[0-9]?.DAT$")
-
-FILES = {
-    "DEVSETTING.DAT": DevSettingFile,
-    "DJMMYSETTING.DAT": DjmMySettingFile,
-    "MYSETTING.DAT": MySettingFile,
-    "MYSETTING2.DAT": MySetting2File,
-}
 
 
 def get_mysetting_paths(root, deep=False):

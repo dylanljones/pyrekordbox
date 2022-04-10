@@ -220,3 +220,11 @@ class MySetting2File(SettingsFile):
         "waveform": structs.Waveform.waveform,
         "beat_jump_beat_value": structs.BeatJumpBeatValue.one,
     }
+
+
+FILES = {
+    "DEVSETTING.DAT": DevSettingFile,
+    "DJMMYSETTING.DAT": DjmMySettingFile,
+    "MYSETTING.DAT": MySettingFile,
+    "MYSETTING2.DAT": MySetting2File,
+}
