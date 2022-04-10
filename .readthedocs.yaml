@@ -9,10 +9,10 @@ build:
 python:
   version: 3.8
   install:
-    - method: setuptools
-      path: .
     - requirements: docs/source/requirements.txt
     - requirements: requirements.txt
+    - method: setuptools
+      path: .
 
 formats:
   - htmlzip
