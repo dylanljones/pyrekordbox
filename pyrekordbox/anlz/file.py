@@ -51,7 +51,38 @@ class AnlzFile(abc.Sequence):
             The new instance with the parsed file content.
         """
         self = cls()
+        self._parse(data)
+        return self
 
+    @classmethod
+    def parse_file(cls, path: str):
+        """Reads and parses a Rekordbox analysis binary file.
+
+        Parameters
+        ----------
+        path : str
+            The path of a Rekordbox analysis file which is used to read
+            the file contents before parsing the binary data.
+
+        Returns
+        -------
+        self : AnlzFile
+            The new instance with the parsed file content.
+
+        See Also
+        --------
+        AnlzFile.parse: Parses the data of a Rekordbox analysis file.
+        """
+        ext = os.path.splitext(path)[1]
+        if ext not in (".DAT", ".EXT", ".2EX"):
+            raise ValueError(f"File type '{ext}' not supported!")
+
+        logger.debug(f"Reading file {os.path.split(path)[1]}")
+        with open(path, "rb") as fh:
+            data = fh.read()
+        return cls.parse(data)
+
+    def _parse(self, data: bytes):
         file_header = structs.AnlzFileHeader.parse(data)
         tag_type = file_header.type
         assert tag_type == "PMAI"
@@ -84,48 +115,6 @@ class AnlzFile(abc.Sequence):
 
         self.file_header = file_header
         self.tags = tags
-        return self
-
-    @classmethod
-    def parse_file(cls, path: str):
-        """Reads and parses a Rekordbox analysis binary file.
-
-        Parameters
-        ----------
-        path : str
-            The path of a Rekordbox analysis file which is used to read
-            the file contents before parsing the binary data.
-
-        Returns
-        -------
-        self : AnlzFile
-            The new instance with the parsed file content.
-
-        See Also
-        --------
-        AnlzFile.parse: Parses the data of a Rekordbox binary file.
-        """
-        ext = os.path.splitext(path)[1]
-        if ext not in (".DAT", ".EXT", ".2EX"):
-            raise ValueError(f"File type '{ext}' not supported!")
-
-        logger.debug(f"Reading file {os.path.split(path)[1]}")
-        with open(path, "rb") as fh:
-            data = fh.read()
-        return cls.parse(data)
-
-    def getall(self, item):
-        if isinstance(item, int):
-            return self.tags[item]
-        if item.isupper() and len(item) == 4:
-            return [tag for tag in self.tags if tag.type == item]
-        else:
-            return [tag for tag in self.tags if tag.name == item]
-
-    def getone(self, item):
-        if isinstance(item, int):
-            return self.tags[item]
-        return self.getall(item)[0]
 
     def update_len(self):
         # Update struct lengths
@@ -154,6 +143,19 @@ class AnlzFile(abc.Sequence):
         data = self.build()
         with open(path, "wb") as fh:
             fh.write(data)
+
+    def getall(self, item):
+        if isinstance(item, int):
+            return self.tags[item]
+        if item.isupper() and len(item) == 4:
+            return [tag for tag in self.tags if tag.type == item]
+        else:
+            return [tag for tag in self.tags if tag.name == item]
+
+    def getone(self, item):
+        if isinstance(item, int):
+            return self.tags[item]
+        return self.getall(item)[0]
 
     def __len__(self):
         return len(self.tags)

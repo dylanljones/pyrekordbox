@@ -32,4 +32,4 @@ def get_mysetting_paths(root, deep=False):
 
 def read_mysetting_file(path):
     obj = FILES[os.path.split(path)[1]]
-    return obj(path)
+    return obj.parse_file(path)
