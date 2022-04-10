@@ -14,21 +14,6 @@ MySetting files, XML databases and the main Rekordbox 6 database.
 *Note*: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
 
-
-
-1. [Installation](#installation)
-2. [Usage](#usage)
-   - [Configuration](#configuration)
-   - [Rekordbox XML](#rekordbox-xml)
-   - [Rekordbox ANLZ files](#rekordbox-anlz-files)
-   - [Rekordbox MySettings](#rekordbox-mysettings)
-   - [Rekordbox 6 database](#rekordbox-6-database)
-3. [File formats](#file-formats)
-4. [Contributing](#contributing)
-5. [Related Projects](#related-projects)
-6. [Thank Yous](#thank-yous)
-
-
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
 |----|:------------------------------------------------------------------------------------------------------------------|
 
