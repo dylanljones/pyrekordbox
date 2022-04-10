@@ -89,6 +89,7 @@ rekordbox.cfg and rekordbox.yml.
 The Rekordbox XML database is used for importing (and exporting) Rekordbox collections
 including track metadata and playlists. They can also be used to share playlists
 between two databases. Exporting XML databases was removed in Rekordbox 6.
+*Update*: In newer Rekordbox 6 versions the XML export feature returned!
 
 pyrekordbox can read and write Rekordbox XML databases.
 
