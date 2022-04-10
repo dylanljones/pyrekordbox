@@ -1,6 +1,7 @@
 
 # pyrekordbox
 
+[![Tests][tests-badge]][tests-link]
 ![python][python-badge]
 ![platform][platform-badge]
 [![license: MIT][license-badge]][license-link]
@@ -260,7 +261,8 @@ appreciated on MacOS.
 
 
 
-
+[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
+[tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [python-badge]: https://img.shields.io/badge/python-3.7%20|%203.8%20|%203.9-blue?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [license-badge]: https://img.shields.io/badge/license-MIT-lightgrey?style=flat
@@ -268,11 +270,12 @@ appreciated on MacOS.
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 [black-link]: https://github.com/psf/black
 
-[documentation]: docs
-[db6-doc]: .resources/db_format.md
-[anlz-doc]: .resources/anlz_format.md
-[xml-doc]: .resources/xml_format.md
-[mysettings-doc]: .resources/mysettings_format.md
+
+[documentation]: https://pyrekordbox.readthedocs.io/en/latest
+[db6-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/db6
+[anlz-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/anlz
+[xml-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/xml
+[mysettings-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/mysetting
 
 [repo]: https://github.com/dylanljones/rekordtools
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
