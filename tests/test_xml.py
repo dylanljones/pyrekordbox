@@ -8,12 +8,12 @@ import os
 from pyrekordbox import RekordboxXml
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
-XML = os.path.join(TEST_ROOT, "xml")
 
 
-def test_parse_xml_tracks():
-    path = os.path.join(XML, "demo_tracks", "database.xml")
+def test_parse_xml_tracks_v5():
+    path = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
     xml = RekordboxXml(path)
+    assert os.path.exists(path)
 
     assert xml.num_tracks == 6
 
