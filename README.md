@@ -7,7 +7,7 @@
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
 
-PyRekordbox is a Python package for interacting with the library and export data of
+Pyrekordbox is a Python package for interacting with the library and export data of
 Pioneer's Rekordbox DJ Software. It currently supports Rekordbox analysis files,
 MySetting files, XML databases and the main Rekordbox 6 database.
 
