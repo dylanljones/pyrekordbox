@@ -95,7 +95,7 @@ def get_pioneer_app_dir(path=""):
             app_data = os.path.join(home, "Library", "Application Support")
         else:
             # Linux: not supported
-            raise OSError(f"OS {sys.platform} not supported!")
+            raise logger.warning(f"OS {sys.platform} not supported!")
 
         # Pioneer app data
         path = os.path.join(app_data, "Pioneer")
@@ -134,7 +134,7 @@ def get_pioneer_install_dir(path=""):
             path = os.path.abspath("/Applications")
         else:
             # Linux: not supported
-            raise OSError(f"OS {sys.platform} not supported!")
+            logger.warning(f"OS {sys.platform} not supported!")
 
     path = os.path.abspath(path)
     if not os.path.exists(path):
@@ -254,7 +254,7 @@ def read_rekordbox6_asar(rb6_install_dir):
         root = os.path.join(rb6_install_dir, "rekordbox.app", "Contents", "MacOS")
         location = os.path.join(root, "rekordboxAgent.app", "Contents", "Resources")
     else:
-        raise OSError(f"OS {sys.platform} not supported!")
+        raise logger.warning(f"OS {sys.platform} not supported!")
 
     # Read asar file
     path = os.path.abspath(os.path.join(location, "app.asar"))
