@@ -2,7 +2,7 @@
 # -- Project gitignore -----------------------------------------------------------------
 
 master.db
-ksy/
+.ksy/
 dev_*.py
 decrypt_database.py
 compile_structs.bat
