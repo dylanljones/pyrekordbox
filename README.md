@@ -271,11 +271,11 @@ appreciated on MacOS.
 [black-link]: https://github.com/psf/black
 
 
-[documentation]: https://pyrekordbox.readthedocs.io/en/latest
-[db6-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/db6
-[anlz-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/anlz
-[xml-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/xml
-[mysettings-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/mysetting
+[documentation]: https://pyrekordbox.readthedocs.io/en/latest/
+[db6-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/db6.html
+[anlz-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/anlz.html
+[xml-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/xml.html
+[mysettings-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/mysetting.html
 
 [repo]: https://github.com/dylanljones/rekordtools
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
