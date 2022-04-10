@@ -169,7 +169,8 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 So far I did not find a reliable dependency for using SQLCipher
 with Python on Windows. For now, SQLCipher can be used with the included DLL's by replacing
-the Python SQLite DLL's:
+the Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
+StackOverflow discussion):
 
 1) rename `sqlcipher.dll` to `sqlite3.dll` and replace the existing file in the Python DLLs folder with it
 2) copy `libcrypto-1_1.dll` into the Python DLLs folder (optional, should work without)
