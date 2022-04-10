@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<MASTER_PLAYLIST Version="3.0.0" AutomaticSync="0">
+  <PRODUCT Name="rekordbox" Version="5.8.6" Company="Pioneer DJ"/>
+  <PLAYLISTS>
+    <NODE Id="1" ParentId="0" Attribute="0" Timestamp="1649097338996" Lib_Type="0" CheckType="0"/>
+    <NODE Id="2" ParentId="0" Attribute="1" Timestamp="1649097351229" Lib_Type="0" CheckType="0"/>
+    <NODE Id="3" ParentId="2" Attribute="0" Timestamp="1649097363428" Lib_Type="0" CheckType="0"/>
+  </PLAYLISTS>
+</MASTER_PLAYLIST>

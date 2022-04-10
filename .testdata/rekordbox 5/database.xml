@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="5.8.6" Company="Pioneer DJ"/>
+  <COLLECTION Entries="6">
+    <TRACK TrackID="1" Name="NOISE" Artist="" Composer="" Album="" Grouping=""
+           Genre="" Kind="WAV File" Size="1382226" TotalTime="5" DiscNumber="0"
+           TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2022-04-04"
+           BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
+           Location="file://localhost/C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/NOISE.wav"
+           Remixer="" Tonality="" Label="" Mix=""/>
+    <TRACK TrackID="2" Name="SINEWAVE" Artist="" Composer="" Album="" Grouping=""
+           Genre="" Kind="WAV File" Size="1515258" TotalTime="5" DiscNumber="0"
+           TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2022-04-04"
+           BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
+           Location="file://localhost/C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/SINEWAVE.wav"
+           Remixer="" Tonality="" Label="" Mix=""/>
+    <TRACK TrackID="3" Name="SIREN" Artist="" Composer="" Album="" Grouping=""
+           Genre="" Kind="WAV File" Size="1941204" TotalTime="7" DiscNumber="0"
+           TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2022-04-04"
+           BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
+           Location="file://localhost/C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/SIREN.wav"
+           Remixer="" Tonality="" Label="" Mix=""/>
+    <TRACK TrackID="4" Name="HORN" Artist="" Composer="" Album="" Grouping=""
+           Genre="" Kind="WAV File" Size="2010816" TotalTime="7" DiscNumber="0"
+           TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2022-04-04"
+           BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
+           Location="file://localhost/C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/HORN.wav"
+           Remixer="" Tonality="" Label="" Mix=""/>
+    <TRACK TrackID="5" Name="Demo Track 1" Artist="Loopmasters" Composer=""
+           Album="" Grouping="" Genre="" Kind="MP3 File" Size="6899624"
+           TotalTime="172" DiscNumber="0" TrackNumber="0" Year="0" AverageBpm="128.00"
+           DateAdded="2022-04-04" BitRate="320" SampleRate="44100" Comments="Tracks by www.loopmasters.com"
+           PlayCount="0" Rating="0" Location="file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3"
+           Remixer="" Tonality="" Label="Loopmasters" Mix="">
+      <TEMPO Inizio="0.025" Bpm="128.00" Metro="4/4" Battito="1"/>
+      <POSITION_MARK Name="" Type="0" Start="0.025" Num="-1"/>
+      <POSITION_MARK Name="" Type="0" Start="15.025" Num="-1"/>
+      <POSITION_MARK Name="" Type="0" Start="30.025" Num="-1"/>
+      <POSITION_MARK Name="" Type="0" Start="45.025" Num="-1"/>
+    </TRACK>
+    <TRACK TrackID="6" Name="Demo Track 2" Artist="Loopmasters" Composer=""
+           Album="" Grouping="" Genre="" Kind="MP3 File" Size="5124342"
+           TotalTime="128" DiscNumber="0" TrackNumber="0" Year="0" AverageBpm="120.00"
+           DateAdded="2022-04-04" BitRate="320" SampleRate="44100" Comments="Tracks by www.loopmasters.com"
+           PlayCount="0" Rating="0" Location="file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%202.mp3"
+           Remixer="" Tonality="" Label="Loopmasters" Mix="">
+      <TEMPO Inizio="0.025" Bpm="120.00" Metro="4/4" Battito="1"/>
+      <TEMPO Inizio="48.026" Bpm="120.00" Metro="4/4" Battito="1"/>
+      <TEMPO Inizio="48.525" Bpm="120.00" Metro="4/4" Battito="2"/>
+      <TEMPO Inizio="49.026" Bpm="120.00" Metro="4/4" Battito="3"/>
+      <TEMPO Inizio="49.525" Bpm="120.00" Metro="4/4" Battito="4"/>
+      <TEMPO Inizio="50.026" Bpm="120.00" Metro="4/4" Battito="1"/>
+      <TEMPO Inizio="50.525" Bpm="120.00" Metro="4/4" Battito="2"/>
+      <TEMPO Inizio="51.026" Bpm="120.00" Metro="4/4" Battito="3"/>
+      <TEMPO Inizio="51.525" Bpm="120.00" Metro="4/4" Battito="4"/>
+      <TEMPO Inizio="52.026" Bpm="120.00" Metro="4/4" Battito="1"/>
+      <POSITION_MARK Name="" Type="0" Start="0.025" Num="-1"/>
+      <POSITION_MARK Name="" Type="0" Start="16.025" Num="-1"/>
+      <POSITION_MARK Name="" Type="0" Start="32.025" Num="-1"/>
+      <POSITION_MARK Name="" Type="0" Start="48.026" Num="-1"/>
+    </TRACK>
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Type="0" Name="ROOT" Count="2">
+      <NODE Name="Folder" Type="0" Count="1">
+        <NODE Name="Sub Playlist" Type="1" KeyType="0" Entries="2">
+          <TRACK Key="5"/>
+          <TRACK Key="6"/>
+        </NODE>
+      </NODE>
+      <NODE Name="Playlist1" Type="1" KeyType="0" Entries="2">
+        <TRACK Key="5"/>
+        <TRACK Key="6"/>
+      </NODE>
+    </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>

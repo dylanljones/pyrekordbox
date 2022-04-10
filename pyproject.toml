@@ -1,0 +1,30 @@
+
+# -- Build -----------------------------------------------------------------------------
+
+[build-system]
+requires = [
+    "setuptools >= 60.0.0",
+    "setuptools_scm[toml] >= 4, <6",
+    "setuptools_scm_git_archive",
+    "wheel >= 0.37.0",
+]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools_scm]
+write_to = "pyrekordbox/_version.py"
+git_describe_command = "git describe --dirty --tags --long --match * --first-parent"
+
+
+# -- Black -----------------------------------------------------------------------------
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = "__init__.py|__main__.py|_version.py"
+force-exclude = """
+/(
+    anlz/structs.py |
+    mysettings/structs.py
+)\
+"""

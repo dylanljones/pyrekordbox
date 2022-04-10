@@ -1,0 +1,100 @@
+<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" version="1.0" width="642" height="46"
+     viewBox="0 0 642 46">
+    <text x="21" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">f
+    </text>
+    <text x="61" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">e
+    </text>
+    <text x="101" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">d
+    </text>
+    <text x="141" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">c
+    </text>
+    <text x="181" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">b
+    </text>
+    <text x="221" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">a
+    </text>
+    <text x="261" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">9
+    </text>
+    <text x="301" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">8
+    </text>
+    <text x="341" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">7
+    </text>
+    <text x="381" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">6
+    </text>
+    <text x="421" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">5
+    </text>
+    <text x="461" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">4
+    </text>
+    <text x="501" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">3
+    </text>
+    <text x="541" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">2
+    </text>
+    <text x="581" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">1
+    </text>
+    <text x="621" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">0
+    </text>
+    <line x1="1" y1="15" x2="121" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="1" y1="45" x2="121" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="121" y1="15" x2="121" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="1" y1="15" x2="1" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Palatino, Georgia, Times New Roman, serif"
+          font-style="italic" x="61" y="31" text-anchor="middle"
+          dominant-baseline="middle">red
+    </text>
+    <line x1="121" y1="15" x2="241" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="121" y1="45" x2="241" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="241" y1="15" x2="241" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="121" y1="15" x2="121" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Palatino, Georgia, Times New Roman, serif"
+          font-style="italic" x="181" y="31" text-anchor="middle"
+          dominant-baseline="middle">green
+    </text>
+    <line x1="241" y1="15" x2="361" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="241" y1="45" x2="361" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="361" y1="15" x2="361" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="241" y1="15" x2="241" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Palatino, Georgia, Times New Roman, serif"
+          font-style="italic" x="301" y="31" text-anchor="middle"
+          dominant-baseline="middle">blue
+    </text>
+    <line x1="361" y1="15" x2="561" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="361" y1="45" x2="561" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="561" y1="15" x2="561" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="361" y1="15" x2="361" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Palatino, Georgia, Times New Roman, serif"
+          font-style="italic" x="461" y="31" text-anchor="middle"
+          dominant-baseline="middle">height
+    </text>
+    <line x1="561" y1="15" x2="601" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="561" y1="45" x2="601" y2="45" stroke="#000000" stroke-width="1"/>
+    <line stroke-dasharray="1,3" x1="601" y1="15" x2="601" y2="45" stroke="#000000"
+          stroke-width="1"/>
+    <line x1="561" y1="15" x2="561" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Courier New, monospace" x="581" y="31"
+          text-anchor="middle" dominant-baseline="middle">00
+    </text>
+    <line x1="601" y1="15" x2="641" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="601" y1="45" x2="641" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="641" y1="15" x2="641" y2="45" stroke="#000000" stroke-width="1"/>
+    <line stroke-dasharray="1,3" x1="601" y1="15" x2="601" y2="45" stroke="#000000"
+          stroke-width="1"/>
+    <text font-size="18" font-family="Courier New, monospace" x="621" y="31"
+          text-anchor="middle" dominant-baseline="middle">00
+    </text>
+</svg>

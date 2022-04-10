@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     version="1.0" width="322" height="46"
+     viewBox="0 0 322 46">
+    <text x="21" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">0
+    </text>
+    <text x="61" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">1
+    </text>
+    <text x="101" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">2
+    </text>
+    <text x="141" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">3
+    </text>
+    <text x="181" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">4
+    </text>
+    <text x="221" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">5
+    </text>
+    <text x="261" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">6
+    </text>
+    <text x="301" y="8" font-family="Courier New, monospace" font-size="11"
+          dominant-baseline="middle" text-anchor="middle">7
+    </text>
+    <line x1="1" y1="15" x2="81" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="1" y1="45" x2="81" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="81" y1="15" x2="81" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="1" y1="15" x2="1" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Palatino, Georgia, Times New Roman, serif"
+          font-style="italic" x="41" y="31" text-anchor="middle"
+          dominant-baseline="middle">b
+        <tspan font-size="70%" dy="0.5ex" dominant-baseline="middle">num</tspan>
+    </text>
+    <line x1="81" y1="15" x2="161" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="81" y1="45" x2="161" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="161" y1="15" x2="161" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="81" y1="15" x2="81" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Palatino, Georgia, Times New Roman, serif"
+          font-style="italic" x="121" y="31" text-anchor="middle"
+          dominant-baseline="middle">tempo
+    </text>
+    <line x1="161" y1="15" x2="321" y2="15" stroke="#000000" stroke-width="1"/>
+    <line x1="161" y1="45" x2="321" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="321" y1="15" x2="321" y2="45" stroke="#000000" stroke-width="1"/>
+    <line x1="161" y1="15" x2="161" y2="45" stroke="#000000" stroke-width="1"/>
+    <text font-size="18" font-family="Palatino, Georgia, Times New Roman, serif"
+          font-style="italic" x="241" y="31" text-anchor="middle"
+          dominant-baseline="middle">time
+    </text>
+</svg>
