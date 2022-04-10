@@ -22,7 +22,12 @@ in any way and has been written independently!
 
 ## Installation
 
-pyrekordbox can be installed via [GitHub][repo]
+pyrekordbox is available on [PyPI][pypi-link]:
+````commandline
+pip install pyrekordbox
+````
+
+Alternatively, it can be installed via [GitHub][repo]
 ```commandline
 pip install git+https://github.com/dylanljones/pyrekordbox.git@VERSION
 ```
@@ -267,7 +272,7 @@ appreciated on MacOS.
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/xml.html
 [mysettings-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/mysetting.html
 
-[repo]: https://github.com/dylanljones/rekordtools
+[repo]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
 [pysqlcipher3]: https://github.com/rigglemania/pysqlcipher3
 [deep-symmetry]: https://github.com/Deep-Symmetry
