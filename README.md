@@ -2,6 +2,7 @@
 # pyrekordbox
 
 [![Tests][tests-badge]][tests-link]
+[![Docs][docs-badge]][documentation]
 [![Version][pypi-badge]][pypi-link]
 [![Python][python-badge]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
@@ -45,7 +46,6 @@ Some features need additional dependencies (see the [Rekordbox 6 database](#reko
 
 [Read the documentation on ReadTheDocs!][documentation]
 
-[![Docs][docs-badge]][documentation]
 
 ### Configuration
 
