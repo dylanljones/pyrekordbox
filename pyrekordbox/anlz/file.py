@@ -21,7 +21,7 @@ class BuildFileLengthError(Exception):
         )
 
 
-class AnlzFile(abc.Sequence):
+class AnlzFile(abc.Mapping):
     """Rekordbox `ANLZnnnn.xxx` binary file handler."""
 
     def __init__(self):
@@ -144,24 +144,24 @@ class AnlzFile(abc.Sequence):
         with open(path, "wb") as fh:
             fh.write(data)
 
-    def getall(self, item):
+    def getone(self, item):
+        if isinstance(item, int):
+            return self.tags[item]
+        return self.get(item)[0]
+
+    def __len__(self):
+        return len(self.keys())
+
+    def __iter__(self):
+        return iter(set(tag.type for tag in self.tags))
+
+    def __getitem__(self, item):
         if isinstance(item, int):
             return self.tags[item]
         if item.isupper() and len(item) == 4:
             return [tag for tag in self.tags if tag.type == item]
         else:
             return [tag for tag in self.tags if tag.name == item]
-
-    def getone(self, item):
-        if isinstance(item, int):
-            return self.tags[item]
-        return self.getall(item)[0]
-
-    def __len__(self):
-        return len(self.tags)
-
-    def __getitem__(self, item):
-        return self.getall(item)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.tag_types})"
