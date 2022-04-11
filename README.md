@@ -193,11 +193,6 @@ providing the key via the `PRAGMA key='db-key'` SQL statement.
 |----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
-On macOS there is the [pysqlcipher3][pysqlcipher3] package, which simplifies the installation.
-This will be implemented in a future version.
-
-
-
 ## File formats
 
 A summary of the Rekordbox file formats can be cound in the [documentation]:
