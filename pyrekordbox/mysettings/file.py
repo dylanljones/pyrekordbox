@@ -4,7 +4,6 @@
 #
 # Copyright (c) 2022, Dylan Jones
 
-import os
 import re
 import crc16
 from construct import Struct
@@ -34,20 +33,59 @@ def _is_valid_key(k: str):
 
 
 class SettingsFile(MutableMapping):
+    """Abtract base class of Rekordbox settings files."""
 
     struct: Struct
     defaults: dict
     version: str = ""  # only used by DEVSETTING
 
-    def __init__(self, path=""):
+    def __init__(self):
         super().__init__()
-        self._path = path
         self.parsed = None
         self.items = dict()
-        if path:
-            self.parse_file(path)
 
-    def parse(self, data):
+    @classmethod
+    def parse(cls, data: bytes):
+        """Parses the in-memory data of a Rekordbox settings binary file.
+
+        Parameters
+        ----------
+        data : bytes
+            The in-memory binary contents of a Rekordbox settings file.
+
+        Returns
+        -------
+        self : SettingsFile
+            The new instance with the parsed file content.
+        """
+        self = cls()
+        self._parse(data)
+        return self
+
+    @classmethod
+    def parse_file(cls, path: str):
+        """Reads and parses a Rekordbox settings binary file.
+
+        Parameters
+        ----------
+        path : str
+            The path of a Rekordbox settings file which is used to read
+            the file contents before parsing the binary data.
+
+        Returns
+        -------
+        self : AnlzFile
+            The new instance with the parsed file content.
+
+        See Also
+        --------
+        SettingsFile.parse: Parses the data of a Rekordbox settings file.
+        """
+        with open(path, "rb") as fh:
+            data = fh.read()
+        return cls.parse(data)
+
+    def _parse(self, data):
         parsed = self.struct.parse(data)
         keys = filter(_is_valid_key, parsed.data.keys())
         items = dict()
@@ -56,13 +94,6 @@ class SettingsFile(MutableMapping):
 
         self.parsed = parsed
         self.items.update(items)
-
-    def parse_file(self, path):
-        if not os.path.exists(path):
-            return
-        with open(path, "rb") as fh:
-            data = fh.read()
-        self.parse(data)
 
     def build(self):
         # Copy defaults and update with cuirrent data
@@ -84,8 +115,7 @@ class SettingsFile(MutableMapping):
         # Write data with updated checksum
         return self.struct.build(file_items)
 
-    def save(self, path=""):
-        path = path or self._path
+    def save(self, path):
         data = self.build()
         with open(path, "wb") as fh:
             fh.write(data)
@@ -190,3 +220,11 @@ class MySetting2File(SettingsFile):
         "waveform": structs.Waveform.waveform,
         "beat_jump_beat_value": structs.BeatJumpBeatValue.one,
     }
+
+
+FILES = {
+    "DEVSETTING.DAT": DevSettingFile,
+    "DJMMYSETTING.DAT": DjmMySettingFile,
+    "MYSETTING.DAT": MySettingFile,
+    "MYSETTING2.DAT": MySetting2File,
+}

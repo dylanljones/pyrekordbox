@@ -2,9 +2,10 @@
 # pyrekordbox
 
 [![Tests][tests-badge]][tests-link]
+[![Docs][docs-badge]][documentation]
+[![Version][pypi-badge]][pypi-link]
 [![Python][python-badge]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
-[![Status][status-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
 
@@ -43,9 +44,8 @@ Some features need additional dependencies (see the [Rekordbox 6 database](#reko
 
 ## Usage
 
-[![Docs][docs-badge]][documentation]
-
 [Read the documentation on ReadTheDocs!][documentation]
+
 
 ### Configuration
 
@@ -89,6 +89,7 @@ rekordbox.cfg and rekordbox.yml.
 The Rekordbox XML database is used for importing (and exporting) Rekordbox collections
 including track metadata and playlists. They can also be used to share playlists
 between two databases. Exporting XML databases was removed in Rekordbox 6.
+*Update*: In newer Rekordbox 6 versions the XML export feature returned!
 
 pyrekordbox can read and write Rekordbox XML databases.
 
@@ -254,11 +255,11 @@ appreciated on MacOS.
   https://github.com/gabek/supbox
 
 
-[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
-[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat&logo=readthedocs
+[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
+[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
-[status-badge]: https://img.shields.io/pypi/status/pyrekordbox
+[pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 [pypi-link]: https://pypi.org/project/pyrekordbox/
