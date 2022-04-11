@@ -2,9 +2,9 @@
 # pyrekordbox
 
 [![Tests][tests-badge]][tests-link]
+[![Version][pypi-badge]][pypi-link]
 [![Python][python-badge]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
-[![Status][status-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
 
@@ -43,9 +43,9 @@ Some features need additional dependencies (see the [Rekordbox 6 database](#reko
 
 ## Usage
 
-[![Docs][docs-badge]][documentation]
-
 [Read the documentation on ReadTheDocs!][documentation]
+
+[![Docs][docs-badge]][documentation]
 
 ### Configuration
 
@@ -259,7 +259,7 @@ appreciated on MacOS.
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat&logo=readthedocs
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
-[status-badge]: https://img.shields.io/pypi/status/pyrekordbox
+[pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 [pypi-link]: https://pypi.org/project/pyrekordbox/
