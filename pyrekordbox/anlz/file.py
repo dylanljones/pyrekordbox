@@ -145,8 +145,6 @@ class AnlzFile(abc.Mapping):
             fh.write(data)
 
     def getone(self, item):
-        if isinstance(item, int):
-            return self.tags[item]
         return self.get(item)[0]
 
     def __len__(self):
@@ -156,8 +154,6 @@ class AnlzFile(abc.Mapping):
         return iter(set(tag.type for tag in self.tags))
 
     def __getitem__(self, item):
-        if isinstance(item, int):
-            return self.tags[item]
         if item.isupper() and len(item) == 4:
             return [tag for tag in self.tags if tag.type == item]
         else:
