@@ -255,8 +255,8 @@ appreciated on MacOS.
   https://github.com/gabek/supbox
 
 
-[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
-[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat&logo=readthedocs
+[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
+[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat

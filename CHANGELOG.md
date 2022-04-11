@@ -4,6 +4,7 @@
 ## [Unreleased]
 
 ### Improvements/Bug Fixes
+- inherit AnlzFile from Mapping to implement dict interface
 - unify binary file API
 
 
