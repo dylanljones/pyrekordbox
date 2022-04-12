@@ -87,8 +87,20 @@ class Rekordbox6Database:
         anlz_root = os.path.join(rb6_config["db_dir"], "share")
         self._anlz_root = os.path.normpath(anlz_root)
 
+    def close(self):
+        self.con.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
     def execute(self, sql, params=None):
-        self.cur.execute(sql, params)
+        if params is None:
+            self.cur.execute(sql)
+        else:
+            self.cur.execute(sql, params)
 
     def fetchall(self):
         return self.cur.fetchall()
