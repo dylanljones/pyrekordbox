@@ -9,9 +9,12 @@
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
 
-Pyrekordbox is a Python package for interacting with the library and export data of
-Pioneer's Rekordbox DJ Software. It currently supports Rekordbox analysis files,
-MySetting files, XML databases and the main Rekordbox 6 database.
+pyrekordbox is a Python package for interacting with the library and export data of
+Pioneer's Rekordbox DJ Software. It currently supports
+- Rekordbox XML database
+- Analysis files (ANLZ)
+- My-settings files
+- Rekordbox 6 `master.db` database
 
 *Note*: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
@@ -190,14 +193,9 @@ providing the key via the `PRAGMA key='db-key'` SQL statement.
 |----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
-On macOS there is the [pysqlcipher3][pysqlcipher3] package, which simplifies the installation.
-This will be implemented in a future version.
-
-
-
 ## File formats
 
-A summary of the Rekordbox file formats can be cound in the [documentation]:
+A summary of the Rekordbox file formats can be found in the [documentation]:
 
 - [Rekordbox XML format][xml-doc]
 - [ANLZ file format][anlz-doc]
