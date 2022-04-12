@@ -173,7 +173,7 @@ found in the collection.
    :widths: 25 100
    :header-rows: 1
 
-   * - Table Name
+   * - Column Name
      - Description
    * - `ID`
      - The ID of the artist.
@@ -193,7 +193,7 @@ This table stores the Category data of Rekordbox.
    :widths: 25 100
    :header-rows: 1
 
-   * - Table Name
+   * - Column Name
      - Description
    * - `ID`
      - The ID of the category.
@@ -224,7 +224,7 @@ Rekordbox and for tagging tracks:
    :widths: 25 100
    :header-rows: 1
 
-   * - Table Name
+   * - Column Name
      - Description
    * - `ID`
      - The ID of the color
@@ -242,6 +242,293 @@ djmdContent
 This table stores the main track data of Rekordbox. The table contains most information
 about each track in the collection. Some columns are linked to other tables by the
 corresponding ID.
+
+.. list-table:: djmdContent columns
+   :widths: 1 1 1
+   :header-rows: 1
+
+   * - Column Name
+     - Description
+     - Notes
+   * - `ID`
+     - The ID of the content
+     - referenced as `ContentID` in other tables
+   * - `FileNameL`
+     - The long file name
+     - This is the normal file name
+   * - `FileNameS`
+     - The short file name
+     - mostly empty
+   * - `Title`
+     - The title of the track
+     -
+   * - `ArtistID`
+     - The ID of the artist of the track
+     - Links to `ID` in the `djmdArtist` table
+   * - `AlbumID`
+     - The album of the track
+     - Links to `ID` in the `djmdAlbum` table
+   * - `GenreID`
+     - The genre of the track
+     - Links to `ID` in the `djmdGenre` table
+   * - `BPM`
+     - The average BPM of the track
+     - Unit: Second
+   * - `Length`
+     - The length of the track
+     - Unit: seconds
+   * - `TrackNo`
+     - Number of the track of the album
+     -
+   * - `BitRate`
+     - Encoding bit rate
+     - Unit: Kbps
+   * - `BitDepth`
+     - Encoding bit depth
+     - Unit: Bits
+   * - `Commnt`
+     - The comments of the track
+     -
+   * - `FileType`
+     - Type of audio file
+     - mp3= `0` / `1` , m4a= `4` , wav= `11` , aiff= `12`
+   * - `Rating`
+     - Rating of the track
+     -
+   * - `ReleaseYear`
+     - Year of release
+     -
+   * - `RemixerID`
+     - The remixer of the track
+     - Links to `ID` in the `djmdArtist` table
+   * - `LabelID`
+     - The record label
+     - Links to `ID` in the `djmdLabel` table
+   * - `OrgArtistID`
+     - The original artist (for remixes)
+     - Links to `ID` in the `djmdArtist` table
+   * - `KeyID`
+     - Tonality (Kind of musical key)
+     - Links to `ID` in the `djmdKey` table
+   * - `StockDate`
+     - ?
+     -
+   * - `ColorID`
+     - Colour for track grouping
+     - Links to `ID` in the `djmdColor` table
+   * - `DJPlayCount`
+     - Play count of the track
+     - Not sure if plays in Rekordbox count
+   * - `ImagePath`
+     - Path to the tracks album artwork
+     - The path is relative to the Rekordbox database root
+   * - `MasterDBID`
+     - The master-ID of the track
+     - Not sure whats the difference to `ID`
+   * - `MasterSongID`
+     - The master-song-ID of the track
+     - Not sure whats the difference to `ID` and `MasterDBID`
+   * - `AnalysisDataPath`
+     - Path to the tracks analysis files (ANLZ)
+     - The path is relative to the Rekordbox database root
+   * - `SearchStr`
+     - Some string used for searching?
+     -
+   * - `FileSize`
+     - The file size of the track
+     - Unit: Octet
+   * - `DiscNo`
+     - Number of the disc of the album
+     -
+   * - `ComposerID`
+     - The composer (or producer) of the track
+     - Links to `ID` in the `djmdArtist` table
+   * - `Subtitle`
+     - The track subtitles
+     -
+   * - `SampleRate`
+     - Frequency of sampling
+     - Unit: Hertz
+   * - `DisableQuantize`
+     - Individual quantize setting fro track
+     - If None the global setting is used
+   * - `Analysed`
+     - Some code how the trck is analyzed
+     - Guessing not analyzed= `0` , standard= `105` , advanced= `121`
+   * - `ReleaseDate`
+     - Date of track release
+     - Format: yyyy-mm-dd; ex.: 2010-08-21
+   * - `DateCreated`
+     - Date of file creation
+     - Format: yyyy-mm-dd; ex.: 2010-08-21
+   * - `ContentLink`
+     - ?
+     -
+   * - `Tag`
+     - My tag value
+     -
+   * - `ModifiedByRBM`
+     - ?
+     -
+   * - `HotCueAutoLoad`
+     - Individual hot cue auto-load settin
+     - Either `'on'` or `'off'`
+   * - `DeliveryControl`
+     - ?
+     -
+   * - `DeliveryComment`
+     - ?
+     -
+   * - `CueUpdated`
+     - Maybe number of times cues where changed?
+     -
+   * - `AnalysisUpdated`
+     - Flag if track is analyzed in advanced mode
+     - advanced= `1`, normal= `0`
+   * - `TrackInfoUpdated`
+     - Maybe number of times cues where changed?
+     -
+   * - `Lyricist`
+     - The lyricist of the track
+     -
+   * - `ISRC`
+     - The ISRC code of the track
+     -
+   * - `SamplerTrackInfo`
+     - ?
+     -
+   * - `SamplerPlayOffset`
+     - ?
+     -
+   * - `SamplerGain`
+     - ?
+     -
+   * - `VideoAssociate`
+     - ?
+     -
+   * - `LyricStatus`
+     - ?
+     -
+   * - `ServiceID`
+     - ?
+     -
+   * - `OrgFolderPath`
+     - ?
+     - Mostly same as `FolderPath`
+   * - `Reserved1`
+     -
+     -
+   * - `Reserved2`
+     -
+     -
+   * - `Reserved3`
+     -
+     -
+   * - `Reserved4`
+     -
+     -
+   * - `ExtInfo`
+     - ?
+     -
+   * - `rb_file_id`
+     - The Rekordbox ID of the file
+     -
+   * - `DeviceID`
+     - ?
+     -
+   * - `rb_LocalFolderPath`
+     - ?
+     -
+   * - `SrcID`
+     - ?
+     -
+   * - `SrcTitle`
+     - ?
+     -
+   * - `SrcArtistName`
+     - ?
+     -
+   * - `SrcAlbumName`
+     - ?
+     -
+   * - `SrcLength`
+     - ?
+     -
+
+
+djmdCue
+~~~~~~~
+
+This table stores the cue points (memory and hotcues) of the tracks in Rekordbox.
+
+
+.. list-table:: djmdCue columns
+   :widths: 1 1 1
+   :header-rows: 1
+
+   * - Column Name
+     - Description
+     - Notes
+   * - `ID`
+     - The ID of the cue point
+     -
+   * - `ContentID`
+     - The corresponding track of the cue
+     - Links to `ID` in the `djmdContent` table
+   * - `InMsec`
+     - Start time of the cue point
+     - Unit: Millisecond
+   * - `InFrame`
+     - The frame number of the start time
+     -
+   * - `InMpegFrame`
+     - The Mpeg frame number of the start time
+     - `0` if not a mpeg file
+   * - `InMpegAbs`
+     - ?
+     - `0` if not a mpeg file
+   * - `OutMsec`
+     - End time of the cue point (for loops)
+     - Unit: Millisecond, `-1` if not a loop
+   * - `OutFrame`
+     - The frame number of the end time (for loops)
+     - `0` if not a loop
+   * - `OutMpegFrame`
+     - The Mpeg frame number of the end time (for loops)
+     - `0` if not a loop or mpeg file
+   * - `OutMpegAbs`
+     - ?
+     - `0` if not a loop or mpeg file
+   * - `Kind`
+     - Type of cue point
+     - Cue= `0` , Fade-In= `0` , Fade-Out= `0` , Load= `3` , Loop= `4`
+   * - `Color`
+     - The color ID of the cue point
+     - `-1` if no color
+   * - `ColorTableIndex`
+     - ?
+     -
+   * - `ActiveLoop`
+     - ?
+     -
+   * - `Comment`
+     - Name of comment of cue point
+     -
+   * - `BeatLoopSize`
+     - ?
+     -
+   * - `CueMicrosec`
+     - ?
+     -
+   * - `InPointSeekInfo`
+     - ?
+     -
+   * - `OutPointSeekInfo`
+     - ?
+     -
+   * - `ContentUUID`
+     - The UUID of the track
+     - Links to `UUID` in `djmdContent` table
 
 
 References
