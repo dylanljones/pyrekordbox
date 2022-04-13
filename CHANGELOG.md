@@ -4,6 +4,8 @@
 ## [Unreleased]
 
 ### Improvements/Bug Fixes
+- fix loading the Rekordbox setting file twice in config initialization
+- add context for Rekordbox 6 database
 - inherit AnlzFile from Mapping to implement dict interface
 - unify binary file API
 
