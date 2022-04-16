@@ -964,6 +964,83 @@ This table stores tracks contained in the history lists in the `djmdHistory` tab
 DjmdSongHotCueBanklist
 ~~~~~~~~~~~~~~~~~~~~~~
 
+This table stores the hot cue entries contained in the hot-cue bank lists in the
+`djmdHotCueBanklist` table.
+
+.. list-table:: djmdSongHotCueBanklist columns
+   :widths: 1 1 1
+   :header-rows: 1
+
+   * - Column Name
+     - Description
+     - Notes
+   * - `ID`
+     - The ID of the hot-cue bank list entry
+     -
+   * - `HotCueBanklistID`
+     - The ID of the hot-cue bank list containing the entry
+     - Links to `ID` in the `djmdHotCueBanklist` table
+   * - `ContentID`
+     - The corresponding track
+     - Links to `ID` in the `djmdContent` table
+   * - `TrackNo`
+     - The number of the hot-cue bank list entry
+     -
+   * - `CueID`
+     - The ID of the corresponding cue item
+     - Links to `ID` in the `djmdCues` table
+   * - `InMsec`
+     - Start time of the cue point
+     - Unit: Millisecond
+   * - `InFrame`
+     - The frame number of the start time
+     -
+   * - `InMpegFrame`
+     - The Mpeg frame number of the start time
+     - `0` if not a mpeg file
+   * - `InMpegAbs`
+     - ?
+     - `0` if not a mpeg file
+   * - `OutMsec`
+     - End time of the cue point (for loops)
+     - Unit: Millisecond, `-1` if not a loop
+   * - `OutFrame`
+     - The frame number of the end time (for loops)
+     - `0` if not a loop
+   * - `OutMpegFrame`
+     - The Mpeg frame number of the end time (for loops)
+     - `0` if not a loop or mpeg file
+   * - `OutMpegAbs`
+     - ?
+     - `0` if not a loop or mpeg file
+   * - `Color`
+     - The color ID of the cue point
+     - `-1` if no color
+   * - `ColorTableIndex`
+     - ?
+     -
+   * - `ActiveLoop`
+     - ?
+     -
+   * - `Comment`
+     - Name of comment of cue point
+     -
+   * - `BeatLoopSize`
+     - ?
+     -
+   * - `CueMicrosec`
+     - ?
+     -
+   * - `InPointSeekInfo`
+     - ?
+     -
+   * - `OutPointSeekInfo`
+     - ?
+     -
+   * - `HotCueBanklistUUID`
+     - The UUID of the hot-cue bank list
+     - Links to `UUID` in `djmdHotCueBanklist` table
+
 
 DjmdSongMyTag
 ~~~~~~~~~~~~~
