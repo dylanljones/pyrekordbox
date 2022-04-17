@@ -164,9 +164,8 @@ an easy interface for accessing the data stored in it:
 from pyrekordbox import Rekordbox6Database
 
 db = Rekordbox6Database()
-track_items = db.get_content()
-cid = track_items[0]["ID"]
-artist = db.get_artist_name(content_id=cid)
+for item in db.get_content():
+    print(item.Title, item.Artist.Name)
 ````
 Changing entries of the database is not supported yet since it is not guaranteed that
 the database could be corrupted from writing to it. However, this feature will by

@@ -92,22 +92,24 @@ def _get_rb_config(pioneer_prog_dir: str, pioneer_app_dir: str, version: int):
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
-    conf = {"version": rb_version, "install_dir": rb_prog_dir, "app_dir": rb_app_dir}
+    conf = {
+        "version": rb_version,
+        "install_dir": rb_prog_dir,
+        "app_dir": rb_app_dir,
+        "db_dir": db_dir,
+    }
     return conf
 
 
 def _get_rb5_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, version=5)
 
-    # Read settings for database directory
-    settings = read_rekordbox_settings(conf["app_dir"])
-    db_dir = os.path.normpath(settings["masterDbDirectory"])
     # RB5 database is called 'datafile.edb'
-    db_path = os.path.join(db_dir, "datafile.edb")
+    db_path = os.path.join(conf["db_dir"], "datafile.edb")
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
-    conf.update({"db_path": db_path, "db_dir": db_dir})
+    conf.update({"db_path": db_path})
     return conf
 
 
@@ -118,10 +120,12 @@ def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     opts = read_rekordbox6_options(pioneer_app_dir)
     db_path = os.path.normpath(opts["db-path"])
     db_dir = os.path.dirname(db_path)
+    assert conf["db_dir"] == db_dir
+
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
-    conf.update({"db_path": db_path, "db_dir": db_dir, "dp": opts["dp"]})
+    conf.update({"db_path": db_path, "dp": opts["dp"]})
     return conf
 
 

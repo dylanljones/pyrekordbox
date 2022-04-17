@@ -28,5 +28,5 @@ logger.addHandler(sh)
 # logger.addHandler(fh)
 
 # Set logging level
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 logging.root.setLevel(logging.NOTSET)

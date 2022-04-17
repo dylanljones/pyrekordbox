@@ -6,3 +6,4 @@ construct>=2.10.0
 crc16>=0.1.0
 hypothesis>=6.0.0
 pytest>=6.2.0
+sqlalchemy>=1.4.0
