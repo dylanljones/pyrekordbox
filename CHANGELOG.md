@@ -7,6 +7,7 @@
 - use SQLAlchemy for the  Rekordbox6 `master.db` database
 
 ### Improvements/Bug Fixes
+- fix import error and README.md
 - set logging level to warning
 - fix loading the Rekordbox setting file twice in config initialization
 - add context for Rekordbox 6 database
