@@ -16,7 +16,7 @@ from .mysettings import (
     DjmMySettingFile,
     DevSettingFile,
 )
-from .db6 import Rekordbox6Database, op
+from .db6 import Rekordbox6Database, open_rekordbox_database
 
 try:
     from ._version import version as __version__
