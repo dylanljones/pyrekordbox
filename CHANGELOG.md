@@ -1,7 +1,7 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.0.2"></a>
+## [0.0.2] - 2022-20-04
 
 ### New Features
 - use SQLAlchemy for the  Rekordbox6 `master.db` database
@@ -28,5 +28,6 @@
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.1...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.2...HEAD
+[0.0.2]: https://github.com/dylanljones/pyrekordbox/compare/0.0.1...0.0.2
 [0.0.1]: https://github.com/dylanljones/pyrekordbox/compare/0.0.0...0.0.1
