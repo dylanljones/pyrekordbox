@@ -11,6 +11,7 @@ Welcome to pyrekordbox's documentation!
    :caption: User Guide
 
    quickstart
+   tutorial/index
 
 
 .. toctree::
