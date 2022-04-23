@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "numpydoc",
     "myst_parser",
+    "sphinx_design",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
@@ -83,6 +84,7 @@ html_static_path = ["_static"]
 #    '.md': 'recommonmark.parser.CommonMarkParser',
 # }
 source_suffix = [".rst", ".md"]
+myst_enable_extensions = ["colon_fence"]
 
 # Don't show type hints
 autodoc_typehints = "none"
