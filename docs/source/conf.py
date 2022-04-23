@@ -48,7 +48,6 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.extlinks",  # define roles for links
     "sphinx_toggleprompt",  # toggle `>>>`
-    "sphinx_rtd_theme",
     "sphinx.ext.graphviz",
     "sphinx.ext.inheritance_diagram",
 ]
