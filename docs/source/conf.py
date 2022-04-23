@@ -76,7 +76,7 @@ html_theme = "furo"  # "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 # Code block styling
-pygments_dark_style = "monokai"
+# pygments_dark_style = "monokai"
 
 # Include Markdown parser
 # source_parsers = {
