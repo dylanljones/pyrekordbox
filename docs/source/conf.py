@@ -71,7 +71,7 @@ html_theme = "furo"  # "sphinx_rtd_theme"
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
-# pygments_dark_style = "monokai"
+pygments_dark_style = "monokai"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
