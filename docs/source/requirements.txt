@@ -3,5 +3,6 @@ matplotlib
 sphinx>3.0.0   # https://github.com/readthedocs/readthedocs.org/issues/8616
 sphinx_toggleprompt
 sphinx_rtd_theme
+sphinxawesom-theme
 myst-parser
 graphviz
