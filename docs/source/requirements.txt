@@ -1,6 +1,7 @@
 numpydoc
 matplotlib
-sphinx>4.0.0   # https://github.com/readthedocs/readthedocs.org/issues/8616
+sphinx>=4.5.0
+sphinx_copybutton>=0.5.0
 sphinx_toggleprompt
 furo
 myst-parser

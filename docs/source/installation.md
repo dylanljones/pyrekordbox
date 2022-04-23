@@ -7,12 +7,14 @@ $ pip install pyrekordbox
 ```
 
 Alternatively, it can be installed via [GitHub]:
+
 ```sh
 $ pip install git+https://github.com/dylanljones/pyrekordbox.git@VERSION
 ```
 
 where `VERSION` is a branch, tag or release. The project can also be cloned/forked
 and installed via
+
 ```sh
 $ python setup.py install
 ```
