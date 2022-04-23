@@ -1,4 +1,0 @@
-Configuration
--------------
-
-Comming soon!
