@@ -2,9 +2,9 @@
 
 Pyrekordbox is available on [PyPI]:
 
-`````shell
+````shell
 $ pip install pyrekordbox
-`````
+````
 
 Alternatively, it can be installed via [GitHub]:
 ````shell

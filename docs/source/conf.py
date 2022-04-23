@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "numpydoc",
     "myst_parser",
+    "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
     "matplotlib.sphinxext.plot_directive",
