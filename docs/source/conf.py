@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "numpydoc",
     "myst_parser",
+    "sphinx_copybutton",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
