@@ -7,9 +7,11 @@
 - add get-methods for `master.db` database tables
 
 ### Improvements/Bug Fixes
+- fix table name in `get_artist`
 - fix typo in settingFile table name
 
 ### Documentation
+- switch back to rtd theme since furo code blocks don't render properly
 - use furo sphinx theme
 - add quick-start
 - add installation section
@@ -32,6 +34,7 @@
 - unify binary file API
 
 ### Documentation
+- add missing djmd tables to `master.db` database documentation
 - add missing djmd tables to `master.db` database documentation
 
 
