@@ -1,6 +1,5 @@
 sphinx>=4.5.0
 sphinx_toggleprompt
-sphinx_rtd_theme
 sphinx_copybutton>=0.5.0
 numpydoc
 matplotlib
