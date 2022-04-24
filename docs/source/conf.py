@@ -31,6 +31,9 @@ for sp in "abcfr":
 
 # -- General configuration ---------------------------------------------------
 
+# If your documentation needs a minimal Sphinx version, state it here.
+needs_sphinx = "3.0"
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -38,6 +41,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "numpydoc",
     "myst_parser",
+    "numpydoc",
     "sphinx_copybutton",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
@@ -48,6 +52,9 @@ extensions = [
     "sphinx.ext.extlinks",  # define roles for links
 ]
 
+# If you need extensions of a certain version or higher, list them here.
+needs_extensions = {"myst_parser": "0.13.7"}
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -56,6 +63,15 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "tests"]
+
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
+source_suffix = [".rst", ".md"]
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ["_static"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -67,18 +83,19 @@ html_theme = "furo"  # "sphinx_rtd_theme"
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 pygments_dark_style = "monokai"
+# We need headers to be linkable to so ask MyST-Parser to autogenerate anchor IDs for
+# headers up to and including level 3.
+myst_heading_anchors = 3
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# Prettier support formatting some MyST syntax but not all, so let's disable the
+# unsupported yet still enabled by default ones.
+myst_disable_syntax = [
+    "colon_fence",
+    "myst_block_break",
+    "myst_line_comment",
+    "math_block",
+]
 
-# Include Markdown parser
-# source_parsers = {
-#    '.md': 'recommonmark.parser.CommonMarkParser',
-# }
-source_suffix = [".rst", ".md"]
-myst_enable_extensions = ["colon_fence"]
 
 # Don't show type hints
 autodoc_typehints = "none"
@@ -98,6 +115,14 @@ autosummary_generate = True
 # autosummary_imported_members = True
 
 
+# -- Numpy extension ---------------------------------------------------------
+
+numpydoc_use_plots = True
+# numpydoc_xref_param_type = True
+# numpydoc_xref_ignore = "all"  # not working...
+numpydoc_show_class_members = False
+
+
 # -- Intersphinx -------------------------------------------------------------
 
 # taken from https://gist.github.com/bskinn/0e164963428d4b51017cebdb6cda5209
@@ -107,3 +132,24 @@ intersphinx_mapping = {
     "np": (r"https://docs.scipy.org/doc/numpy/", None),
     "matplotlib": (r"https://matplotlib.org/", None),
 }
+
+
+# -- Auto-run sphinx-apidoc --------------------------------------------------
+
+# def run_apidoc(_):
+#     from sphinx.ext.apidoc import main
+#     import os
+#     import sys
+#     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+#     cur_dir = os.path.abspath(os.path.dirname(__file__))
+#     proj_dir = os.path.dirname(os.path.dirname(cur_dir))
+#     doc_dir = os.path.join(proj_dir, "docs")
+#     output_path = os.path.join(doc_dir, "source", "generated")
+#     module = os.path.join(proj_dir, "pyrekordbox")
+#     exclude = os.path.join(module, "tests")
+#     template_dir = os.path.join(doc_dir, "source", "_templates", "apidoc")
+#     main(["-fMeT", "-o", output_path, module, exclude, "--templatedir", template_dir])
+#
+#
+# def setup(app):
+#     app.connect('builder-inited', run_apidoc)
