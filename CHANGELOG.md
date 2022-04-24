@@ -1,8 +1,27 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### New Features
+- add get-methods for `master.db` database tables
+
+### Improvements/Bug Fixes
+- fix table name in `get_artist`
+- fix typo in settingFile table name
+
+### Documentation
+- switch back to rtd theme since furo code blocks don't render properly
+- use furo sphinx theme
+- add quick-start
+- add installation section
+- add tutorial sections
+- rename file-format headers
+- add development section
+
+
 <a name="0.0.2"></a>
 ## [0.0.2] - 2022-20-04
-
 ### New Features
 - use SQLAlchemy for the  Rekordbox6 `master.db` database
 
@@ -15,6 +34,7 @@
 - unify binary file API
 
 ### Documentation
+- add missing djmd tables to `master.db` database documentation
 - add missing djmd tables to `master.db` database documentation
 
 

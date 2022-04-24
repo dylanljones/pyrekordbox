@@ -1,5 +1,5 @@
-Analysis Files
-==============
+Analysis Files Format
+=====================
 
 This document explains the file format of the Rekordbox ANLZ analysis files, which come
 with the extionsions `.DAT`, `.EXT` and `.2EX`.
@@ -8,11 +8,6 @@ The following information was mainly taken from the excellent reverse engineerin
 work [ref3]_ of the people behind DeepSymmetry's `crate-digger`_.
 All figures were taken or modified from [ref3]_ as well.
 
-
-.. toctree::
-  :titlesonly:
-
-  *
 
 File Header
 -----------

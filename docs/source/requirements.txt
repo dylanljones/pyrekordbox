@@ -1,7 +1,8 @@
-numpydoc
-matplotlib
-sphinx>3.0.0   # https://github.com/readthedocs/readthedocs.org/issues/8616
+sphinx>=4.5.0
 sphinx_toggleprompt
 sphinx_rtd_theme
+sphinx_copybutton>=0.5.0
+numpydoc
+matplotlib
+furo
 myst-parser
-graphviz

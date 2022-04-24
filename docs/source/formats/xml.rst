@@ -1,5 +1,5 @@
-XML Database
-============
+XML Database Format
+===================
 
 
 The Rekordbox XML format is well documented by Pioneer in [ref1]_ and [ref2]_.
@@ -11,8 +11,10 @@ The first entry of the XML file should be displayed as follows:
 
    <?xml version="1.0" encoding="UTF-8" ?>
 
-In order to save playlists and their information to Rekordbox, all rows from the
-second row and beyond must follow a format which rekordbox supports.
+.. warning::
+
+   In order to save playlists and their information to Rekordbox, all rows from the
+   second row and beyond must follow a format which rekordbox supports.
 
 
 General structure

@@ -40,7 +40,7 @@ from .tables import (
     DjmdSort,
     HotCueBanklistCue,
     ImageFile,
-    SettingsFile,
+    SettingFile,
     UuidIDMap,
 )
 

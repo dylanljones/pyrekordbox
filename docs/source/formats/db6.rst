@@ -1,5 +1,5 @@
-Rekordbox 6 Database
-====================
+Rekordbox 6 Database Format
+===========================
 
 With Rekordbox 6 Pioneer switched from using a DeviceSQL database (`.edb`) to SQLite.
 This is an `SQLite3`_ database encrypted with `SQLCipher4`_.

@@ -46,7 +46,7 @@ __all__ = [
     "DjmdSort",
     "HotCueBanklistCue",
     "ImageFile",
-    "SettingsFile",
+    "SettingFile",
     "UuidIDMap",
 ]
 
@@ -592,7 +592,7 @@ class DjmdSongRelatedTracks(Base, StatsFull):
     __tablename__ = "djmdSongRelatedTracks"
 
     ID = Column(VARCHAR(255), primary_key=True)
-    SongRelatedTracksID = Column(
+    RelatedTracksID = Column(
         VARCHAR(255), ForeignKey("djmdRelatedTracks.ID"), default=None
     )
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
@@ -661,9 +661,9 @@ class ImageFile(Base, StatsFull):
     rb_file_size_dirty = Column(Integer, default=0)
 
 
-class SettingsFile(Base, StatsFull):
+class SettingFile(Base, StatsFull):
 
-    __tablename__ = "settingsFile"
+    __tablename__ = "settingFile"
 
     ID = Column(VARCHAR(255), primary_key=True)
     Path = Column(VARCHAR(255), default=None)

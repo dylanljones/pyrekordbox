@@ -1,5 +1,5 @@
-MySetting Files
-===============
+MySetting Files Format
+======================
 
 This document explains the file format of the following Rekordbox MySetting files:
 
