@@ -253,7 +253,7 @@ appreciated on MacOS.
 
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
-[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?style=flat
+[docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
@@ -264,11 +264,11 @@ appreciated on MacOS.
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
 
-[documentation]: https://pyrekordbox.readthedocs.io/en/latest/
-[db6-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/db6.html
-[anlz-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/anlz.html
-[xml-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/xml.html
-[mysettings-doc]: https://pyrekordbox.readthedocs.io/en/latest/formats/mysetting.html
+[documentation]: https://pyrekordbox.readthedocs.io/en/stable/
+[db6-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/db6.html
+[anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
+[xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
+[mysettings-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/mysetting.html
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [dlls]: https://github.com/dylanljones/pyrekordbox/tree/master/Libs
