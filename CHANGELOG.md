@@ -3,6 +3,12 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+- add get-methods for `master.db` database tables
+
+### Improvements/Bug Fixes
+- fix typo in settingFile table name
+
 ### Documentation
 - use furo sphinx theme
 - add quick-start
@@ -26,7 +32,6 @@
 - unify binary file API
 
 ### Documentation
-- add missing djmd tables to `master.db` database documentation
 - add missing djmd tables to `master.db` database documentation
 
 
