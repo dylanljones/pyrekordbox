@@ -142,7 +142,7 @@ class Rekordbox6Database:
         return self.query(tables.DjmdAlbum).filter_by(**kwargs)
 
     def get_artist(self, **kwargs):
-        return self.query(tables.DjmdAlbum).filter_by(**kwargs)
+        return self.query(tables.DjmdArtist).filter_by(**kwargs)
 
     def get_category(self, **kwargs):
         return self.query(tables.DjmdCategory).filter_by(**kwargs)
