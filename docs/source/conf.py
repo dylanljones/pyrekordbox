@@ -81,8 +81,8 @@ html_static_path = ["_static"]
 html_theme = "furo"
 
 # The name of the Pygments (syntax highlighting) style to use.
-# pygments_style = "sphinx"
-# pygments_dark_style = "monokai"
+pygments_style = "sphinx"
+pygments_dark_style = "monokai"
 
 # We need headers to be linkable to so ask MyST-Parser to autogenerate anchor IDs for
 # headers up to and including level 3.
