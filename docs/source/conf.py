@@ -42,6 +42,7 @@ extensions = [
     "numpydoc",
     "myst_parser",
     "numpydoc",
+    "sphinx_rtd_theme",
     "sphinx_copybutton",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
@@ -78,11 +79,12 @@ html_static_path = ["_static"]
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "furo"  # "sphinx_rtd_theme"
+html_theme = "sphinx_rtd_theme"  # "furo"
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
-pygments_dark_style = "monokai"
+# pygments_style = "sphinx"
+# pygments_dark_style = "monokai"
+
 # We need headers to be linkable to so ask MyST-Parser to autogenerate anchor IDs for
 # headers up to and including level 3.
 myst_heading_anchors = 3
