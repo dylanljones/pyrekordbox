@@ -1,8 +1,14 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+- Improve Rekordbox XML handling and API
+
+
 <a name="0.0.3"></a>
 ## [0.0.3] - 2022-24-04
-
 ### New Features
 - add get-methods for `master.db` database tables
 
@@ -35,6 +41,7 @@
 
 ### Documentation
 - add missing djmd tables to `master.db` database documentation
+- add missing djmd tables to `master.db` database documentation
 
 
 <a name="0.0.1"></a>
@@ -46,6 +53,8 @@
 <a name="0.0.0"></a>
 ## 0.0.0 - 2022-10-04
 
+
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.3...HEAD
 [0.0.3]: https://github.com/dylanljones/pyrekordbox/compare/0.0.2...0.0.3
 [0.0.2]: https://github.com/dylanljones/pyrekordbox/compare/0.0.1...0.0.2
 [0.0.1]: https://github.com/dylanljones/pyrekordbox/compare/0.0.0...0.0.1
