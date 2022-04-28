@@ -44,7 +44,7 @@ def test_encode_path(path, expected):
     ],
 )
 def test_decode_path(s, expected):
-    assert decode_path(s) == expected
+    assert decode_path(s) == os.path.normpath(expected)
 
 
 def test_parse_xml_tracks_v5():
