@@ -8,10 +8,33 @@
 
 import logging
 import os.path
+import urllib.parse
+from collections import abc
 from xml.dom import minidom
 import xml.etree.cElementTree as xml
+import bidict
 
 logger = logging.getLogger(__name__)
+
+URL_PREFIX = "file://localhost/"
+
+POSMARK_TYPE_MAPPING = bidict.bidict(
+    {
+        "0": "cue",
+        "1": "fadein",
+        "2": "fadeout",
+        "3": "load",
+        "4": "loop",
+    }
+)
+
+
+RATING_MAPPING = bidict.bidict(
+    {"0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5}
+)
+
+
+NODE_KEYTYPE_MAPPING = bidict.bidict({"0": "TrackID", "1": "Location"})
 
 
 def pretty_xml(element, indent=None, encoding="utf-8"):
@@ -44,170 +67,306 @@ def pretty_xml(element, indent=None, encoding="utf-8"):
     return string
 
 
-# ======================================================================================
-# XML elements
-# ======================================================================================
+def encode_path(path):
+    """Encodes a file path as URI string.
+
+    Parameters
+    ----------
+    path : str
+        The file path to encode.
+
+    Returns
+    -------
+    url : str
+        The encoded file path as URI string.
+
+    Examples
+    --------
+    >>> s = r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3"  # noqa: W605
+    >>> encode_path(s)
+    file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3
+
+    """
+    url_path = urllib.parse.quote(path, safe=":/\\")
+    url = URL_PREFIX + url_path.replace("\\", "/")
+    return url
 
 
-class AbstractElement:
+def decode_path(url):
+    """Decodes an as URI string encoded file path.
+
+    Parameters
+    ----------
+    url : str
+        The encoded file path to decode.
+
+    Returns
+    -------
+    path : str
+        The decoded file path.
+
+    Examples
+    --------
+    >>> s = r"file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3"
+    >>> decode_path(s)
+    C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3  # noqa: W605
+
+    """
+    path = urllib.parse.unquote(url)
+    path = path.replace(URL_PREFIX, "")
+    return os.path.normpath(path)
+
+
+class AbstractElement(abc.Mapping):
     """Abstract base class for Rekordbox XML elements."""
 
     TAG: str
+    ATTRIBS: list
 
-    def __init__(self, element):
-        self.element = element
+    SETTERS = dict()
+    GETTERS = dict()
 
-    @property
-    def attrib(self):
-        return self.element.attrib
+    def __init__(self, element=None, *args, **kwargs):
+        self._element = element
+        if element is None:
+            self._init(*args, **kwargs)
+        else:
+            self._load_subelements()
+
+    def _init(self, *args, **kwargs):
+        pass
+
+    def _load_subelements(self):
+        pass
+
+    def get(self, key, default=None):
+        if key not in self.ATTRIBS:
+            raise KeyError(f"{key} is not a valid key for {self.__class__.__name__}!")
+        value = self._element.attrib.get(key, default)
+        if value == default:
+            return default
+        try:
+            # Apply callback
+            value = self.GETTERS[key](value)
+        except KeyError:
+            pass
+        return value
+
+    def set(self, key, value):
+        if key not in self.ATTRIBS:
+            raise KeyError(f"{key} is not a valid key for {self.__class__.__name__}!")
+        try:
+            # Apply callback
+            value = self.SETTERS[key](value)
+        except KeyError:
+            # Convert to str just in case
+            value = str(value)
+        self._element.attrib.set(key, value)
+
+    def __len__(self):
+        return len(self._element.attrib)
+
+    def __iter__(self):
+        return iter(self._element.attrib.keys())
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __getattr__(self, key):
+        return self.get(key)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.attrib})"
+        return f"<{self.__class__.__name__}()>"
 
 
 # -- Collection elements ---------------------------------------------------------------
 
 
+# noinspection PyPep8Naming
 class Tempo(AbstractElement):
-    """Rekordbox XML Tempo element for storing tempo and beat grid data of a track."""
+    """Tempo element representing the beat grid.
+
+    Attributes
+    ----------
+    Inizio : float
+        The start position of the beat grid item.
+    Bpm : float
+        The BPM value of the beat grid item.
+    Metro : str, optional
+        The kind of musical meter, for example '4/4'. The default is '4/4'.
+    Battito : int
+        The beat number in the bar. If `metro` is '4/4', the value can be 1, 2, 3 or 4.
+    """
 
     TAG = "TEMPO"
+    ATTRIBS = ["Inizio", "Bpm", "Metro", "Battito"]
+    GETTERS = {"Inizio": float, "Bpm": float, "Battito": int}
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(
+        self, parent=None, Inizio=0.0, Bpm=0.0, Metro="4/4", Battito=1, element=None
+    ):
+        super().__init__(element, parent, Inizio, Bpm, Metro, Battito)
 
-    @classmethod
-    def new(cls, track_element, inizio, bpm, metro, battito):
-        """Create a new Tempo element
-
-        Parameters
-        ----------
-        track_element: xml.etree.ElementTree.Element
-            Parent track xml-element
-        inizio: float
-            Start position of BeatGrid
-        bpm: float
-            Value of BPM
-        metro: str
-            Kind of musical meter
-        battito: int
-            Beat number in the bar
-
-        Returns
-        -------
-        temp: Tempo
-        """
+    def _init(self, parent, inizio, bpm, metro, battito):
         attrib = {
             "Inizio": str(inizio),
             "Bpm": str(bpm),
-            "Metro": metro,
+            "Metro": str(metro),
             "Battito": str(battito),
         }
-        return cls(xml.SubElement(track_element, cls.TAG, attrib=attrib))
+        self._element = xml.SubElement(parent, self.TAG, attrib=attrib)
 
-    @property
-    def inizio(self):
-        """float: Start position of BeatGrid."""
-        return float(self.element.get("Inizio"))
-
-    @property
-    def bpm(self):
-        """float: Value of BPM."""
-        return float(self.element.get("Bpm"))
-
-    @property
-    def metro(self):
-        """str: Kind of musical meter."""
-        return self.element.attrib.get("Metro")
-
-    @property
-    def battito(self):
-        """int: Beat number in the bar."""
-        return int(self.element.attrib.get("Battito"))
+    def __repr__(self):
+        args = ", ".join(
+            [
+                f"Inizio={self.Inizio}",
+                f"Bpm={self.Bpm}",
+                f"Metro={self.Metro}",
+                f"Battito={self.Battito}",
+            ]
+        )
+        return f"<{self.__class__.__name__}({args})>"
 
 
+# noinspection PyPep8Naming
 class PositionMark(AbstractElement):
-    """Rekordbox XML Position element for storing position markers like cue points."""
+    """Position element for storing position markers like cue points.
+
+    Attributes
+    ----------
+    Name : str
+        The name of the position mark.
+    Type : str
+        The type of position mark. Can be 'cue', 'fadein', 'fadeout', 'load' or 'loop'.
+    Start : float
+        Start position of the position mark in seconds.
+    End : float, optionl
+        End position of the position mark in seconds.
+    Num : int, optional
+        Charakter for identification of the position mark (for hot cues). For memory
+        cues this is always -1.
+    """
 
     TAG = "POSITION_MARK"
+    ATTRIBS = ["Name", "Type", "Start", "End", "Num"]
 
-    CUE = 0
-    FADE_IN = 1
-    FADE_OUT = 2
-    LOAD = 3
-    LOOP = 4
+    GETTERS = {
+        "Type": POSMARK_TYPE_MAPPING.get,
+        "Start": float,
+        "End": float,
+        "Num": int,
+    }
+    SETTERS = {"Type": POSMARK_TYPE_MAPPING.inv.get}  # noqa
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(
+        self,
+        parent=None,
+        Name="",
+        Type="cue",
+        Start=0.0,
+        End=None,
+        Num=-1,
+        element=None,
+    ):
+        super().__init__(element, parent, Name, Type, Start, End, Num)
 
-    @classmethod
-    def new(cls, track_element, name, marker_type, start, end, num):
-        """Create a new PositionMark element
-
-        Parameters
-        ----------
-        track_element : xml.etree.ElementTree.Element
-            Parent track xml-element.
-        name : str
-            Name of position mark.
-        marker_type : int
-            Type of position mark.
-        start : float
-            Start position of position mark.
-        end : float
-            End position of position mark.
-        num : int
-            Number for identification of the position mark.
-
-        Returns
-        -------
-        mark : PositionMark
-            The new ``PositionMark`` instance.
-        """
+    def _init(self, parent, name, type_, start, end, num):
         attrib = {
             "Name": name,
-            "Type": str(marker_type),
+            "Type": POSMARK_TYPE_MAPPING.inv.get(type_),  # noqa
             "Start": str(start),
-            "End": str(end),
             "Num": str(num),
         }
-        return cls(xml.SubElement(track_element, cls.TAG, attrib=attrib))
+        if end is not None:
+            attrib["End"] = str(end)
+        self._element = xml.SubElement(parent, self.TAG, attrib=attrib)
 
-    @property
-    def name(self):
-        """str: Name of position mark."""
-        return self.element.attrib.get("Name")
-
-    @property
-    def type(self):
-        """int: Type of position mark (Cue=0, Fade-In=1, Fade-Out=2, Load=3, Loop=4)."""
-        return int(self.element.attrib.get("Type"))
-
-    @property
-    def start(self):
-        """float: Start position of position mark."""
-        return float(self.element.attrib.get("Start"))
-
-    @property
-    def end(self):
-        """float: End position of position mark."""
-        val = self.element.attrib.get("End")
-        return float(val) if val is not None else None
-
-    @property
-    def num(self):
-        """int: Number for identification of the position mark.
-
-        Hot-Cue: 0, 1, 2, ...; Memory: -1.
-        """
-        return int(self.element.attrib.get("Num"))
+    def __repr__(self):
+        args = ", ".join(
+            [
+                f"Name={self.Name}",
+                f"Type={self.Type}",
+                f"Start={self.Start}",
+                f"End={self.End}",
+                f"Num={self.Num}",
+            ]
+        )
+        return f"<{self.__class__.__name__}({args})>"
 
 
+# noinspection PyPep8Naming
 class Track(AbstractElement):
-    """Rekordbox XML Track element for storing the metadata of a track."""
+    """Track element for storing the metadata of a track.
+
+    Attributes
+    ----------
+    TrackID : int
+        Identification of the track.
+    Name: str
+        The name of the track.
+    Artist : str
+        The name of the artist.
+    Composer : str
+        The name of the composer (or producer).
+    Album : str
+        The name of the album.
+    Grouping : str
+        The name of the grouping.
+    Genre : str
+        The name of the genre.
+    Kind : str
+        The kind of the audio file, for example 'WAV File' or 'MP3 File'.
+    Size : int
+        The size of the audio file.
+    TotalTime : int
+        The duration of the track in seconds.
+    DiscNumber : int
+        The number of the disc of the album.
+    TrackNumber : int
+        The Number of the track of the album.
+    Year : int
+        The year of release.
+    AverageBpm : float
+        The average BPM of the track.
+    DateModified : str
+        The date of last modification in the format 'yyyy-mm-dd'.
+    DateAdded : str
+        The date of addition modification in the format 'yyyy-mm-dd'.
+    BitRate : int
+        The encoding bit rate.
+    SampleRate : float
+        The frequency of sampling.
+    Comments : str
+        The comments of the track.
+    PlayCount : int
+        The play count of the track.
+    LastPlayed : str
+        The date of last playing in the format 'yyyy-mm-dd'.
+    Rating : int
+        The rating of the track using the mapping 0=0, 1=51, 2=102, 3=153, 4=204, 5=255.
+    Location : str
+        The location of the file encoded as URI string. This value is essential for
+        each track.
+    Remixer : str
+        The name of the remixer.
+    Tonality : str
+        The tonality or kind of musical key.
+    Label : str
+        The name of the record label.
+    Mix : str
+        The name of the mix.
+    Colour : str
+        The color for track grouping in RGB format.
+    tempos : list
+        The `Tempo` elements of the track.
+    marks : list
+        The `PositionMark` elements of the track.
+    """
 
     TAG = "TRACK"
-
     ATTRIBS = [
         "TrackID",
         "Name",
@@ -239,402 +398,126 @@ class Track(AbstractElement):
         "Colour",
     ]
 
-    def __init__(self, element):
-        super().__init__(element)
+    GETTERS = {
+        "TrackID": int,
+        "Size": int,
+        "TotalTime": int,
+        "DiscNumber": int,
+        "TrackNumber": int,
+        "Year": int,
+        "AverageBpm": float,
+        "BitRate": int,
+        "SampleRate": float,
+        "PlayCount": int,
+        "Rating": RATING_MAPPING.get,
+        "Location": decode_path,
+    }
+
+    SETTERS = {"Rating": RATING_MAPPING.inv.get, "Location": encode_path}  # noqa
+
+    def __init__(self, parent=None, Location="", element=None, **kwargs):
         self.tempos = list()
         self.marks = list()
-        self.load_subelements()
+        super().__init__(element, parent, Location, **kwargs)
 
-    def load_subelements(self):
-        tempo_elements = self.element.findall(f"{Tempo.TAG}")
+    def _init(self, parent, Location, **kwargs):
+        attrib = {"Location": encode_path(Location)}
+        for key, val in kwargs:
+            if key not in self.ATTRIBS:
+                raise KeyError(
+                    f"{key} is not a valid key for {self.__class__.__name__}!"
+                )
+            attrib[key] = str(val)
+        self._element = xml.SubElement(parent, self.TAG, attrib=attrib)
+
+    def _load_subelements(self):
+        tempo_elements = self._element.findall(f"{Tempo.TAG}")
         if tempo_elements is not None:
-            self.tempos = [Tempo(el) for el in tempo_elements]
-        mark_elements = self.element.findall(f".//{PositionMark.TAG}")
+            self.tempos = [Tempo(element=el) for el in tempo_elements]
+        mark_elements = self._element.findall(f".//{PositionMark.TAG}")
         if mark_elements is not None:
-            self.marks = [PositionMark(el) for el in mark_elements]
+            self.marks = [PositionMark(element=el) for el in mark_elements]
 
-    @property
-    def attrib(self):
-        return self.element.attrib
+    def add_tempo(self, Inizio=0.0, Bpm=0.0, Metro="4/4", Battito=1):
+        return Tempo(self, Inizio, Bpm, Metro, Battito)
 
-    @property
-    def id(self):
-        """int: Identification of track."""
-        return int(self.element.attrib.get("TrackID"))
-
-    @id.setter
-    def id(self, value):
-        """int: Identification of track."""
-        self.element.attrib.update({"TrackID": str(value)})
-
-    @property
-    def name(self):
-        """str: Name of track."""
-        return self.element.attrib.get("Name")
-
-    @name.setter
-    def name(self, value):
-        """str: Name of track."""
-        self.element.attrib.update({"Name": value})
-
-    @property
-    def artist(self):
-        """str: Name of artist."""
-        return self.element.attrib.get("Artist")
-
-    @artist.setter
-    def artist(self, value):
-        """str: Name of artist."""
-        self.element.attrib.update({"Artist": value})
-
-    @property
-    def composer(self):
-        """str: Name of composer (or producer)."""
-        return self.element.attrib.get("Composer")
-
-    @composer.setter
-    def composer(self, value):
-        """str: Name of composer (or producer)"""
-        self.element.attrib.update({"Composer": value})
-
-    @property
-    def album(self):
-        """str: Name of album."""
-        return self.element.attrib.get("Album")
-
-    @album.setter
-    def album(self, value):
-        """str: Name of album."""
-        self.element.attrib.update({"Album": value})
-
-    @property
-    def grouping(self):
-        """str: Name of group."""
-        return self.element.attrib.get("Grouping")
-
-    @grouping.setter
-    def grouping(self, value):
-        """str: Name of group."""
-        self.element.attrib.update({"Grouping": value})
-
-    @property
-    def genre(self):
-        """str: Name of genre."""
-        return self.element.attrib.get("Genre")
-
-    @genre.setter
-    def genre(self, value):
-        """str: Name of genre."""
-        self.element.attrib.update({"Genre": value})
-
-    @property
-    def kind(self):
-        """str: Type of audio file."""
-        return self.element.attrib.get("Kind")
-
-    @kind.setter
-    def kind(self, value):
-        """str: Type of audio file."""
-        self.element.attrib.update({"Kind": value})
-
-    @property
-    def size(self):
-        """int: Size of audio file."""
-        return int(self.element.attrib.get("Size"))
-
-    @size.setter
-    def size(self, value):
-        """int: Size of audio file."""
-        self.element.attrib.update({"Size": str(value)})
-
-    @property
-    def total_time(self):
-        """float: Duration of track (in seconds)."""
-        return float(self.element.attrib.get("TotalTime"))
-
-    @total_time.setter
-    def total_time(self, value):
-        """float: Duration of track (in seconds)."""
-        self.element.attrib.update({"TotalTime": str(value)})
-
-    @property
-    def disc_num(self):
-        """int: Order number of the disc of the album."""
-        return int(self.element.attrib.get("DiscNumber"))
-
-    @disc_num.setter
-    def disc_num(self, value):
-        """int: Order number of the disc of the album."""
-        self.element.attrib.update({"DiscNumber": value})
-
-    @property
-    def track_num(self):
-        """int: Order number of the track on the album."""
-        return int(self.element.attrib.get("TrackNumber"))
-
-    @track_num.setter
-    def track_num(self, value):
-        """int: Order number of the track on the album."""
-        self.element.attrib.update({"TrackNumber": value})
-
-    @property
-    def year(self):
-        """str: Year of release."""
-        return self.element.attrib.get("Year")
-
-    @year.setter
-    def year(self, value):
-        """str: Year of release."""
-        self.element.attrib.update({"Year": value})
-
-    @property
-    def bpm(self):
-        """float Value of average BPM."""
-        return float(self.element.attrib.get("AverageBPM"))
-
-    @bpm.setter
-    def bpm(self, value):
-        """float Value of average BPM."""
-        self.element.attrib.update({"AverageBPM": str(value)})
-
-    @property
-    def date_modified(self):
-        """str: Date of last modification (Format: yyyy-mm-dd)."""
-        return self.element.attrib.get("DateModified")
-
-    @date_modified.setter
-    def date_modified(self, value):
-        """str: Date of last modification (Format: yyyy-mm-dd)."""
-        self.element.attrib.update({"DateModified": value})
-
-    @property
-    def date_added(self):
-        """str: Date of addition (Format: yyyy-mm-dd)."""
-        return self.element.attrib.get("DateAdded")
-
-    @date_added.setter
-    def date_added(self, value):
-        """str: Date of addition (Format: yyyy-mm-dd)."""
-        self.element.attrib.update({"DateAdded": value})
-
-    @property
-    def bit_rate(self):
-        """int: Encoding bit rate."""
-        return int(self.element.attrib.get("BitRate"))
-
-    @bit_rate.setter
-    def bit_rate(self, value):
-        """int: Encoding bit rate."""
-        self.element.attrib.update({"BitRate": str(value)})
-
-    @property
-    def sample_rate(self):
-        """int: Frequency of sampling."""
-        return int(self.element.attrib.get("SampleRate"))
-
-    @sample_rate.setter
-    def sample_rate(self, value):
-        """int: Frequency of sampling."""
-        self.element.attrib.update({"SampleRate": str(value)})
-
-    @property
-    def comments(self):
-        """str: Comments of track."""
-        return self.element.attrib.get("Comments")
-
-    @comments.setter
-    def comments(self, value):
-        """str: Comments of track."""
-        self.element.attrib.update({"Comments": value})
-
-    @property
-    def play_count(self):
-        """int: Play count of the track."""
-        return int(self.element.attrib.get("PlayCount"))
-
-    @play_count.setter
-    def play_count(self, value):
-        """int: Play count of the track."""
-        self.element.attrib.update({"PlayCount": str(value)})
-
-    @property
-    def last_played(self):
-        """str: Date of last playing (Format: yyyy-mm-dd)."""
-        return self.element.attrib.get("LastPlayed")
-
-    @last_played.setter
-    def last_played(self, value):
-        """str: Date of last playing (Format: yyyy-mm-dd)."""
-        self.element.attrib.update({"LastPlayed": value})
-
-    @property
-    def rating(self):
-        """int: Rating of the track.
-
-        0 star=0, 1 star=51, 2 stars=102, 3 stars=153, 4 stars=204, 5 stars=255.
-        """
-        return int(self.element.attrib.get("Rating"))
-
-    @rating.setter
-    def rating(self, value):
-        """int: Rating of the track.
-
-        0 star=0, 1 star=51, 2 stars=102, 3 stars=153, 4 stars=204, 5 stars=255.
-        """
-        self.element.attrib.update({"Rating": str(value)})
-
-    @property
-    def location(self):
-        """str: Location of the file."""
-        return self.element.attrib.get("Location")
-
-    @location.setter
-    def location(self, value):
-        """str: Location of the file."""
-        self.element.attrib.update({"Location": value})
-
-    @property
-    def remixer(self):
-        """str: Name of remixer."""
-        return self.element.attrib.get("Remixer")
-
-    @remixer.setter
-    def remixer(self, value):
-        """str: Name of remixer."""
-        self.element.attrib.update({"Remixer": value})
-
-    @property
-    def key(self):
-        """str: Tonality (Kind of musical key)."""
-        return self.element.attrib.get("Tonality")
-
-    @key.setter
-    def key(self, value):
-        """str: Tonality (Kind of musical key)."""
-        self.element.attrib.update({"Tonality": value})
-
-    @property
-    def label(self):
-        """str: Name of the record label."""
-        return self.element.attrib.get("Label")
-
-    @label.setter
-    def label(self, value):
-        """str: Name of the record label."""
-        self.element.attrib.update({"Label": value})
-
-    @property
-    def mix(self):
-        """str: Name of mix."""
-        return self.element.attrib.get("Mix")
-
-    @mix.setter
-    def mix(self, value):
-        """str: Name of mix."""
-        self.element.attrib.update({"Mix": value})
-
-    @property
-    def color(self):
-        """str: Colour for track grouping."""
-        return self.element.attrib.get("Colour")
-
-    @color.setter
-    def color(self, value):
-        """str: Colour for track grouping."""
-        self.element.attrib.update({"Colour": value})
-
-    def sort_markers(self):
-        self.marks.sort(key=lambda x: x.start)
-
-    def cue_points(self):
-        return [m for m in self.marks if m.type == PositionMark.CUE]
-
-    def to_string(self):
-        string = "TRACK:\n"
-        for key, value in self.attrib.items():
-            string += f"{key:<13}{value}\n"
-        return string
+    def add_mark(self, Name="", Type="cue", Start=0.0, End=None, Num=-1):
+        return PositionMark(self, Name, Type, Start, End, Num)
 
     def __repr__(self):
-        track_id = self.id
-        name = self.name
-        return f"{self.__class__.__name__}(ID={track_id}, Name={name})"
+        return f"<{self.__class__.__name__}(Location={self.Location})>"
 
 
 # -- Playlist elements -----------------------------------------------------------------
 
 
-class Node(AbstractElement):
-    """Rekordbox XML Node element used for storing playlist folders and playlists."""
+class Node:
+    """Node element used for storing playlist folders and playlists."""
 
     TAG = "NODE"
 
     FOLDER = 0
     PLAYLIST = 1
 
-    TRACKID = 0
-    LOCATION = 1
-
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, parent=None, element=None, **attribs):
+        self._parent = parent
+        self._element = element
+        if element is None:
+            self._element = xml.SubElement(parent, self.TAG, attrib=attribs)
 
     @classmethod
-    def folder(cls, parent_element, name):
+    def folder(cls, parent, name):
         attrib = {"Name": name, "Type": str(cls.FOLDER), "Count": "0"}
-        return cls(xml.SubElement(parent_element, cls.TAG, attrib=attrib))
+        return cls(parent, **attrib)
 
     @classmethod
-    def playlist(cls, parent_element, name, keytype=TRACKID):
+    def playlist(cls, parent, name, keytype="TrackID"):
         attrib = {
             "Name": name,
             "Type": str(cls.PLAYLIST),
-            "KeyType": str(keytype),
+            "KeyType": NODE_KEYTYPE_MAPPING.inv[keytype],  # noqa
             "Entries": "0",
         }
-        return cls(xml.SubElement(parent_element, cls.TAG, attrib=attrib))
+        return cls(parent, **attrib)
 
     @property
     def parent(self):
-        return self.element.parent
+        return self._parent
 
     @property
     def name(self):
         """str: Name of Node."""
-        return self.element.attrib.get("Name")
+        return self._element.attrib.get("Name")
 
     @property
     def type(self):
         """int: Type of Node (0=folder or 1=playlist)."""
-        return int(self.element.attrib.get("Type"))
+        return int(self._element.attrib.get("Type"))
 
     @property
     def count(self):
-        """int: Number of Node's in the Node."""
-        return int(self.element.attrib.get("Count", 0))
+        return int(self._element.attrib.get("Count", 0))
 
     @property
     def entries(self):
-        """int: Number of Track's in Playlist."""
-        return int(self.element.attrib.get("Entries", 0))
+        return int(self._element.attrib.get("Entries", 0))
 
     @property
-    def keytype(self):
-        """int: Kind of identification (0=TrackID or 1=Location)."""
-        return int(self.element.attrib.get("KeyType"))
+    def key_type(self):
+        return NODE_KEYTYPE_MAPPING.get(self._element.attrib.get("KeyType"))
 
     @property
-    def keys(self):
-        """list of Track: TrackID's of the playlist-content (if playlist-Node)."""
-        keys = list()
-        for el in self.element.findall(f".//{Track.TAG}"):
-            val = el.attrib["Key"]
-            keys.append(int(val) if self.keytype == self.TRACKID else val)
-        return keys
+    def is_folder(self):
+        return self.key_type == self.FOLDER
+
+    @property
+    def is_playlist(self):
+        return self.key_type == self.PLAYLIST
 
     @property
     def nodes(self):
         """list of Node: Sub-Nodes (in case of a folder-Node)."""
-        return [Node(el) for el in self.element.findall(f"{Node.TAG}")]
+        return [Node(self, element=el) for el in self._element.findall(f"{self.TAG}")]
 
     def get_node(self, i):
         """Returns the i-th sub-Node of the current node.
@@ -648,7 +531,7 @@ class Node(AbstractElement):
         -------
         subnode : Node
         """
-        return Node(self.element.findall(f"{Node.TAG}[{i}]"))
+        return Node(self, element=self._element.findall(f"{self.TAG}[{i}]"))
 
     def get_node_by_name(self, name):
         """Returns the sub-Node with the given name.
@@ -662,110 +545,145 @@ class Node(AbstractElement):
         -------
         subnode : Node
         """
-        return Node(self.element.find(f'.//{Node.TAG}[@Name="{name}"]'))
+        return Node(self, element=self._element.find(f'.//{self.TAG}[@Name="{name}"]'))
+
+    def get_tracks(self):
+        if self.type == self.FOLDER:
+            return list()
+        elements = self._element.findall(f".//{Track.TAG}")
+        return [int(el.attrib["Key"]) for el in elements]
+
+    def _update_count(self):
+        self._element.attrib["Count"] = str(len(self._element))
+
+    def _update_entries(self):
+        self._element.attrib["Entries"] = str(len(self._element))
 
     def add_folder_node(self, name):
-        node = Node.folder(self.element, name)
-        self.element.attrib["Count"] = str(self.count + 1)
+        node = Node.folder(self._element, name)
+        self._update_count()
         return node
 
-    def add_playlist_node(self, name, keytype=TRACKID):
-        node = Node.playlist(self.element, name, keytype)
-        self.element.attrib["Count"] = str(self.count + 1)
+    def add_playlist_node(self, name, keytype="TrackID"):
+        node = Node.playlist(self._element, name, keytype)
+        self._update_count()
         return node
-
-    def get_track(self, idx):
-        if self.type == self.FOLDER:
-            return None
-        el = self.element.findall(f".//{Track.TAG}[{idx}]")
-        return int(el.attrib["Key"])
 
     def add_track(self, key):
-        """Add a track to the current node.
-
-        Parameters
-        ----------
-        key : int or str
-            Track identification.
-        """
-        el = xml.SubElement(self.element, Track.TAG, attrib={"Key": str(key)})
-        self.element.attrib["Entries"] = str(self.entries + 1)
+        el = xml.SubElement(self._element, Track.TAG, attrib={"Key": str(key)})
+        self._update_entries()
         return el
 
-    def print_tree(self, lvl=0, indent=4):
+    def treestr(self, lvl=0, indent=4):
         space = indent * lvl * " "
+        string = ""
         if self.type == self.PLAYLIST:
-            print(space + f"Playlist: {self.name} ({self.entries} Tracks)")
+            string += space + f"Playlist: {self.name} ({self.entries} Tracks)\n"
         elif self.type == self.FOLDER:
-            print(space + f"Folder: {self.name}")
+            string += space + f"Folder: {self.name}\n"
             for node in self.nodes:
-                node.print_tree(lvl + 1, indent)
+                string += node.treestr(lvl + 1, indent)
+        return string
 
     def __repr__(self):
-        string = f"Node(Name={self.name}, type={self.type}, "
-        if self.type == self.FOLDER:
-            string += f"Count={self.count}"
-        else:
-            string += f"Entries={self.entries}, KeyType={self.keytype}"
-        return string + ")"
+        return f"<{self.__class__.__name__}({self.name})>"
 
 
-# ======================================================================================
-# XML File
-# ======================================================================================
+# -- Main XML object -------------------------------------------------------------------
 
 
+# noinspection PyPep8Naming
 class RekordboxXml:
-    """Rekordbox XML database file object."""
+    """Rekordbox XML database object.
 
-    ROOT = "DJ_PLAYLISTS"
+    The XML database contains the tracks and playlists in the Rekordbox collection. By
+    importing the databse, new tracks and items can be added to the Rekordbox
+    collection.
+    The Rekordbox XML file can be created in Rekordbox 5/6 in the application menu
+    'File>Export collection in xml format'. It can be imported by setting the file path
+    in 'File>Preferences>Advanced>rekordbox xml>Imported Libary'.
+
+    If a file path is passed to the constructor of the `RekordboxXml` object, the file
+    is opened and parsed. Otherwise, an empty file is created with the given arguments.
+    Creating an importable XML file requires a product name, xml database version and
+    company name.
+
+    Attributes
+    ----------
+    path : str, optional
+        The file path to
+
+    Examples
+    --------
+    Open Rekordbox XML file
+
+    >>> file = RekordboxXml(os.path.join(".testdata", "rekordbox 6", "database.xml"))
+
+    Create new XML file
+
+    >>> file = RekordboxXml()
+
+    """
+
+    ROOT_TAG = "DJ_PLAYLISTS"
     PRDT_TAG = "PRODUCT"
     PLST_TAG = "PLAYLISTS"
     COLL_TAG = "COLLECTION"
 
     def __init__(self, path="", name=None, version=None, company=None):
-        self.path = path
         self._root = None
         self._product = None
         self._collection = None
         self._playlists = None
         self._root_node = None
-
-        self.collection = None
-
-        if os.path.exists(path):
-            self.parse(self.path)
+        if path:
+            self._parse(path)
         else:
-            self.init(name, version, company)
+            self._init(name, version, company)
 
     @property
     def frmt_version(self):
+        """str : The version of the Rekordbox XML format."""
         return self._root.attrib["Version"]
 
     @property
     def product_name(self):
+        """str : The product name that will be displayed in the software."""
         return self._product.attrib.get("Name")
 
     @property
     def product_version(self):
+        """str : The product version."""
         return self._product.attrib.get("Version")
 
     @property
     def product_company(self):
+        """str : The company name."""
         return self._product.attrib.get("Company")
 
     @property
     def num_tracks(self):
+        """str : The number of tracks in the collection."""
         return int(self._collection.attrib.get("Entries"))
 
-    def init(self, name=None, version=None, company=None, frmt_version=None):
+    def _parse(self, path):
+        """Parse an existing XML file."""
+        tree = xml.parse(path)
+        self._root = tree.getroot()
+        self._product = self._root.find(self.PRDT_TAG)
+        self._collection = self._root.find(self.COLL_TAG)
+        self._playlists = self._root.find(self.PLST_TAG)
+        self._root_node = Node(element=self._playlists.find(Node.TAG))
+
+    def _init(self, name=None, version=None, company=None, frmt_version=None):
+        """Initialize a new XML file."""
         frmt_version = frmt_version or "1.0.0"
-        name = name or "pyRekordbox"
+        name = name or "pyrekordbox"
         version = version or "0.0.1"
         company = company or "None"
 
         # Initialize root element
-        self._root = xml.Element(self.ROOT, attrib={"Version": frmt_version})
+        self._root = xml.Element(self.ROOT_TAG, attrib={"Version": frmt_version})
         # Initialize product element
         attrib = {"Name": name, "Version": version, "Company": company}
         self._product = xml.SubElement(self._root, self.PRDT_TAG, attrib=attrib)
@@ -776,58 +694,113 @@ class RekordboxXml:
         self._playlists = xml.SubElement(self._root, self.PLST_TAG)
         self._root_node = Node.folder(self._playlists, "ROOT")
 
-    def parse(self, path):
-        self.path = path
-
-        tree = xml.parse(path)
-        self._root = tree.getroot()
-        self._product = self._root.find(self.PRDT_TAG)
-        self._collection = self._root.find(self.COLL_TAG)
-        self._playlists = self._root.find(self.PLST_TAG)
-        self._root_node = Node(self._playlists.find(Node.TAG))
-
     def get_tracks(self):
-        return [Track(el) for el in self._collection.findall(f".//{Track.TAG}")]
+        """Returns the tracks in the collection of the XML file.
+
+        Returns
+        -------
+        tracks : list of Track
+            A list of the track objects in the collection.
+        """
+        elements = self._collection.findall(f".//{Track.TAG}")
+        return [Track(element=el) for el in elements]
+
+    def get_track(self, index=None, TrackID=None):
+        """Get a track in the collection of the XML file.
+
+        Parameters
+        ----------
+        index : int, optional
+            If `index` is given, the track with this index in the collection is
+            returned.
+        TrackID : int, optional
+            If `TrackID` is given, the track with this ID in the collection is
+            returned.
+
+        Returns
+        -------
+        track : Track
+            The track object.
+        """
+        if index is None and TrackID is None:
+            raise ValueError("Either index or TrackID has to be specified!")
+
+        if TrackID is not None:
+            el = self._collection.find(f'.//{Track.TAG}[@TrackID="{TrackID}"]')
+        else:
+            el = self._collection.find(f".//{Track.TAG}[{index}]")
+        return Track(element=el)
 
     def get_track_ids(self):
-        return [Track(el).id for el in self._collection.findall(f".//{Track.TAG}")]
+        """Returns the `TrackID` of all tracks in the collection of the XML file.
 
-    def get_track(self, track_id):
-        element = self._collection.find(f'.//{Track.TAG}[@TrackID="{track_id}"]')
-        if element is None:
-            return None
-        return Track(element)
-
-    def update_track_count(self):
-        num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
-        self._collection.attrib["Entries"] = num_tracks
+        Returns
+        -------
+        ids : list of int
+            The ID's of all tracks.
+        """
+        elements = self._collection.findall(f".//{Track.TAG}")
+        return [int(el.attrib["TrackID"]) for el in elements]
 
     def get_playlist(self, *names):
         node = self._root_node
+        if not names:
+            return node
         for name in names:
             node = node.get_node_by_name(name)
         return node
 
-    def print_playlist_tree(self):
-        self._root_node.print_tree()
+    def _update_track_count(self):
+        num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
+        self._collection.attrib["Entries"] = num_tracks
+
+    def add_track(self, location, **kwargs):
+        track = Track(self, location, **kwargs)
+        self._update_track_count()
+        return track
+
+    def add_playlist_folder(self, name):
+        return self._root_node.add_folder_node(name)
+
+    def add_playlist_node(self, name, keytype="TrackID"):
+        return self._root_node.add_folder_node(name, keytype)
 
     def tostring(self, indent=None):
+        """Returns the contents of the XML file as a string.
+
+        Parameters
+        ----------
+        indent : str, optional
+            The indentation used for formatting the XML file. The default is 3 spaces.
+
+        Returns
+        -------
+        s : str
+            The contents of the XML file
+        """
         return pretty_xml(self._root, indent, encoding="utf-8")
 
     def save(self, path="", indent=None):
-        if not path:
-            path = self.path
+        """Writes the contents of the XML file to disk.
+
+        Parameters
+        ----------
+        path : str, optional
+            The path for saving the XML file. The default is the original file.
+        indent : str, optional
+            The indentation used for formatting the XML element.
+            The default is 3 spaces.
+        """
         string = self.tostring(indent)
         with open(path, "w") as fh:
             fh.write(string)
 
     def __repr__(self):
-        path = self.path
         name = self.product_name
         v = self.product_version
         company = self.product_company
         tracks = self.num_tracks
 
         cls = self.__class__.__name__
-        s = f"{cls}('{path}', tracks={tracks}, info={name} {company} v{v})"
+        s = f"{cls}(tracks={tracks}, info={name}, {company}, v{v})"
         return s

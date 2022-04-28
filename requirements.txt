@@ -1,6 +1,7 @@
 setuptools>=60.0.0
 setuptools-scm[toml]>=4
 blowfish>=0.6.0
+bidict>=0.21.0
 numpy>=1.19.0
 construct>=2.10.0
 crc16>=0.1.0
