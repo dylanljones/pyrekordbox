@@ -531,7 +531,7 @@ class Node:
         -------
         subnode : Node
         """
-        return Node(self, element=self._element.findall(f"{self.TAG}[{i}]"))
+        return Node(self, element=self._element.findall(f"{self.TAG}[{i + 1}]"))
 
     def get_node_by_name(self, name):
         """Returns the sub-Node with the given name.
@@ -728,7 +728,7 @@ class RekordboxXml:
         if TrackID is not None:
             el = self._collection.find(f'.//{Track.TAG}[@TrackID="{TrackID}"]')
         else:
-            el = self._collection.find(f".//{Track.TAG}[{index}]")
+            el = self._collection.find(f".//{Track.TAG}[{index + 1}]")
         return Track(element=el)
 
     def get_track_ids(self):
