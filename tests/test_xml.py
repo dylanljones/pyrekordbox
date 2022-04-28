@@ -35,11 +35,11 @@ def test_encode_path(path, expected):
     [
         (
             "file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3",
-            r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3",
+            r"C:/Music/PioneerDJ/Demo Tracks/Demo Track 1.mp3",
         ),
         (
             "file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%202.mp3",
-            r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 2.mp3",
+            r"C:/Music/PioneerDJ/Demo Tracks/Demo Track 2.mp3",
         ),
     ],
 )
