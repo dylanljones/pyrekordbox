@@ -17,7 +17,7 @@ TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata"
     "path,expected",
     [
         (
-            r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3",
+            r"C:/Music/PioneerDJ/Demo Tracks/Demo Track 1.mp3",
             "file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3",
         ),
         (
