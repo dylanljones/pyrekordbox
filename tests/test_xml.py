@@ -18,21 +18,21 @@ def test_parse_xml_tracks_v5():
     assert xml.num_tracks == 6
 
     track = xml.get_track(1)
-    assert track.name == "NOISE"
+    assert track.Name == "NOISE"
     assert len(track.tempos) == 0
-    assert len(track.cue_points()) == 0
+    assert len(track.marks) == 0
 
     track = xml.get_track(5)
 
     tempo = track.tempos[0]
-    assert tempo.bpm == 128.0
-    assert tempo.inizio == 0.025
-    assert tempo.metro == "4/4"
-    assert tempo.battito == 1
+    assert tempo.Bpm == 128.0
+    assert tempo.Inizio == 0.025
+    assert tempo.Metro == "4/4"
+    assert tempo.Battito == 1
 
-    positions = track.cue_points()
+    positions = track.marks
     assert len(positions) == 4
-    assert positions[0].name == ""
-    assert positions[0].type == 0
-    assert positions[0].start == 0.025
-    assert positions[0].num == -1
+    assert positions[0].Name == ""
+    assert positions[0].Type == "cue"
+    assert positions[0].Start == 0.025
+    assert positions[0].Num == -1
