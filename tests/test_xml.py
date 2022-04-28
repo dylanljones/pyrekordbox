@@ -6,8 +6,45 @@
 
 import os
 from pyrekordbox import RekordboxXml
+from pyrekordbox.xml import encode_path, decode_path
+import pytest
+
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
+
+
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        (
+            r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3",
+            "file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3",
+        ),
+        (
+            r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 2.mp3",
+            "file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%202.mp3",
+        ),
+    ],
+)
+def test_encode_path(path, expected):
+    assert encode_path(path) == expected
+
+
+@pytest.mark.parametrize(
+    "s,expected",
+    [
+        (
+            "file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3",
+            r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3",
+        ),
+        (
+            "file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%202.mp3",
+            r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 2.mp3",
+        ),
+    ],
+)
+def test_decode_path(s, expected):
+    assert decode_path(s) == expected
 
 
 def test_parse_xml_tracks_v5():
