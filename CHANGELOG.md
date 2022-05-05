@@ -4,6 +4,7 @@
 ## [Unreleased]
 
 ### Improvements/Bug Fixes
+- add method to remove tracks in XML database and fix bug in track count update
 - fix position argument of XPath in XML file (starts at 1)
 - file paths in the XML file are now encoded and decoded as URI's
 - fix XML tests with new API
