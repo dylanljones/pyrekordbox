@@ -117,7 +117,7 @@ ktype = pl.key_type     # Key can either be TrackID or Location
 
 # Add tracks and sub-playlists (folders)
 pl.add_track(track.TrackID)
-pl.add_playlist_node("Sub Sub Playlist")
+pl.add_playlist("Sub Sub Playlist")
 ````
 
 ### Rekordbox ANLZ files
