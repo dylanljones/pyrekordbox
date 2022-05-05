@@ -422,7 +422,7 @@ class Track(AbstractElement):
 
     def _init(self, parent, Location, **kwargs):
         attrib = {"Location": encode_path(Location)}
-        for key, val in kwargs:
+        for key, val in kwargs.items():
             if key not in self.ATTRIBS:
                 raise KeyError(
                     f"{key} is not a valid key for {self.__class__.__name__}!"
@@ -636,6 +636,8 @@ class RekordboxXml:
         self._collection = None
         self._playlists = None
         self._root_node = None
+
+        self._last_id = 0
         if path:
             self._parse(path)
         else:
@@ -693,6 +695,10 @@ class RekordboxXml:
         # Initialize playlist element
         self._playlists = xml.SubElement(self._root, self.PLST_TAG)
         self._root_node = Node.folder(self._playlists, "ROOT")
+
+        track_ids = self.get_track_ids()
+        if track_ids:
+            self._last_id = max(track_ids)
 
     def get_tracks(self):
         """Returns the tracks in the collection of the XML file.
@@ -755,7 +761,10 @@ class RekordboxXml:
         self._collection.attrib["Entries"] = str(num_tracks)
 
     def add_track(self, location, **kwargs):
+        if "TrackID" not in kwargs:
+            kwargs["TrackID"] = self._last_id + 1
         track = Track(self._collection, location, **kwargs)
+        self._last_id = track["TrackID"]
         self._update_track_count()
         return track
 
