@@ -84,6 +84,11 @@ def test_parse_xml_tracks_v5():
     assert positions[0].Num == -1
 
 
+def test_create_empty():
+    xml = RekordboxXml()
+    assert xml.tostring() == EMPTY
+
+
 def test_update_track_count():
     xml = RekordboxXml()
     track1 = xml.add_track("C:/path/to/file1.wav")
