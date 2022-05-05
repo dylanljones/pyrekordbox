@@ -680,7 +680,7 @@ class RekordboxXml:
         frmt_version = frmt_version or "1.0.0"
         name = name or "pyrekordbox"
         version = version or "0.0.1"
-        company = company or "None"
+        company = company or ""
 
         # Initialize root element
         self._root = xml.Element(self.ROOT_TAG, attrib={"Version": frmt_version})
@@ -752,12 +752,16 @@ class RekordboxXml:
 
     def _update_track_count(self):
         num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
-        self._collection.attrib["Entries"] = num_tracks
+        self._collection.attrib["Entries"] = str(num_tracks)
 
     def add_track(self, location, **kwargs):
-        track = Track(self, location, **kwargs)
+        track = Track(self._collection, location, **kwargs)
         self._update_track_count()
         return track
+
+    def remove_track(self, track):
+        self._collection.remove(track._element)  # noqa
+        self._update_track_count()
 
     def add_playlist_folder(self, name):
         return self._root_node.add_folder_node(name)
