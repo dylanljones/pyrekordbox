@@ -3,6 +3,9 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+- add auto-increment of XML TrackID when adding new tracks
+
 ### Improvements/Bug Fixes
 - add method to remove tracks in XML database and fix bug in track count update
 - fix position argument of XPath in XML file (starts at 1)
