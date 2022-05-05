@@ -12,15 +12,6 @@ import pytest
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
 
-EMPTY = """<?xml version="1.0" encoding="utf-8"?>
-<DJ_PLAYLISTS Version="1.0.0">
-    <PRODUCT Name="pyrekordbox" Version="0.0.1" Company=""/>
-    <COLLECTION Entries="0"/>
-    <PLAYLISTS>
-        <NODE Name="ROOT" Type="0" Count="0"/>
-    </PLAYLISTS>
-</DJ_PLAYLISTS>"""
-
 
 @pytest.mark.parametrize(
     "path,expected",
@@ -82,11 +73,6 @@ def test_parse_xml_tracks_v5():
     assert positions[0].Type == "cue"
     assert positions[0].Start == 0.025
     assert positions[0].Num == -1
-
-
-def test_create_empty():
-    xml = RekordboxXml()
-    assert xml.tostring() == EMPTY
 
 
 def test_update_track_count():
