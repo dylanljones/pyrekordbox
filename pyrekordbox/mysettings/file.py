@@ -5,10 +5,10 @@
 # Copyright (c) 2022, Dylan Jones
 
 import re
-import crc16
 from construct import Struct
 from collections.abc import MutableMapping
 from . import structs
+from ..utils import crc16xmodem
 
 RE_INVALID_KEY = re.compile("[_u][0-9]?", flags=re.IGNORECASE)
 
@@ -25,7 +25,7 @@ def compute_checksum(data, struct):
     https://reveng.sourceforge.io/crc-catalogue/all.htm#crc.cat.crc-16-xmodem
     """
     start = 0 if struct == structs.DjmMySetting else 104
-    return crc16.crc16xmodem(data[start:-4])
+    return crc16xmodem(data[start:-4])
 
 
 def _is_valid_key(k: str):
