@@ -30,12 +30,30 @@ from pyrekordbox.config import update_config
 update_config(pioneer_install_dir, pioneer_app_dir)
 ````
 
+## Configuration files
 Alternatively the two paths can be specified in a configuration file under the section
 `rekordbox`. Supported configuration files are pyproject.toml, setup.cfg, rekordbox.toml,
 rekordbox.cfg and rekordbox.yml.
 
+**pyproject.toml** / **pyrekordbox.toml**
+`````toml
+[pyrekordbox]
+pioneer-install-dir = "C:/Program Files/Pioneer"
+pioneer-app-dir = "C:/Users/user/AppData/Roaming/Pioneer"
+`````
+
+
+**setup.cfg** / **pyrekordbox.cfg**
+`````ini
+[pyrekordbox]
+pioneer-install-dir = C:/Program Files/Pioneer
+pioneer-app-dir = C:/Users/user/AppData/Roaming/Pioneer
+`````
+
+
+**rekordbox.yml**
 ````yaml
 rekordbox:
-  pioneer-install-dir: C:\Program Files\Pioneer
-  pioneer-app-dir: C:\Users\user\AppData\Roaming\Pioneer
+  pioneer-install-dir: C:/Program Files/Pioneer
+  pioneer-app-dir: C:/Users/user/AppData/Roaming/Pioneer
 ````

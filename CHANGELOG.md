@@ -1,9 +1,15 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.0.4"></a>
+## [0.0.4] - 2022-06-05
+### New Features
+- add auto-increment of XML TrackID when adding new tracks
 
 ### Improvements/Bug Fixes
+- fix wrong MySetting default values
+- simplify names of playlist (folder) creation methods
+- add method to remove tracks in XML database and fix bug in track count update
+- fix position argument of XPath in XML file (starts at 1)
 - file paths in the XML file are now encoded and decoded as URI's
 - fix XML tests with new API
 - Improve Rekordbox XML handling and API
@@ -56,7 +62,8 @@
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.3...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.4...HEAD
+[0.0.4]: https://github.com/dylanljones/pyrekordbox/compare/0.0.3...0.0.4
 [0.0.3]: https://github.com/dylanljones/pyrekordbox/compare/0.0.2...0.0.3
 [0.0.2]: https://github.com/dylanljones/pyrekordbox/compare/0.0.1...0.0.2
 [0.0.1]: https://github.com/dylanljones/pyrekordbox/compare/0.0.0...0.0.1

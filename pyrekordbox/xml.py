@@ -422,7 +422,7 @@ class Track(AbstractElement):
 
     def _init(self, parent, Location, **kwargs):
         attrib = {"Location": encode_path(Location)}
-        for key, val in kwargs:
+        for key, val in kwargs.items():
             if key not in self.ATTRIBS:
                 raise KeyError(
                     f"{key} is not a valid key for {self.__class__.__name__}!"
@@ -531,7 +531,7 @@ class Node:
         -------
         subnode : Node
         """
-        return Node(self, element=self._element.findall(f"{self.TAG}[{i}]"))
+        return Node(self, element=self._element.findall(f"{self.TAG}[{i + 1}]"))
 
     def get_node_by_name(self, name):
         """Returns the sub-Node with the given name.
@@ -559,12 +559,45 @@ class Node:
     def _update_entries(self):
         self._element.attrib["Entries"] = str(len(self._element))
 
-    def add_folder_node(self, name):
+    def add_playlist_folder(self, name):
+        """Add a new playlist folder as child to this node.
+
+        Parameters
+        ----------
+        name : str
+            The name of the new playlist folder.
+
+        Returns
+        -------
+        folder_node : Node
+            The newly created playlist folder node.
+        """
+        if self.is_playlist:
+            raise ValueError("Sub-elements can only be added to a folder node!")
+
         node = Node.folder(self._element, name)
         self._update_count()
         return node
 
-    def add_playlist_node(self, name, keytype="TrackID"):
+    def add_playlist(self, name, keytype="TrackID"):
+        """Add a new playlist as child to this node.
+
+        Parameters
+        ----------
+        name : str
+            The name of the new playlist.
+        keytype : {'TrackID', 'Location'} str
+            The type of key the playlist uses to store the tracks. Can either be
+            'TrackID' or 'Location'.
+
+        Returns
+        -------
+        playlist_node : Node
+            The newly created playlist node.
+        """
+        if self.is_playlist:
+            raise ValueError("Sub-elements can only be added to a folder node!")
+
         node = Node.playlist(self._element, name, keytype)
         self._update_count()
         return node
@@ -636,6 +669,8 @@ class RekordboxXml:
         self._collection = None
         self._playlists = None
         self._root_node = None
+
+        self._last_id = 0
         if path:
             self._parse(path)
         else:
@@ -680,7 +715,7 @@ class RekordboxXml:
         frmt_version = frmt_version or "1.0.0"
         name = name or "pyrekordbox"
         version = version or "0.0.1"
-        company = company or "None"
+        company = company or ""
 
         # Initialize root element
         self._root = xml.Element(self.ROOT_TAG, attrib={"Version": frmt_version})
@@ -693,6 +728,10 @@ class RekordboxXml:
         # Initialize playlist element
         self._playlists = xml.SubElement(self._root, self.PLST_TAG)
         self._root_node = Node.folder(self._playlists, "ROOT")
+
+        track_ids = self.get_track_ids()
+        if track_ids:
+            self._last_id = max(track_ids)
 
     def get_tracks(self):
         """Returns the tracks in the collection of the XML file.
@@ -720,7 +759,19 @@ class RekordboxXml:
         Returns
         -------
         track : Track
-            The track object.
+            The XML track element.
+
+        Examples
+        --------
+        Get track by index
+
+        >>> file = RekordboxXml("database.xml")
+        >>> track = file.get_track(0)
+
+        or by ``TrackID``
+
+        >>> track = file.get_track(TrackID=1)
+
         """
         if index is None and TrackID is None:
             raise ValueError("Either index or TrackID has to be specified!")
@@ -728,7 +779,7 @@ class RekordboxXml:
         if TrackID is not None:
             el = self._collection.find(f'.//{Track.TAG}[@TrackID="{TrackID}"]')
         else:
-            el = self._collection.find(f".//{Track.TAG}[{index}]")
+            el = self._collection.find(f".//{Track.TAG}[{index + 1}]")
         return Track(element=el)
 
     def get_track_ids(self):
@@ -743,6 +794,25 @@ class RekordboxXml:
         return [int(el.attrib["TrackID"]) for el in elements]
 
     def get_playlist(self, *names):
+        """Returns a playlist or playlist folder with the given path.
+
+        Parameters
+        ----------
+        *names : str
+            Names in the path. If no names are given the root playlist folder is
+            returned.
+
+        Returns
+        -------
+        node : Node
+            The playlist or playlist folder node.
+
+        Examples
+        --------
+        >>> file = RekordboxXml("database.xml")
+        >>> playlist = file.get_playlist("Folder", "Sub Playlist")
+
+        """
         node = self._root_node
         if not names:
             return node
@@ -751,18 +821,95 @@ class RekordboxXml:
         return node
 
     def _update_track_count(self):
+        """Updates the track count element."""
         num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
-        self._collection.attrib["Entries"] = num_tracks
+        self._collection.attrib["Entries"] = str(num_tracks)
 
     def add_track(self, location, **kwargs):
-        track = Track(self, location, **kwargs)
+        """Add a new track element to the Rekordbox XML collection.
+
+        Parameters
+        ----------
+        location : str
+            The file path of the track.
+        kwargs :
+            Keyword arguments which are used to fill the track attributes. If no
+            argument for ``TrackID`` is given the ID is auto-incremented.
+
+        Returns
+        -------
+        track : Track
+            The newly created XML track element.
+
+        Examples
+        --------
+        >>> file = RekordboxXml("database.xml")
+        >>> _ = file.add_track("path/to/track.wav")
+        """
+        if "TrackID" not in kwargs:
+            kwargs["TrackID"] = self._last_id + 1
+        track = Track(self._collection, location, **kwargs)
+        self._last_id = track["TrackID"]
         self._update_track_count()
         return track
 
+    def remove_track(self, track):
+        """Remove a track element from the Rekordbox XML collection.
+
+        Parameters
+        ----------
+        track : Track
+            The XML track element to remove.
+
+        Examples
+        --------
+        >>> file = RekordboxXml("database.xml")
+        >>> t = file.get_track(0)
+        >>> file.remove_track(t)
+
+        """
+        self._collection.remove(track._element)  # noqa
+        self._update_track_count()
+
     def add_playlist_folder(self, name):
+        """Add a new top-level playlist folder to the XML collection.
+
+        Parameters
+        ----------
+        name : str
+            The name of the new playlist folder.
+
+        Returns
+        -------
+        folder_node : Node
+            The newly created playlist folder node.
+
+        See Also
+        --------
+        Node.add_playlist_folder
+        """
         return self._root_node.add_folder_node(name)
 
-    def add_playlist_node(self, name, keytype="TrackID"):
+    def add_playlist(self, name, keytype="TrackID"):
+        """Add a new top-level playlist to the XML collection.
+
+        Parameters
+        ----------
+        name : str
+            The name of the new playlist.
+        keytype : {'TrackID', 'Location'} str
+            The type of key the playlist uses to store the tracks. Can either be
+            'TrackID' or 'Location'.
+
+        Returns
+        -------
+        playlist_node : Node
+            The newly created playlist node.
+
+        See Also
+        --------
+        Node.add_playlist
+        """
         return self._root_node.add_folder_node(name, keytype)
 
     def tostring(self, indent=None):

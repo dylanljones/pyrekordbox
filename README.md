@@ -100,9 +100,25 @@ pyrekordbox can read and write Rekordbox XML databases.
 from pyrekordbox.xml import RekordboxXml
 
 xml = RekordboxXml("database.xml")
-track = xml.get_track(0)
-````
 
+track = xml.get_track(0)    # Get track by index (or TrackID)
+track_id = track.TrackID    # Access via attribute
+name = track["Name"]        # or dictionary syntax
+
+path = "/path/to/file.mp3"
+track = xml.add_track(path) # Add new track
+track["Name"] = "Title"     # Add attributes to new track
+track["TrackID"] = 10       # Types are handled automatically
+
+# Get playlist (folder) by path
+pl = xml.get_playlist("Folder", "Sub Playlist")
+keys = pl.get_tracks()  # Get keys of tracks in playlist
+ktype = pl.key_type     # Key can either be TrackID or Location
+
+# Add tracks and sub-playlists (folders)
+pl.add_track(track.TrackID)
+pl.add_playlist("Sub Sub Playlist")
+````
 
 ### Rekordbox ANLZ files
 

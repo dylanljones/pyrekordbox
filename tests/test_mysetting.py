@@ -5,32 +5,85 @@
 # Copyright (c) 2022, Dylan Jones
 
 import os
-from pyrekordbox.mysettings import read_mysetting_file, FILES
+import pytest
+from pyrekordbox.mysettings import (
+    read_mysetting_file,
+    MySettingFile,
+    MySetting2File,
+    DjmMySettingFile,
+)
 from pyrekordbox.mysettings.file import compute_checksum
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
 
+MYSETTING_KEYS = [
+    "on_air_display",
+    "lcd_brightness",
+    "quantize",
+    "auto_cue_level",
+    "language",
+    "jog_ring_brightness",
+    "jog_ring_indicator",
+    "slip_flashing",
+    "eject_lock",
+    "disc_slot_illumination",
+    "sync",
+    "play_mode",
+    "quantize_beat_value",
+    "hotcue_autoload",
+    "hotcue_color",
+    "needle_lock",
+    "time_mode",
+    "jog_mode",
+    "auto_cue",
+    "master_tempo",
+    "tempo_range",
+    "phase_meter",
+]
 
-def _read_setting(type_, key, value):
+MYSETTING2_KEYS = [
+    "vinyl_speed_adjust",
+    "jog_display_mode",
+    "pad_button_brightness",
+    "jog_lcd_brightness",
+    "waveform_divisions",
+    "waveform",
+    "beat_jump_beat_value",
+]
+
+DJMMYSETTING_KEYS = [
+    "channel_fader_curve",
+    "cross_fader_curve",
+    "headphones_pre_eq",
+    "headphones_mono_split",
+    "beat_fx_quantize",
+    "mic_low_cut",
+    "talk_over_mode",
+    "talk_over_level",
+    "midi_channel",
+    "midi_button_type",
+    "display_brightness",
+    "indicator_brightness",
+    "channel_fader_curve_long",
+]
+
+
+def _read_setting_file(type_, key, value):
     file = type_.upper() + ".DAT"
     root = os.path.join(TEST_ROOT, "mysettings", type_)
     path = os.path.join(root, key, value, file)
     if not os.path.exists(path):
         raise FileNotFoundError(path)
-    file = read_mysetting_file(path)
-    return file[key]
+    return read_mysetting_file(path)
 
 
-def _read_mysetting(key, value):
-    return _read_setting("mysetting", key, value)
-
-
-def _read_mysetting2(key, value):
-    return _read_setting("mysetting2", key, value)
-
-
-def _read_djmysetting(key, value):
-    return _read_setting("djmmysetting", key, value)
+def _read_default_setting_file(type_):
+    file = type_.upper() + ".DAT"
+    root = os.path.join(TEST_ROOT, "mysettings")
+    path = os.path.join(root, file)
+    if not os.path.exists(path):
+        raise FileNotFoundError(path)
+    return read_mysetting_file(path)
 
 
 def _get_values(type_, key):
@@ -38,277 +91,100 @@ def _get_values(type_, key):
     return os.listdir(root)
 
 
-def get_mysetting_values(key):
-    return _get_values("mysetting", key)
-
-
-def get_mysetting2_values(key):
-    return _get_values("mysetting2", key)
-
-
-def get_djmmysetting_values(key):
-    return _get_values("djmmysetting", key)
-
-
 # -- MySetting -------------------------------------------------------------------------
 
 
-def test_mysetting_on_air_display():
-    key = "on_air_display"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
+@pytest.mark.parametrize("key", MYSETTING_KEYS)
+def test_get_mysetting(key):
+    for expected in _get_values("mysetting", key):
+        file = _read_setting_file("mysetting", key, expected)
+        assert file[key] == expected
 
 
-def test_mysetting_lcd_brightness():
-    key = "lcd_brightness"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
+def test_mysetting_defaults():
+    file_default = _read_default_setting_file("mysetting")
+    file = MySettingFile()
+    for key in MYSETTING_KEYS:
+        assert file[key] == file_default[key]
 
 
-def test_mysetting_quantize():
-    key = "quantize"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_auto_cue_level():
-    key = "auto_cue_level"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_language():
-    key = "language"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_jog_ring_brightness():
-    key = "jog_ring_brightness"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_jog_ring_indicator():
-    key = "jog_ring_indicator"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_slip_flashing():
-    key = "slip_flashing"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_eject_lock():
-    key = "eject_lock"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_disc_slot_illumination():
-    key = "disc_slot_illumination"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_sync():
-    key = "sync"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_play_mode():
-    key = "play_mode"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_quantize_beat_value():
-    key = "quantize_beat_value"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_hotcue_autoload():
-    key = "hotcue_autoload"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_hotcue_color():
-    key = "hotcue_color"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_needle_lock():
-    key = "needle_lock"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_time_mode():
-    key = "time_mode"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_jog_mode():
-    key = "jog_mode"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_auto_cue():
-    key = "auto_cue"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_master_tempo():
-    key = "master_tempo"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_tempo_range():
-    key = "tempo_range"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
-
-
-def test_mysetting_phase_meter():
-    key = "phase_meter"
-    for expected in get_mysetting_values(key):
-        assert _read_mysetting(key, expected) == expected
+@pytest.mark.parametrize("key", MYSETTING_KEYS)
+def test_set_mysetting(key):
+    type_ = "mysetting"
+    for val in _get_values(type_, key):
+        # Read value file
+        file_ref = _read_setting_file(type_, key, val)
+        # Read default file and update value
+        file = _read_default_setting_file(type_)
+        file[key] = val
+        # Check values are identical
+        assert file[key] == file_ref[key]
+        # Check binary data is identical
+        assert file.build() == file_ref.build()
 
 
 # -- MySetting2 ------------------------------------------------------------------------
 
 
-def test_mysetting2_vinyl_speed_adjust():
-    key = "vinyl_speed_adjust"
-    for expected in get_mysetting2_values(key):
-        assert _read_mysetting2(key, expected) == expected
+@pytest.mark.parametrize("key", MYSETTING2_KEYS)
+def test_get_mysetting2(key):
+    for expected in _get_values("mysetting2", key):
+        file = _read_setting_file("mysetting2", key, expected)
+        assert file[key] == expected
 
 
-def test_mysetting2_jog_display_mode():
-    key = "jog_display_mode"
-    for expected in get_mysetting2_values(key):
-        assert _read_mysetting2(key, expected) == expected
+def test_mysetting2_defaults():
+    file_default = _read_default_setting_file("mysetting2")
+    file = MySetting2File()
+    for key in MYSETTING2_KEYS:
+        assert file[key] == file_default[key]
 
 
-def test_mysetting2_pad_button_brightness():
-    key = "pad_button_brightness"
-    for expected in get_mysetting2_values(key):
-        assert _read_mysetting2(key, expected) == expected
-
-
-def test_mysetting2_jog_lcd_brightness():
-    key = "jog_lcd_brightness"
-    for expected in get_mysetting2_values(key):
-        assert _read_mysetting2(key, expected) == expected
-
-
-def test_mysetting2_waveform_divisions():
-    key = "waveform_divisions"
-    for expected in get_mysetting2_values(key):
-        assert _read_mysetting2(key, expected) == expected
-
-
-def test_mysetting2_waveform():
-    key = "waveform"
-    for expected in get_mysetting2_values(key):
-        assert _read_mysetting2(key, expected) == expected
-
-
-def test_mysetting2_beat_jump_beat_value():
-    key = "beat_jump_beat_value"
-    for expected in get_mysetting2_values(key):
-        assert _read_mysetting2(key, expected) == expected
+@pytest.mark.parametrize("key", MYSETTING2_KEYS)
+def test_set_mysetting2(key):
+    type_ = "mysetting2"
+    for val in _get_values(type_, key):
+        # Read value file
+        file_ref = _read_setting_file(type_, key, val)
+        # Read default file and update value
+        file = _read_default_setting_file(type_)
+        file[key] = val
+        # Check values are identical
+        assert file[key] == file_ref[key]
+        # Check binary data is identical
+        assert file.build() == file_ref.build()
 
 
 # -- DjmMySetting ----------------------------------------------------------------------
 
 
-def test_mysetting2_channel_fader_curve():
-    key = "channel_fader_curve"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
+@pytest.mark.parametrize("key", DJMMYSETTING_KEYS)
+def test_get_djmmysetting(key):
+    for expected in _get_values("djmmysetting", key):
+        file = _read_setting_file("djmmysetting", key, expected)
+        assert file[key] == expected
 
 
-def test_mysetting2_crossfader_curve():
-    key = "cross_fader_curve"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
+def test_djmmysetting_defaults():
+    file_default = _read_default_setting_file("djmmysetting")
+    file = DjmMySettingFile()
+    for key in DJMMYSETTING_KEYS:
+        assert file[key] == file_default[key]
 
 
-def test_mysetting2_headphones_pre_eq():
-    key = "headphones_pre_eq"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_headphones_mono_split():
-    key = "headphones_mono_split"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_beat_fx_quantize():
-    key = "beat_fx_quantize"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_mic_low_cut():
-    key = "mic_low_cut"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_talk_over_mode():
-    key = "talk_over_mode"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_talk_over_level():
-    key = "talk_over_level"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_midi_channel():
-    key = "midi_channel"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_midi_button_type():
-    key = "midi_button_type"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_display_brightness():
-    key = "display_brightness"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_indicator_brightness():
-    key = "indicator_brightness"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
-
-
-def test_mysetting2_channel_fader_curve_long():
-    key = "channel_fader_curve_long"
-    for expected in get_djmmysetting_values(key):
-        assert _read_djmysetting(key, expected) == expected
+@pytest.mark.parametrize("key", DJMMYSETTING_KEYS)
+def test_set_djmmysetting(key):
+    type_ = "djmmysetting"
+    for val in _get_values(type_, key):
+        # Read value file
+        file_ref = _read_setting_file(type_, key, val)
+        # Read default file and update value
+        file = _read_default_setting_file(type_)
+        file[key] = val
+        # Check values are identical
+        assert file[key] == file_ref[key]
+        # Check binary data is identical
+        assert file.build() == file_ref.build()
 
 
 # ======================================================================================
@@ -327,12 +203,3 @@ def test_mysetting_checksum():
             data = sett.build()
             checksum = compute_checksum(data, sett.struct)
             assert checksum == sett.parsed.checksum
-
-
-def test_default_build():
-    file_types = "MYSETTING.DAT", "MYSETTING2.DAT", "DJMMYSETTING.DAT"
-    for key in file_types:
-        obj = FILES[key]()
-        data = obj.build()
-        # See if data is parsable
-        obj.parse(data)
