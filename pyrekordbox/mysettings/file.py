@@ -164,7 +164,7 @@ class DjmMySettingFile(SettingsFile):
     struct = structs.DjmMySetting
     defaults = {
         "channel_fader_curve": structs.ChannelFaderCurve.linear,
-        "cross_fader_curve": structs.CrossfaderCurve.constant,
+        "cross_fader_curve": structs.CrossfaderCurve.fast_cut,
         "headphones_pre_eq": structs.HeadphonesPreEQ.post_eq,
         "headphones_mono_split": structs.HeadphonesMonoSplit.stereo,
         "beat_fx_quantize": structs.BeatFXQuantize.on,
@@ -175,7 +175,7 @@ class DjmMySettingFile(SettingsFile):
         "midi_button_type": structs.MidiButtonType.toggle,
         "display_brightness": structs.MixerDisplayBrightness.five,
         "indicator_brightness": structs.MixerIndicatorBrightness.three,
-        "channel_fader_curve_long": structs.ChannelFaderCurveLong.linear,
+        "channel_fader_curve_long": structs.ChannelFaderCurveLong.exponential,
     }
 
 
@@ -184,7 +184,7 @@ class MySettingFile(SettingsFile):
     struct = structs.MySetting
     defaults = {
         "auto_cue": structs.AutoCue.on,
-        "auto_cue_level": structs.AutoCueLevel.minus_36db,
+        "auto_cue_level": structs.AutoCueLevel.memory,
         "disc_slot_illumination": structs.DiscSlotIllumination.bright,
         "eject_lock": structs.EjectLock.unlock,
         "hotcue_autoload": structs.HotCueAutoLoad.on,
@@ -218,7 +218,7 @@ class MySetting2File(SettingsFile):
         "jog_lcd_brightness": structs.JogLCDBrightness.three,
         "waveform_divisions": structs.WaveformDivisions.phrase,
         "waveform": structs.Waveform.waveform,
-        "beat_jump_beat_value": structs.BeatJumpBeatValue.one,
+        "beat_jump_beat_value": structs.BeatJumpBeatValue.sixteen,
     }
 
 
