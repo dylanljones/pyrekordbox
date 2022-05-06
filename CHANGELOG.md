@@ -4,6 +4,9 @@
 ## [Unreleased]
 
 ### Improvements/Bug Fixes
+- improve XML playlist handling and fix refactoring bugs
+- raise ValueError if duplicate track is added
+- improve XML key errors
 - add implementation of crc16xmodem to support Python 3.10 ([#21](https://github.com/dylanljones/pyrekordbox/issues/21))
 
 
