@@ -10,6 +10,9 @@ from pyrekordbox import RekordboxXml
 from pyrekordbox.xml import Tempo, PositionMark
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
+XML5 = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
+XML6 = os.path.join(TEST_ROOT, "rekordbox 6", "database.xml")
+
 
 V5_TRACK_INFOS = [
     {
@@ -374,8 +377,7 @@ POSITION_MARKS = [
 
 
 def test_track_attribs_v5():
-    path = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
-    xml = RekordboxXml(path)
+    xml = RekordboxXml(XML5)
 
     for i, track in enumerate(xml.get_tracks()):
         for attr in track.ATTRIBS:
@@ -390,8 +392,7 @@ def test_track_attribs_v5():
 
 
 def test_track_attribs_v6():
-    path = os.path.join(TEST_ROOT, "rekordbox 6", "database.xml")
-    xml = RekordboxXml(path)
+    xml = RekordboxXml(XML6)
 
     for i, track in enumerate(xml.get_tracks()):
         for attr in track.ATTRIBS:
@@ -406,8 +407,7 @@ def test_track_attribs_v6():
 
 
 def test_tempos_v5():
-    path = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
-    xml = RekordboxXml(path)
+    xml = RekordboxXml(XML5)
 
     for i in range(3):
         track = xml.get_track(i)
@@ -435,8 +435,7 @@ def test_tempos_v5():
 
 
 def test_marks_v5():
-    path = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
-    xml = RekordboxXml(path)
+    xml = RekordboxXml(XML5)
 
     for i in range(3):
         track = xml.get_track(i)
@@ -506,3 +505,86 @@ def test_update_track_count():
 
     xml.remove_track(track2)
     assert xml.num_tracks == 0
+
+
+def test_get_playlist():
+    xml = RekordboxXml(XML5)
+
+    playlist = xml.get_playlist("Playlist1")
+    assert playlist.is_playlist
+    assert not playlist.is_folder
+
+    folder = xml.get_playlist("Folder")
+    assert folder.is_folder
+    assert not folder.is_playlist
+
+    sub_playlist = xml.get_playlist("Folder", "Sub Playlist")
+    assert sub_playlist.is_playlist
+    assert not sub_playlist.is_folder
+
+    assert folder.get_playlist("Sub Playlist").name == sub_playlist.name
+
+
+def test_playlist_entries():
+    xml = RekordboxXml(XML5)
+
+    playlist = xml.get_playlist("Playlist1")
+    key_type = playlist.key_type
+    for key in playlist.get_tracks():
+        kwargs = {key_type: key}
+        xml.get_track(**kwargs)
+
+
+def test_add_playlist():
+    xml = RekordboxXml()
+    playlist = xml.add_playlist("Playlist")
+
+    assert playlist.is_playlist
+    assert not playlist.is_folder
+
+    with pytest.raises(ValueError):
+        playlist.add_playlist("Sub Playlist")
+
+
+def test_add_playlist_folder():
+    xml = RekordboxXml()
+    folder = xml.add_playlist_folder("Folder")
+
+    assert not folder.is_playlist
+    assert folder.is_folder
+
+    folder.add_playlist("Sub Playlist")
+
+
+def test_update_folder_count():
+    xml = RekordboxXml()
+    folder = xml.add_playlist_folder("Folder")
+
+    folder.add_playlist("P1")
+    assert folder.count == 1
+
+    folder.add_playlist_folder("F1")
+    assert folder.count == 2
+
+    folder.remove_playlist("P1")
+    assert folder.count == 1
+
+    folder.remove_playlist("F1")
+    assert folder.count == 0
+
+
+def test_update_playlist_entries():
+    xml = RekordboxXml()
+    playlist = xml.add_playlist("Playlist")
+
+    playlist.add_track(0)
+    assert playlist.entries == 1
+
+    playlist.add_track(1)
+    assert playlist.entries == 2
+
+    playlist.remove_track(1)
+    assert playlist.entries == 1
+
+    playlist.remove_track(0)
+    assert playlist.entries == 0
