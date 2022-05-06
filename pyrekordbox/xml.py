@@ -117,6 +117,13 @@ def decode_path(url):
     return os.path.normpath(path)
 
 
+class XmlAttributeKeyError(Exception):
+    def __init__(self, cls, key, attributes):
+        super().__init__(
+            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
+        )
+
+
 class AbstractElement(abc.Mapping):
     """Abstract base class for Rekordbox XML elements."""
 
@@ -141,7 +148,7 @@ class AbstractElement(abc.Mapping):
 
     def get(self, key, default=None):
         if key not in self.ATTRIBS:
-            raise KeyError(f"{key} is not a valid key for {self.__class__.__name__}!")
+            raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
         value = self._element.attrib.get(key, default)
         if value == default:
             return default
@@ -154,7 +161,7 @@ class AbstractElement(abc.Mapping):
 
     def set(self, key, value):
         if key not in self.ATTRIBS:
-            raise KeyError(f"{key} is not a valid key for {self.__class__.__name__}!")
+            raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
         try:
             # Apply callback
             value = self.SETTERS[key](value)
