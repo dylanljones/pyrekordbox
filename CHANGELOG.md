@@ -1,5 +1,12 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+- add implementation of crc16xmodem to support Python 3.10 ([#21](https://github.com/dylanljones/pyrekordbox/issues/21))
+
+
 <a name="0.0.4"></a>
 ## [0.0.4] - 2022-06-05
 ### New Features
