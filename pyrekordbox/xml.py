@@ -855,8 +855,22 @@ class RekordboxXml:
         """
         if "TrackID" not in kwargs:
             kwargs["TrackID"] = self._last_id + 1
+
+        # Check that Location and TrackID are unique
+        track_id = kwargs["TrackID"]
+
+        for other in self.get_tracks():
+            if track_id == other.TrackID:
+                raise ValueError(
+                    f"XML database already contains a track with TrackID={track_id}!"
+                )
+            elif os.path.normpath(location) == other.Location:
+                raise ValueError(
+                    f"XML database already contains a track with Location={location}!"
+                )
+        # Create track and add it to the collection
         track = Track(self._collection, location, **kwargs)
-        self._last_id = track["TrackID"]
+        self._last_id = int(track["TrackID"])
         self._update_track_count()
         return track
 
