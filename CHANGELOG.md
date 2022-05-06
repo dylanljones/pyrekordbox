@@ -1,9 +1,11 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
-
+## [0.0.5] - 2022-06-05
+### New Features
 ### Improvements/Bug Fixes
+- improve XML playlist handling and fix refactoring bugs
+- raise ValueError if duplicate track is added
+- improve XML key errors
 - add implementation of crc16xmodem to support Python 3.10 ([#21](https://github.com/dylanljones/pyrekordbox/issues/21))
 
 
@@ -69,7 +71,8 @@
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.4...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.5...HEAD
+[0.0.5]: https://github.com/dylanljones/pyrekordbox/compare/0.0.4...0.0.5
 [0.0.4]: https://github.com/dylanljones/pyrekordbox/compare/0.0.3...0.0.4
 [0.0.3]: https://github.com/dylanljones/pyrekordbox/compare/0.0.2...0.0.3
 [0.0.2]: https://github.com/dylanljones/pyrekordbox/compare/0.0.1...0.0.2

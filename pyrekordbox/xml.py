@@ -117,6 +117,13 @@ def decode_path(url):
     return os.path.normpath(path)
 
 
+class XmlAttributeKeyError(Exception):
+    def __init__(self, cls, key, attributes):
+        super().__init__(
+            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
+        )
+
+
 class AbstractElement(abc.Mapping):
     """Abstract base class for Rekordbox XML elements."""
 
@@ -141,7 +148,7 @@ class AbstractElement(abc.Mapping):
 
     def get(self, key, default=None):
         if key not in self.ATTRIBS:
-            raise KeyError(f"{key} is not a valid key for {self.__class__.__name__}!")
+            raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
         value = self._element.attrib.get(key, default)
         if value == default:
             return default
@@ -154,7 +161,7 @@ class AbstractElement(abc.Mapping):
 
     def set(self, key, value):
         if key not in self.ATTRIBS:
-            raise KeyError(f"{key} is not a valid key for {self.__class__.__name__}!")
+            raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
         try:
             # Apply callback
             value = self.SETTERS[key](value)
@@ -508,16 +515,17 @@ class Node:
 
     @property
     def is_folder(self):
-        return self.key_type == self.FOLDER
+        return self.type == self.FOLDER
 
     @property
     def is_playlist(self):
-        return self.key_type == self.PLAYLIST
+        return self.type == self.PLAYLIST
 
-    @property
-    def nodes(self):
-        """list of Node: Sub-Nodes (in case of a folder-Node)."""
-        return [Node(self, element=el) for el in self._element.findall(f"{self.TAG}")]
+    def _update_count(self):
+        self._element.attrib["Count"] = str(len(self._element))
+
+    def _update_entries(self):
+        self._element.attrib["Entries"] = str(len(self._element))
 
     def get_node(self, i):
         """Returns the i-th sub-Node of the current node.
@@ -533,7 +541,7 @@ class Node:
         """
         return Node(self, element=self._element.findall(f"{self.TAG}[{i + 1}]"))
 
-    def get_node_by_name(self, name):
+    def get_playlist(self, name):
         """Returns the sub-Node with the given name.
 
         Parameters
@@ -547,17 +555,8 @@ class Node:
         """
         return Node(self, element=self._element.find(f'.//{self.TAG}[@Name="{name}"]'))
 
-    def get_tracks(self):
-        if self.type == self.FOLDER:
-            return list()
-        elements = self._element.findall(f".//{Track.TAG}")
-        return [int(el.attrib["Key"]) for el in elements]
-
-    def _update_count(self):
-        self._element.attrib["Count"] = str(len(self._element))
-
-    def _update_entries(self):
-        self._element.attrib["Entries"] = str(len(self._element))
+    def get_playlists(self):
+        return [Node(self, element=el) for el in self._element]
 
     def add_playlist_folder(self, name):
         """Add a new playlist folder as child to this node.
@@ -602,10 +601,41 @@ class Node:
         self._update_count()
         return node
 
+    def remove_playlist(self, name):
+        item = self.get_playlist(name)
+        self._element.remove(item._element)  # noqa
+        self._update_count()
+        self._update_entries()
+
     def add_track(self, key):
         el = xml.SubElement(self._element, Track.TAG, attrib={"Key": str(key)})
         self._update_entries()
         return el
+
+    def remove_track(self, key):
+        el = self._element.find(f'{Track.TAG}[@Key="{key}"]')
+        self._element.remove(el)
+        self._update_entries()
+        return el
+
+    def get_tracks(self):
+        if self.type == self.FOLDER:
+            return list()
+        elements = self._element.findall(f".//{Track.TAG}")
+        items = list()
+        for el in elements:
+            val = el.attrib["Key"]
+            if self.key_type == "TrackID":
+                val = int(val)
+            items.append(val)
+        return items
+
+    def get_track(self, key):
+        el = self._element.find(f'{Track.TAG}[@Key="{key}"]')
+        val = el.attrib["Key"]
+        if self.key_type == "TrackID":
+            val = int(val)
+        return val
 
     def treestr(self, lvl=0, indent=4):
         space = indent * lvl * " "
@@ -614,9 +644,12 @@ class Node:
             string += space + f"Playlist: {self.name} ({self.entries} Tracks)\n"
         elif self.type == self.FOLDER:
             string += space + f"Folder: {self.name}\n"
-            for node in self.nodes:
+            for node in self.get_playlists():
                 string += node.treestr(lvl + 1, indent)
         return string
+
+    def __eq__(self, other):
+        return self.parent == other.parent and self.name == other.name
 
     def __repr__(self):
         return f"<{self.__class__.__name__}({self.name})>"
@@ -701,6 +734,10 @@ class RekordboxXml:
         """str : The number of tracks in the collection."""
         return int(self._collection.attrib.get("Entries"))
 
+    @property
+    def root_playlist_folder(self):
+        return self._root_node
+
     def _parse(self, path):
         """Parse an existing XML file."""
         tree = xml.parse(path)
@@ -744,7 +781,7 @@ class RekordboxXml:
         elements = self._collection.findall(f".//{Track.TAG}")
         return [Track(element=el) for el in elements]
 
-    def get_track(self, index=None, TrackID=None):
+    def get_track(self, index=None, TrackID=None, Location=None):
         """Get a track in the collection of the XML file.
 
         Parameters
@@ -754,6 +791,9 @@ class RekordboxXml:
             returned.
         TrackID : int, optional
             If `TrackID` is given, the track with this ID in the collection is
+            returned.
+        Location : str, optional
+            If `Location` is given, the track with this file path in the collection is
             returned.
 
         Returns
@@ -778,6 +818,8 @@ class RekordboxXml:
 
         if TrackID is not None:
             el = self._collection.find(f'.//{Track.TAG}[@TrackID="{TrackID}"]')
+        elif Location is not None:
+            el = self._collection.find(f'.//{Track.TAG}[@Location="{Location}"]')
         else:
             el = self._collection.find(f".//{Track.TAG}[{index + 1}]")
         return Track(element=el)
@@ -817,7 +859,7 @@ class RekordboxXml:
         if not names:
             return node
         for name in names:
-            node = node.get_node_by_name(name)
+            node = node.get_playlist(name)
         return node
 
     def _update_track_count(self):
@@ -848,8 +890,22 @@ class RekordboxXml:
         """
         if "TrackID" not in kwargs:
             kwargs["TrackID"] = self._last_id + 1
+
+        # Check that Location and TrackID are unique
+        track_id = kwargs["TrackID"]
+
+        for other in self.get_tracks():
+            if track_id == other.TrackID:
+                raise ValueError(
+                    f"XML database already contains a track with TrackID={track_id}!"
+                )
+            elif os.path.normpath(location) == other.Location:
+                raise ValueError(
+                    f"XML database already contains a track with Location={location}!"
+                )
+        # Create track and add it to the collection
         track = Track(self._collection, location, **kwargs)
-        self._last_id = track["TrackID"]
+        self._last_id = int(track["TrackID"])
         self._update_track_count()
         return track
 
@@ -888,7 +944,7 @@ class RekordboxXml:
         --------
         Node.add_playlist_folder
         """
-        return self._root_node.add_folder_node(name)
+        return self._root_node.add_playlist_folder(name)
 
     def add_playlist(self, name, keytype="TrackID"):
         """Add a new top-level playlist to the XML collection.
@@ -910,7 +966,7 @@ class RekordboxXml:
         --------
         Node.add_playlist
         """
-        return self._root_node.add_folder_node(name, keytype)
+        return self._root_node.add_playlist(name, keytype)
 
     def tostring(self, indent=None):
         """Returns the contents of the XML file as a string.
