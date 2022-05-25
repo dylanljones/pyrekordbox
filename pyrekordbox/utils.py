@@ -313,7 +313,7 @@ def read_rekordbox6_asar(rb6_install_dir):
     elif sys.platform == "darwin":
         root = os.path.join(rb6_install_dir, "rekordbox.app", "Contents", "MacOS")
         location = os.path.join(root, "rekordboxAgent.app", "Contents", "Resources")
-        encoding = "cp1252"
+        encoding = "cp932"
     else:
         raise logger.warning(f"OS {sys.platform} not supported!")
 
