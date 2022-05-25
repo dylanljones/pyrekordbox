@@ -144,8 +144,17 @@ class AnlzFile(abc.Mapping):
         with open(path, "wb") as fh:
             fh.write(data)
 
-    def getone(self, item):
-        return self.get(item)[0]
+    def get_tag(self, key):
+        return self.__getitem__(key)[0]
+
+    def getall_tags(self, key):
+        return self.__getitem__(key)
+
+    def get(self, key):
+        return self.__getitem__(key)[0].get()
+
+    def getall(self, key):
+        return [tag.get() for tag in self.__getitem__(key)]
 
     def __len__(self):
         return len(self.keys())
