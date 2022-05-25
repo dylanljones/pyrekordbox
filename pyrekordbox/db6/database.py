@@ -10,6 +10,7 @@ import base64
 import warnings
 import blowfish
 import logging
+import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from ..config import get_config
