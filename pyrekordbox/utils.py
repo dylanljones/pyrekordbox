@@ -309,15 +309,17 @@ def read_rekordbox6_asar(rb6_install_dir):
         location = os.path.join(
             rb6_install_dir, "rekordboxAgent-win32-x64", "resources"
         )
+        encoding = "ANSI"
     elif sys.platform == "darwin":
         root = os.path.join(rb6_install_dir, "rekordbox.app", "Contents", "MacOS")
         location = os.path.join(root, "rekordboxAgent.app", "Contents", "Resources")
+        encoding = "cp1252"
     else:
         raise logger.warning(f"OS {sys.platform} not supported!")
 
     # Read asar file
     path = os.path.abspath(os.path.join(location, "app.asar"))
     with open(path, "rb") as fh:
-        data = fh.read().decode("ANSI")
+        data = fh.read().decode(encoding)
 
     return data
