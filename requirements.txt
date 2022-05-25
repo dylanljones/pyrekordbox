@@ -7,4 +7,3 @@ construct>=2.10.0
 hypothesis>=6.0.0
 pytest>=6.2.0
 sqlalchemy>=1.4.0
-pysqlcipher3
