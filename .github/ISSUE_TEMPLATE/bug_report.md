@@ -23,7 +23,7 @@ A clear and concise description of what you expected to happen.
 
 **Environment**
 - pyrekordbox version:
-- OS and Python version: 
+- OS and Python version:
 
 **Additional context**
 Add any other context about the problem here.
