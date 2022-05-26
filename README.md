@@ -222,7 +222,9 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 ## Contributing
 
 If you encounter an issue or want to contribute to pyrekordbox, please feel free to get in touch,
-open an issue or open a pull request!
+[open an issue][new-issue] or create a new pull request! A guide for contributing to
+`pyrekordbox` and the commit-message style can be found in
+[CONTRIBUTING](https://github.com/dylanljones/lattpy/blob/master/CONTRIBUTING.md)
 
 pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation. The auto-configuration
@@ -285,6 +287,10 @@ appreciated on MacOS.
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
 [mysettings-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/mysetting.html
+
+[new-issue]: https://github.com/dylanljones/pyrekordbox/issues/new/choose
+[CONTRIBUTING]: https://github.com/dylanljones/pyrekordbox/blob/master/CONTRIBUTING.md
+[CHANGELOG]: https://github.com/dylanljones/pyrekordbox/blob/master/CHANGELOG.md
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [dlls]: https://github.com/dylanljones/pyrekordbox/tree/master/Libs
