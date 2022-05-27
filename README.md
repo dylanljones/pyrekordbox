@@ -24,7 +24,7 @@ in any way and has been written independently!
 
 
 
-## Installation
+## 🔧 Installation
 
 pyrekordbox is available on [PyPI][pypi-link]:
 ````commandline
@@ -44,11 +44,11 @@ python setup.py install
 Some features need additional dependencies (see the [Rekordbox 6 database](#rekordbox-6-database) section).
 
 
-
-## Usage
+## 📖 Documentation
 
 [Read the documentation on ReadTheDocs!][documentation]
 
+## 🚀 Quick-Start
 
 ### Configuration
 
@@ -208,7 +208,7 @@ providing the key via the `PRAGMA key='db-key'` SQL statement.
 |----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
-## File formats
+## 💡 File formats
 
 A summary of the Rekordbox file formats can be found in the [documentation]:
 
@@ -219,7 +219,7 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 
 
 
-## Contributing
+## 🦸 Contributing
 
 If you encounter an issue or want to contribute to pyrekordbox, please feel free to get in touch,
 [open an issue][new-issue] or create a new pull request! A guide for contributing to
@@ -250,7 +250,7 @@ appreciated on MacOS.
 
 
 
-## Related Projects
+## 🔗 Related Projects
 
 - [crate-digger]: Java library for fetching and parsing rekordbox exports and track analysis files.
 - [rekordcrate]: Library for parsing Pioneer Rekordbox device exports
@@ -258,7 +258,7 @@ appreciated on MacOS.
 
 
 
-## Thank Yous
+## 🙏 Thank Yous
 
 - Deep Symmetry has an extensive analysis of Rekordbox's ANLZ and .edb export file formats
   https://djl-analysis.deepsymmetry.org/djl-analysis
