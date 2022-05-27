@@ -136,7 +136,8 @@ the tracks can be extracted yet.
 from pyrekordbox.anlz import AnlzFile
 
 anlz = AnlzFile.parse_file("ANLZ0000.DAT")
-beat_grid = anlz.getone("beat_grid")
+beat_grid = anlz.get("beat_grid")
+path_tags = anlz.getall_tags("path")
 ````
 
 Changing and creating the Rekordbox analysis files is planned as well, but for that the
