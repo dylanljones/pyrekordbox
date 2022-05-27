@@ -1,7 +1,15 @@
 # What's New
 
+<a name="0.0.6"></a>
+## [0.0.6] - 2022-27-05
+
+### Improvements/Bug Fixes
+- fix encoding errors on MacOS
+- improve ANLZ getters
+
+
+<a name="0.0.5"></a>
 ## [0.0.5] - 2022-06-05
-### New Features
 ### Improvements/Bug Fixes
 - improve XML playlist handling and fix refactoring bugs
 - raise ValueError if duplicate track is added
@@ -72,6 +80,7 @@
 
 
 [Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.5...HEAD
+[0.0.6]: https://github.com/dylanljones/pyrekordbox/compare/0.0.6...0.0.5
 [0.0.5]: https://github.com/dylanljones/pyrekordbox/compare/0.0.4...0.0.5
 [0.0.4]: https://github.com/dylanljones/pyrekordbox/compare/0.0.3...0.0.4
 [0.0.3]: https://github.com/dylanljones/pyrekordbox/compare/0.0.2...0.0.3

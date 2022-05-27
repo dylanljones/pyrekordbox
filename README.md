@@ -24,7 +24,7 @@ in any way and has been written independently!
 
 
 
-## Installation
+## 🔧 Installation
 
 pyrekordbox is available on [PyPI][pypi-link]:
 ````commandline
@@ -44,11 +44,11 @@ python setup.py install
 Some features need additional dependencies (see the [Rekordbox 6 database](#rekordbox-6-database) section).
 
 
-
-## Usage
+## 📖 Documentation
 
 [Read the documentation on ReadTheDocs!][documentation]
 
+## 🚀 Quick-Start
 
 ### Configuration
 
@@ -136,7 +136,8 @@ the tracks can be extracted yet.
 from pyrekordbox.anlz import AnlzFile
 
 anlz = AnlzFile.parse_file("ANLZ0000.DAT")
-beat_grid = anlz.getone("beat_grid")
+beat_grid = anlz.get("beat_grid")
+path_tags = anlz.getall_tags("path")
 ````
 
 Changing and creating the Rekordbox analysis files is planned as well, but for that the
@@ -208,7 +209,7 @@ providing the key via the `PRAGMA key='db-key'` SQL statement.
 |----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
-## File formats
+## 💡 File formats
 
 A summary of the Rekordbox file formats can be found in the [documentation]:
 
@@ -219,10 +220,12 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 
 
 
-## Contributing
+## 🦸 Contributing
 
 If you encounter an issue or want to contribute to pyrekordbox, please feel free to get in touch,
-open an issue or open a pull request!
+[open an issue][new-issue] or create a new pull request! A guide for contributing to
+`pyrekordbox` and the commit-message style can be found in
+[CONTRIBUTING]
 
 pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation. The auto-configuration
@@ -248,7 +251,7 @@ appreciated on MacOS.
 
 
 
-## Related Projects
+## 🔗 Related Projects
 
 - [crate-digger]: Java library for fetching and parsing rekordbox exports and track analysis files.
 - [rekordcrate]: Library for parsing Pioneer Rekordbox device exports
@@ -256,7 +259,7 @@ appreciated on MacOS.
 
 
 
-## Thank Yous
+## 🙏 Thank Yous
 
 - Deep Symmetry has an extensive analysis of Rekordbox's ANLZ and .edb export file formats
   https://djl-analysis.deepsymmetry.org/djl-analysis
@@ -266,7 +269,7 @@ appreciated on MacOS.
   https://rekord.cloud/blog/technical-inspection-of-rekordbox-6-and-its-new-internals.
 - supbox has a nice implementation on finding the Rekordbox 6 database key
   https://github.com/gabek/supbox
-
+- [phil-bergmann](https://github.com/phil-bergmann) for fixing encoding errors on MacOS
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
@@ -285,6 +288,10 @@ appreciated on MacOS.
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
 [mysettings-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/mysetting.html
+
+[new-issue]: https://github.com/dylanljones/pyrekordbox/issues/new/choose
+[CONTRIBUTING]: https://github.com/dylanljones/pyrekordbox/blob/master/CONTRIBUTING.md
+[CHANGELOG]: https://github.com/dylanljones/pyrekordbox/blob/master/CHANGELOG.md
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [dlls]: https://github.com/dylanljones/pyrekordbox/tree/master/Libs
