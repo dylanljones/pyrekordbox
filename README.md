@@ -269,7 +269,7 @@ appreciated on MacOS.
   https://rekord.cloud/blog/technical-inspection-of-rekordbox-6-and-its-new-internals.
 - supbox has a nice implementation on finding the Rekordbox 6 database key
   https://github.com/gabek/supbox
-
+- [phil-bergmann](https://github.com/phil-bergmann) for fixing encoding errors on MacOS
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
