@@ -18,7 +18,7 @@ from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
 from . import tables
 
-if sys.platform.lower() == 'darwin':
+if sys.platform.lower() == "darwin":
     from pysqlcipher3 import dbapi2 as sqlite3
 else:
     import sqlite3
