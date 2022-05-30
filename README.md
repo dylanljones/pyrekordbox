@@ -193,6 +193,8 @@ added after some testing.
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
 
+##### Windows
+
 So far I did not find a reliable dependency for using SQLCipher
 with Python on Windows. For now, SQLCipher can be used with the [included DLL's][dlls]
 by replacing the Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
@@ -208,6 +210,20 @@ providing the key via the `PRAGMA key='db-key'` SQL statement.
 | ❗  | The included DLL's only work with *Python 3.8*! For other platforms and Python versions (specificly the version of the included SQLite3 libary) the DLL's have to be built from source. |
 |----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
+##### MacOS
+
+For MacOS follow these steps:
+
+1) Install [Homebrew](https://brew.sh) if you do not have it on your machine.
+2) Install SQLCipher with `brew install SQLCipher`.
+3) With the python environment you are using to run pyrekordbox active execute the following:
+```shell
+git clone https://github.com/rigglemania/pysqlcipher3
+cd pysqlcipher3
+C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/lib python setup.py build
+C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/lib python setup.py install
+```
+Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
 
 ## 💡 File formats
 

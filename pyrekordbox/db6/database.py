@@ -10,13 +10,18 @@ import base64
 import warnings
 import blowfish
 import logging
-import sqlite3
+import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from ..config import get_config
 from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
 from . import tables
+
+if sys.platform.lower() == "darwin":
+    from pysqlcipher3 import dbapi2 as sqlite3
+else:
+    import sqlite3
 
 logger = logging.getLogger(__name__)
 
