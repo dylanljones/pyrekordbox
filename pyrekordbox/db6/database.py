@@ -19,7 +19,10 @@ from ..anlz import get_anlz_paths, read_anlz_files
 from . import tables
 
 if sys.platform.lower() == "darwin":
-    from pysqlcipher3 import dbapi2 as sqlite3
+    try:
+        from pysqlcipher3 import dbapi2 as sqlite3
+    except ImportError:
+        import sqlite3
 else:
     import sqlite3
 

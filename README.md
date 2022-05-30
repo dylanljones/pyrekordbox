@@ -23,7 +23,6 @@ in any way and has been written independently!
 |----|:------------------------------------------------------------------------------------------------------------------|
 
 
-
 ## 🔧 Installation
 
 pyrekordbox is available on [PyPI][pypi-link]:
@@ -41,7 +40,10 @@ The project can also be cloned/forked and installed via
 python setup.py install
 ````
 
-Some features need additional dependencies (see the [Rekordbox 6 database](#rekordbox-6-database) section).
+| ❗   | Some features require additional dependencies (see the [Rekordbox 6 database](#rekordbox-6-database) section). |
+|-----|:---------------------------------------------------------------------------------------------------------------|
+
+
 
 
 ## 📖 Documentation
@@ -277,6 +279,7 @@ appreciated on MacOS.
 
 ## 🙏 Thank Yous
 
+- [phil-bergmann](https://github.com/phil-bergmann) for helping with MacOS support!
 - Deep Symmetry has an extensive analysis of Rekordbox's ANLZ and .edb export file formats
   https://djl-analysis.deepsymmetry.org/djl-analysis
 - rekordcrate reverse engineered the format of the Rekordbox MySetting files
@@ -285,7 +288,6 @@ appreciated on MacOS.
   https://rekord.cloud/blog/technical-inspection-of-rekordbox-6-and-its-new-internals.
 - supbox has a nice implementation on finding the Rekordbox 6 database key
   https://github.com/gabek/supbox
-- [phil-bergmann](https://github.com/phil-bergmann) for fixing encoding errors on MacOS
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
