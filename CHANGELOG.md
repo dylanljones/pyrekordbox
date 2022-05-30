@@ -1,8 +1,14 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### New Features
+- add SQLCipher support for macOS (see [#27](https://github.com/dylanljones/pyrekordbox/issues/27))
+
+
 <a name="0.0.6"></a>
 ## [0.0.6] - 2022-27-05
-
 ### Improvements/Bug Fixes
 - fix encoding errors on MacOS
 - improve ANLZ getters
@@ -79,8 +85,8 @@
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.5...HEAD
-[0.0.6]: https://github.com/dylanljones/pyrekordbox/compare/0.0.6...0.0.5
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.6...HEAD
+[0.0.6]: https://github.com/dylanljones/pyrekordbox/compare/0.0.5...0.0.6
 [0.0.5]: https://github.com/dylanljones/pyrekordbox/compare/0.0.4...0.0.5
 [0.0.4]: https://github.com/dylanljones/pyrekordbox/compare/0.0.3...0.0.4
 [0.0.3]: https://github.com/dylanljones/pyrekordbox/compare/0.0.2...0.0.3
