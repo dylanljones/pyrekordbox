@@ -24,6 +24,7 @@ jobs:
           "docs/**",
           ".github/**",
           ".resources/**",
+          "logos/**",
           "README.md",
           "CHANGELOG.md",
           "CONTRIBUTING.md",
