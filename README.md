@@ -1,5 +1,7 @@
 
-# pyrekordbox
+<p align="center">
+<img src="logos/logo_full_mid.png" alt="logo" height="50"/>
+</p>
 
 [![Tests][tests-badge]][tests-link]
 [![Docs][docs-badge]][documentation]
