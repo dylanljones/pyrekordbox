@@ -3,15 +3,14 @@
 <img src="logos/light/logo_primary.svg" alt="logo" height="70"/>
 </p>
 
-<p align="center">
-    <a href="https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml"><img alt="Tests" src="https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat"></a>
-    <a href="https://pyrekordbox.readthedocs.io/en/stable/"><img alt="Docs" src="https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat"></a>
-    <a href="https://pypi.org/project/pyrekordbox/"><img alt="PyPI Version" src="https://img.shields.io/pypi/v/pyrekordbox?style=flat"></a>
-    <a href="https://pypi.org/project/pyrekordbox/"><img alt="Python Version" src="https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat"></a>
-    <a href="https://pypi.org/project/pyrekordbox/"><img alt="Platform" src="https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat"></a>
-    <a href="https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/dylanljones/pyrekordbox?color=lightgray&style=flat"></a>
-    <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg?style=flat"></a>
-</p>
+[![Tests][tests-badge]][tests-link]
+[![Docs][docs-badge]][documentation]
+[![Version][pypi-badge]][pypi-link]
+[![Python][python-badge]][pypi-link]
+[![Platform][platform-badge]][pypi-link]
+[![license: MIT][license-badge]][license-link]
+[![style: black][black-badge]][black-link]
+
 
 pyrekordbox is a Python package for interacting with the library and export data of
 Pioneer's Rekordbox DJ Software. It currently supports
