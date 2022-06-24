@@ -222,9 +222,9 @@ db = Rekordbox6Database()
 for item in db.get_content():
     print(item.Title, item.Artist.Name)
 ````
-Changing entries of the database is not supported yet since it is not guaranteed that
-the database could be corrupted from writing to it. However, this feature will by
-added after some testing.
+Changing entries of the database is not yet supported. Writing to the database without
+knowing how Rekordbox generates the UUID/ID's for the DB entries could corrupt the
+libary. This feature will be added after some testing.
 
 
 ## 💡 File formats
@@ -250,20 +250,22 @@ the CI setup since it requires a working Rekordbox installation.
 
 ### To Do
 
-- [ ] Complete ANLZ file support
-     - PCOB
-     - PCO2
-     - PSSI
-     - PWV6
-     - PWV7
-     - PWVC
-- [ ] ANLZ tests
-- [ ] Improve Rekordbox 6 `master.db` database parsing
-- [ ] Rekordbox 6 `master.db` database tests
-- [ ] Add Rekordbox 5 `.edb` database suppport
-- [ ] Add USB export database support (`.pdb`)
-- [x] Add MySettings support
-- [x] MySetting tests
+
+- [ ] Improve Rekordbox 6 `master.db` database parsing.
+- [ ] Writing to the Rekordbox 6 `master.db` database:
+  - Figure out how Rekordbox generates UUID's for the DB entries.
+- [ ] Rekordbox 6 `master.db` database tests.
+- [ ] Complete ANLZ file support. This included the following tags:
+  - PCOB
+  - PCO2
+  - PSSI
+  - PWV6
+  - PWV7
+  - PWVC
+- [ ] ANLZ tests.
+- [ ] Add USB export database support (`.pdb`).
+- [x] Add MySettings support.
+- [x] MySetting tests.
 
 
 
