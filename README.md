@@ -1,5 +1,7 @@
 
-# pyrekordbox
+<p align="center">
+<img src="logos/light/logo_primary.svg" alt="logo" height="70"/>
+</p>
 
 [![Tests][tests-badge]][tests-link]
 [![Docs][docs-badge]][documentation]
@@ -8,6 +10,7 @@
 [![Platform][platform-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
+
 
 pyrekordbox is a Python package for interacting with the library and export data of
 Pioneer's Rekordbox DJ Software. It currently supports
@@ -283,6 +286,9 @@ the CI setup since it requires a working Rekordbox installation.
   https://rekord.cloud/blog/technical-inspection-of-rekordbox-6-and-its-new-internals.
 - supbox has a nice implementation on finding the Rekordbox 6 database key
   https://github.com/gabek/supbox
+
+
+
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
