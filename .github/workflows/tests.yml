@@ -73,3 +73,9 @@ jobs:
     - name: Run tests
       run: |
         pytest tests/ --cov=pyrekordbox --cov-report=xml -v
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        env_vars: OS,PYTHON
+        verbose: True
