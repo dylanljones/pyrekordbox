@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="logos/light/logo_primary.svg" alt="logo" height="70"/>
+<img src="logos/mid/logo_primary.svg" alt="logo" height="70"/>
 </p>
 
 [![Tests][tests-badge]][tests-link]
