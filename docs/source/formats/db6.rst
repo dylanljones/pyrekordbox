@@ -353,7 +353,7 @@ corresponding ID.
      - If None the global setting is used
    * - `Analysed`
      - Some code how the trck is analyzed
-     - Guessing not analyzed= `0` , standard= `105` , advanced= `121`
+     - Guessing not analyzed= `0` , standard= `105` , advanced= `121`, locked = `233`
    * - `ReleaseDate`
      - Date of track release
      - Format: yyyy-mm-dd; ex.: 2010-08-21
