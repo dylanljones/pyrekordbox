@@ -399,7 +399,7 @@ class DjmdHotCueBanklist(Base, StatsFull):
     Name = Column(VARCHAR(255), default=None)
     ImagePath = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
-    ParentID = Column(VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None)
+    ParentID = Column(VARCHAR(255), ForeignKey("djmdHotCueBanklist.ID"), default=None)
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
