@@ -380,6 +380,16 @@ class DjmdHistory(Base, StatsFull):
         return f"<{self.__class__.__name__}({s})>"
 
 
+class DjmdSongHistory(Base, StatsFull):
+
+    __tablename__ = "djmdSongHistory"
+
+    ID = Column(VARCHAR(255), primary_key=True)
+    HistoryID = Column(VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None)
+    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
+    TrackNo = Column(Integer, default=None)
+
+
 class DjmdHotCueBanklist(Base, StatsFull):
 
     __tablename__ = "djmdHotCueBanklist"
@@ -394,6 +404,38 @@ class DjmdHotCueBanklist(Base, StatsFull):
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
+
+
+class DjmdSongHotCueBanklist(Base, StatsFull):
+
+    __tablename__ = "djmdSongHotCueBanklist"
+
+    ID = Column(VARCHAR(255), primary_key=True)
+    HotCueBanklistID = Column(
+        VARCHAR(255), ForeignKey("djmdHotCueBanklist.ID"), default=None
+    )
+    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
+    TrackNo = Column(Integer, default=None)
+    CueID = Column(VARCHAR(255), default=None)
+    InMsec = Column(Integer, default=None)
+    InFrame = Column(Integer, default=None)
+    InMpegFrame = Column(Integer, default=None)
+    InMpegAbs = Column(Integer, default=None)
+    OutMsec = Column(Integer, default=None)
+    OutFrame = Column(Integer, default=None)
+    OutMpegFrame = Column(Integer, default=None)
+    OutMpegAbs = Column(Integer, default=None)
+    Color = Column(Integer, default=None)
+    ColorTableIndex = Column(Integer, default=None)
+    ActiveLoop = Column(Integer, default=None)
+    Comment = Column(VARCHAR(255), default=None)
+    BeatLoopSize = Column(Integer, default=None)
+    CueMicrosec = Column(Integer, default=None)
+    InPointSeekInfo = Column(VARCHAR(255), default=None)
+    OutPointSeekInfo = Column(VARCHAR(255), default=None)
+    HotCueBanklistUUID = Column(
+        VARCHAR(255), ForeignKey("djmdHotCueBanklist.UUID"), default=None
+    )
 
 
 class DjmdKey(Base, StatsFull):
@@ -461,6 +503,16 @@ class DjmdMyTag(Base, StatsFull):
         return f"<{self.__class__.__name__}({s})>"
 
 
+class DjmdSongMyTag(Base, StatsFull):
+
+    __tablename__ = "djmdSongMyTag"
+
+    ID = Column(VARCHAR(255), primary_key=True)
+    MyTagID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
+    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
+    TrackNo = Column(Integer, default=None)
+
+
 class DjmdPlaylist(Base, StatsFull):
 
     __tablename__ = "djmdPlaylist"
@@ -476,6 +528,16 @@ class DjmdPlaylist(Base, StatsFull):
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
+
+
+class DjmdSongPlaylist(Base, StatsFull):
+
+    __tablename__ = "djmdSongPlaylist"
+
+    ID = Column(VARCHAR(255), primary_key=True)
+    PlaylistID = Column(VARCHAR(255), ForeignKey("djmdPlaylist.ID"), default=None)
+    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
+    TrackNo = Column(Integer, default=None)
 
 
 class DjmdProperty(Base, StatsTime):
@@ -510,6 +572,18 @@ class DjmdRelatedTracks(Base, StatsFull):
         return f"<{self.__class__.__name__}({s})>"
 
 
+class DjmdSongRelatedTracks(Base, StatsFull):
+
+    __tablename__ = "djmdSongRelatedTracks"
+
+    ID = Column(VARCHAR(255), primary_key=True)
+    RelatedTracksID = Column(
+        VARCHAR(255), ForeignKey("djmdRelatedTracks.ID"), default=None
+    )
+    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
+    TrackNo = Column(Integer, default=None)
+
+
 class DjmdSampler(Base, StatsFull):
 
     __tablename__ = "djmdSampler"
@@ -523,80 +597,6 @@ class DjmdSampler(Base, StatsFull):
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
-
-
-class DjmdSongHistory(Base, StatsFull):
-
-    __tablename__ = "djmdSongHistory"
-
-    ID = Column(VARCHAR(255), primary_key=True)
-    HistoryID = Column(VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None)
-    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
-    TrackNo = Column(Integer, default=None)
-
-
-class DjmdSongHotCueBanklist(Base, StatsFull):
-
-    __tablename__ = "djmdSongHotCueBanklist"
-
-    ID = Column(VARCHAR(255), primary_key=True)
-    HotCueBanklistID = Column(
-        VARCHAR(255), ForeignKey("djmdHotCueBanklist.ID"), default=None
-    )
-    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
-    TrackNo = Column(Integer, default=None)
-    CueID = Column(VARCHAR(255), default=None)
-    InMsec = Column(Integer, default=None)
-    InFrame = Column(Integer, default=None)
-    InMpegFrame = Column(Integer, default=None)
-    InMpegAbs = Column(Integer, default=None)
-    OutMsec = Column(Integer, default=None)
-    OutFrame = Column(Integer, default=None)
-    OutMpegFrame = Column(Integer, default=None)
-    OutMpegAbs = Column(Integer, default=None)
-    Color = Column(Integer, default=None)
-    ColorTableIndex = Column(Integer, default=None)
-    ActiveLoop = Column(Integer, default=None)
-    Comment = Column(VARCHAR(255), default=None)
-    BeatLoopSize = Column(Integer, default=None)
-    CueMicrosec = Column(Integer, default=None)
-    InPointSeekInfo = Column(VARCHAR(255), default=None)
-    OutPointSeekInfo = Column(VARCHAR(255), default=None)
-    HotCueBanklistUUID = Column(
-        VARCHAR(255), ForeignKey("djmdHotCueBanklist.UUID"), default=None
-    )
-
-
-class DjmdSongMyTag(Base, StatsFull):
-
-    __tablename__ = "djmdSongMyTag"
-
-    ID = Column(VARCHAR(255), primary_key=True)
-    MyTagID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
-    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
-    TrackNo = Column(Integer, default=None)
-
-
-class DjmdSongPlaylist(Base, StatsFull):
-
-    __tablename__ = "djmdSongPlaylist"
-
-    ID = Column(VARCHAR(255), primary_key=True)
-    PlaylistID = Column(VARCHAR(255), ForeignKey("djmdPlaylist.ID"), default=None)
-    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
-    TrackNo = Column(Integer, default=None)
-
-
-class DjmdSongRelatedTracks(Base, StatsFull):
-
-    __tablename__ = "djmdSongRelatedTracks"
-
-    ID = Column(VARCHAR(255), primary_key=True)
-    RelatedTracksID = Column(
-        VARCHAR(255), ForeignKey("djmdRelatedTracks.ID"), default=None
-    )
-    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
-    TrackNo = Column(Integer, default=None)
 
 
 class DjmdSongSampler(Base, StatsFull):
