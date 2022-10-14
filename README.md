@@ -203,11 +203,9 @@ quant = mysett.get("quantize")
 
 ### Rekordbox 6 database
 
-Rekordbox 6 now uses a SQLite database for storing the collection content. The old
-DeviceSQL of Rekordbox 5 was probably too old for Pioneer  to keep using adequately,
-especially with the Rekordbox Agent. Unfortunatly, the new `master.db` SQLite database
-is encrypted using [SQLCipher][sqlcipher], which means it can't be used without the encryption key.
-Pioneer did this because they prefer that no one outside of Pioneer touches it.
+Rekordbox 6 now uses a SQLite database for storing the collection content.
+Unfortunatly, the new `master.db` SQLite database is encrypted using
+[SQLCipher][sqlcipher], which means it can't be used without the encryption key.
 However, since your data is stored and used locally, the key must be present on the
 machine running Rekordbox.
 
