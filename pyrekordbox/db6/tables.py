@@ -375,6 +375,8 @@ class DjmdHistory(Base, StatsFull):
     ParentID = Column(VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None)
     DateCreated = Column(VARCHAR(255), default=None)
 
+    Songs = relationship("DjmdSongHistory", back_populates="History")
+
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
@@ -388,6 +390,8 @@ class DjmdSongHistory(Base, StatsFull):
     HistoryID = Column(VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None)
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     TrackNo = Column(Integer, default=None)
+
+    History = relationship("DjmdHistory", back_populates="Songs")
 
 
 class DjmdHotCueBanklist(Base, StatsFull):
@@ -498,6 +502,8 @@ class DjmdMyTag(Base, StatsFull):
     Attribute = Column(Integer, default=None)
     ParentID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
 
+    MyTags = relationship("DjmdSongMyTag", back_populates="MyTag")
+
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
@@ -512,6 +518,8 @@ class DjmdSongMyTag(Base, StatsFull):
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     TrackNo = Column(Integer, default=None)
 
+    MyTag = relationship("DjmdMyTag", back_populates="MyTags")
+
 
 class DjmdPlaylist(Base, StatsFull):
 
@@ -524,6 +532,8 @@ class DjmdPlaylist(Base, StatsFull):
     Attribute = Column(Integer, default=None)
     ParentID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
     SmartList = Column(Text, default=None)
+
+    Songs = relationship("DjmdSongPlaylist", back_populates="Playlist")
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -539,21 +549,7 @@ class DjmdSongPlaylist(Base, StatsFull):
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     TrackNo = Column(Integer, default=None)
 
-
-class DjmdProperty(Base, StatsTime):
-
-    __tablename__ = "djmdProperty"
-
-    DBID = Column(VARCHAR(255), primary_key=True)
-    DBVersion = Column(VARCHAR(255), default=None)
-    BaseDBDrive = Column(VARCHAR(255), default=None)
-    CurrentDBDrive = Column(VARCHAR(255), default=None)
-    DeviceID = Column(VARCHAR(255), default=None)
-    Reserved1 = Column(Text, default=None)
-    Reserved2 = Column(Text, default=None)
-    Reserved3 = Column(Text, default=None)
-    Reserved4 = Column(Text, default=None)
-    Reserved5 = Column(Text, default=None)
+    Playlist = relationship("DjmdPlaylist", back_populates="Songs")
 
 
 class DjmdRelatedTracks(Base, StatsFull):
@@ -566,6 +562,8 @@ class DjmdRelatedTracks(Base, StatsFull):
     Attribute = Column(Integer, default=None)
     ParentID = Column(VARCHAR(255), ForeignKey("djmdRelatedTracks.ID"), default=None)
     Criteria = Column(Text, default=None)
+
+    Songs = relationship("DjmdSongRelatedTracks", back_populates="RelatedTracks")
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -583,6 +581,8 @@ class DjmdSongRelatedTracks(Base, StatsFull):
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     TrackNo = Column(Integer, default=None)
 
+    RelatedTracks = relationship("DjmdRelatedTracks", back_populates="Songs")
+
 
 class DjmdSampler(Base, StatsFull):
 
@@ -593,6 +593,8 @@ class DjmdSampler(Base, StatsFull):
     Name = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
     ParentID = Column(VARCHAR(255), ForeignKey("djmdSampler.ID"), default=None)
+
+    Songs = relationship("DjmdSongSampler", back_populates="Sampler")
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -607,6 +609,8 @@ class DjmdSongSampler(Base, StatsFull):
     SamplerID = Column(VARCHAR(255), ForeignKey("djmdSampler.ID"), default=None)
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     TrackNo = Column(Integer, default=None)
+
+    Sampler = relationship("DjmdSampler", back_populates="Songs")
 
 
 class DjmdSongTagList(Base, StatsFull):
@@ -636,6 +640,22 @@ class HotCueBanklistCue(Base, StatsFull):
     HotCueBanklistID = Column(VARCHAR(255), default=None)
     Cues = Column(Text, default=None)
     rb_cue_count = Column(Integer, default=None)
+
+
+class DjmdProperty(Base, StatsTime):
+
+    __tablename__ = "djmdProperty"
+
+    DBID = Column(VARCHAR(255), primary_key=True)
+    DBVersion = Column(VARCHAR(255), default=None)
+    BaseDBDrive = Column(VARCHAR(255), default=None)
+    CurrentDBDrive = Column(VARCHAR(255), default=None)
+    DeviceID = Column(VARCHAR(255), default=None)
+    Reserved1 = Column(Text, default=None)
+    Reserved2 = Column(Text, default=None)
+    Reserved3 = Column(Text, default=None)
+    Reserved4 = Column(Text, default=None)
+    Reserved5 = Column(Text, default=None)
 
 
 class ImageFile(Base, StatsFull):
