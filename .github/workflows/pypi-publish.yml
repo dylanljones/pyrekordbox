@@ -32,7 +32,7 @@ jobs:
         ref: ${{ steps.latestrelease.outputs.releasetag }}
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: "3.9"
 
