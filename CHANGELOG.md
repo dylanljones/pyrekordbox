@@ -10,6 +10,9 @@
 - fix incorrect table in `get_related_tracks`
 - fix incorrect foreign key in `DjmdHotCueBanklist`
 
+### Documentation
+- remove duplicate entry in the Rekordbox v6 database format documentation
+
 
 <a name="0.0.7"></a>
 ## [0.0.7] - 2022-12-06
