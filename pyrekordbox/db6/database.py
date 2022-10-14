@@ -238,7 +238,7 @@ class Rekordbox6Database:
         return self.query(tables.DjmdProperty).filter_by(**kwargs)
 
     def get_related_tracks(self, **kwargs):
-        return self.query(tables.DjmdProperty).filter_by(**kwargs)
+        return self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
 
     def get_related_tracks_songs(self, id_):
         return self.query(tables.DjmdSongRelatedTracks).filter_by(RelatedTracksID=id_)

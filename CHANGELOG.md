@@ -1,10 +1,23 @@
 # What's New
 
-<a name="0.0.7"></a>
-## [0.0.7] - 2022-12-06
+<a name="unreleased"></a>
+## [Unreleased]
 
 ### New Features
+- add relationships between lists and contents ([#37](https://github.com/dylanljones/pyrekordbox/issues/37))
+
+### Improvements/Bug Fixes
+- fix incorrect table in `get_related_tracks`
+- fix incorrect foreign key in `DjmdHotCueBanklist`
+
+
+<a name="0.0.7"></a>
+## [0.0.7] - 2022-12-06
+### New Features
 - add SQLCipher support for macOS (see [#27](https://github.com/dylanljones/pyrekordbox/issues/27))
+
+### Documentation
+- add installation instructions for SQLCipher on macOS
 
 
 <a name="0.0.6"></a>
