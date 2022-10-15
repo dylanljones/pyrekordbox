@@ -1,7 +1,7 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.0.8"></a>
+## [0.0.8] - 2022-15-10
 
 ### New Features
 - add relationships between lists and contents ([#37](https://github.com/dylanljones/pyrekordbox/issues/37))
@@ -101,7 +101,8 @@
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.7...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.8...HEAD
+[0.0.8]: https://github.com/dylanljones/pyrekordbox/compare/0.0.7...0.0.8
 [0.0.7]: https://github.com/dylanljones/pyrekordbox/compare/0.0.6...0.0.7
 [0.0.6]: https://github.com/dylanljones/pyrekordbox/compare/0.0.5...0.0.6
 [0.0.5]: https://github.com/dylanljones/pyrekordbox/compare/0.0.4...0.0.5
