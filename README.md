@@ -51,7 +51,7 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 SQLCipher can be used by building the libary against
 an amalgamation with [pysqlcipher3] or by using pre-built DLL's (not recommended). For a detailed instruction,
-see [SQLCIPHER_WINDOWS.md](SQLCIPHER_WINDOWS.md).
+see [SQLCIPHER_WIN.md][sqlcipher_windows].
 
 #### MacOS
 
@@ -308,3 +308,4 @@ the CI setup since it requires a working Rekordbox installation.
 [rekordcrate]: https://github.com/Holzhaus/rekordcrate
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
+[sqlcipher_windows]: https://github.com/dylanljones/pyrekordbox/blob/master/SQLCIPHER_WIN.md
