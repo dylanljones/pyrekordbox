@@ -1,7 +1,7 @@
 # Installing SQLCipher for Python on Windows
 
 
-## Building SQLCipher against amalgamation and installing pysqlcipher3
+## Building SQLCipher and installing pysqlcipher3 (recommended)
 
 
 1. **Install [Visual Studio Community Edition][VS]**
@@ -99,7 +99,7 @@
 You should now have a working ``pysqlcipher3`` installation!
 
 
-## Pre-built SQLCipher DLL's
+## Pre-built SQLCipher DLL's (not recommended)
 
 Alternatively, pyrekordbox includes Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
 StackOverflow discussion), which can be used to open databases encrpyted by SQLCipher.
