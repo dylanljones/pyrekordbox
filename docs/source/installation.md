@@ -177,8 +177,8 @@ c.execute("PRAGMA key='password'")
 ````
 
 ```{attention}
-The included DLL's only work with *Python 3.8*! For other Python versions
-(specifically the version of the included SQLite3 libary) the DLL's have to be built
+The included DLL's only work with *Python 3.8 (32 bit)*! For other Python versions
+(specificly the version of the included SQLite3 libary) the DLL's have to be built
 from source.
 ```
 

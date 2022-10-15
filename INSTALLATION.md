@@ -1,7 +1,31 @@
-# Installing SQLCipher for Python on Windows
+# Installation
 
+Pyrekordbox is available on [PyPI]:
 
-## Building SQLCipher and installing pysqlcipher3 (recommended)
+```sh
+$ pip install pyrekordbox
+```
+
+Alternatively, it can be installed via [GitHub]:
+
+```sh
+$ pip install git+https://github.com/dylanljones/pyrekordbox.git@VERSION
+```
+
+where `VERSION` is a branch, tag or release. The project can also be cloned/forked
+and installed via
+
+```sh
+$ python setup.py install
+```
+
+## Installing SQLCipher
+
+Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
+
+### Windows
+
+#### Building SQLCipher and installing pysqlcipher3 (recommended)
 
 
 1. **Install [Visual Studio Community Edition][VS]**
@@ -112,8 +136,7 @@ options:
   -b, --buildonly       Don't install pysqlcipher3, only build the amalgamation
 ````
 
-After the installation SQLCipher-databases can be unlocked via the
-`pysqlcipher3` package by providing a key via the `PRAGMA key='db-key'` SQL statement:
+After the installation SQLCipher-databases can be unlocked via the `pysqlcipher3` package:
 ````python
 from pysqlcipher3 import dbapi2 as sqlite3
 
@@ -123,7 +146,7 @@ c.execute("PRAGMA key='password'")
 ````
 
 
-## Pre-built SQLCipher DLL's (not recommended)
+#### Pre-built SQLCipher DLL's (not recommended)
 
 Alternatively, pyrekordbox includes Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
 StackOverflow discussion), which can be used to open databases encrpyted by SQLCipher.
@@ -144,8 +167,7 @@ To patch the sqlite3 installation, follow these steps:
 
 The last two steps are only required if the first step is not sufficient.
 
-After replacing the DLL files SQLCipher-databases can be unlocked via the normal
-`sqlite3` package by providing a key via the `PRAGMA key='db-key'` SQL statement:
+After replacing the DLL files SQLCipher-databases can be unlocked via the normal `sqlite3` package:
 ````python
 import sqlite3
 
@@ -158,12 +180,33 @@ c.execute("PRAGMA key='password'")
 |----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
-## References:
 
-- [Sqlcipher](https://www.zetetic.net/sqlcipher/open-source/)
-- [Stackoverflow discussion](https://stackoverflow.com/questions/33618565/how-to-build-sql-cipher-python-binding-for-windows)
-- https://github.com/Monogi/pysqlcipher3_install_win10
+### MacOS
+
+For MacOS follow these steps:
+
+1) Install [Homebrew](https://brew.sh) if you do not have it on your machine.
+2) Install SQLCipher with `brew install SQLCipher`.
+3) With the python environment you are using to run pyrekordbox active execute the following:
+```shell
+git clone https://github.com/rigglemania/pysqlcipher3
+cd pysqlcipher3
+C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/lib python setup.py build
+C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/lib python setup.py install
+```
+Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
+
+
+### References:
+
+- [https://stackoverflow.com/questions/33618565/how-to-build-sql-cipher-python-binding-for-windows](https://stackoverflow.com/questions/33618565/how-to-build-sql-cipher-python-binding-for-windows)
+- [https://github.com/Monogi/pysqlcipher3_install_win10](https://github.com/Monogi/pysqlcipher3_install_win10)
+
+
 
 [VS]: https://visualstudio.microsoft.com/de/vs/community/
 [OpenSSL]: https://slproweb.com/products/Win32OpenSSL.html
 [pysqlcipher3]: https://github.com/rigglemania/pysqlcipher3
+[Pypi]: https://pypi.org/project/pyrekordbox/
+[GitHub]: https://github.com/dylanljones/pyrekordbox
+[sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
