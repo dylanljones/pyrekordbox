@@ -31,10 +31,10 @@
    Confirm the following path exists `../../VC/include/openssl/aes.h`
 
 
-5. **Use included SQLCipher 3 amalgamations or [download](https://github.com/geekbrother/sqlcipher-amalgamation) / compile the SQLCipher 3 amalgamations**
+5. **Download / compile the SQLCipher 3 amalgamation files**
 
-   The included SQLCipher 3 amalgamations can be found in the ``Libs/sqlcipher_amalagamations`` directory
-   of the pyrekordbox package. To compile the amalgamations, follow [this](http://www.jerryrw.com/howtocompile.php) tutorial.
+   Pre-built SQLCipher 3 amalgamation files can be downloaded from [this repo](https://github.com/geekbrother/sqlcipher-amalgamation).
+   To compile the amalgamation files, follow [this tutorial](http://www.jerryrw.com/howtocompile.php).
 
 
 6. **Clone [pysqlcipher3] into any directory**
