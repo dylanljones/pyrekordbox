@@ -129,8 +129,7 @@ rekordbox.cfg and rekordbox.yml.
 
 The Rekordbox XML database is used for importing (and exporting) Rekordbox collections
 including track metadata and playlists. They can also be used to share playlists
-between two databases. Exporting XML databases was removed in Rekordbox 6.
-*Update*: In newer Rekordbox 6 versions the XML export feature returned!
+between two databases.
 
 pyrekordbox can read and write Rekordbox XML databases.
 
@@ -204,11 +203,9 @@ quant = mysett.get("quantize")
 
 ### Rekordbox 6 database
 
-Rekordbox 6 now uses a SQLite database for storing the collection content. The old
-DeviceSQL of Rekordbox 5 was probably too old for Pioneer  to keep using adequately,
-especially with the Rekordbox Agent. Unfortunatly, the new `master.db` SQLite database
-is encrypted using [SQLCipher][sqlcipher], which means it can't be used without the encryption key.
-Pioneer did this because they prefer that no one outside of Pioneer touches it.
+Rekordbox 6 now uses a SQLite database for storing the collection content.
+Unfortunatly, the new `master.db` SQLite database is encrypted using
+[SQLCipher][sqlcipher], which means it can't be used without the encryption key.
 However, since your data is stored and used locally, the key must be present on the
 machine running Rekordbox.
 
