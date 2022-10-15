@@ -98,9 +98,9 @@
 You now should have a working ``pysqlcipher3`` installation! The directory of the
 cloned ``pysqlcipher3`` repo can be deleted after installing the package.
 
-Steps 5-11 can be automated using the included ``install_pysqlcipher`` script:
+Steps 5-11 can be automated using the included ``install_pysqlcipher.py`` script:
 ````commandline
-usage: install_pysqlcipher.py [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
+usage: python install_pysqlcipher.py [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 
 options:
   -h, --help            show this help message and exit
