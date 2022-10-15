@@ -44,7 +44,7 @@
    ````
 
 
-7. **Create directory ``...\pysqlcipher3\amalagamation``**
+7. **Create directory ``...\pysqlcipher3\amalgamation``**
 
    Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5
 
