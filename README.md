@@ -63,8 +63,8 @@ StackOverflow discussion) can be used:
 After that SQLCipher-databases can be unlocked via the normal `sqlite3` package by
 providing the key via the `PRAGMA key='db-key'` SQL statement.
 
-| ❗  | The included DLL's only work with *Python 3.8*! For other Python versions (specificly the version of the included SQLite3 libary) the DLL's have to be built from source. |
-|----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ❗  | The included DLL's only work with *Python 3.8 (32 bit)*! For other Python versions (specificly the version of the included SQLite3 libary) the DLL's have to be built from source. |
+|----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 #### MacOS
 
