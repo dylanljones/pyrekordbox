@@ -125,6 +125,8 @@ class ContentActiveCensor(Base, StatsFull):
     ActiveCensors = Column(Text, default=None)
     rb_activecensor_count = Column(Integer, default=None)
 
+    Content = relationship("DjmdContent")
+
 
 class ContentCue(Base, StatsFull):
 
@@ -134,6 +136,8 @@ class ContentCue(Base, StatsFull):
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     Cues = Column(Text, default=None)
     rb_cue_count = Column(Integer, default=None)
+
+    Content = relationship("DjmdContent")
 
 
 class ContentFile(Base, StatsFull):
@@ -156,18 +160,22 @@ class ContentFile(Base, StatsFull):
     rb_priority = Column(Integer, default=50)
     rb_file_size_dirty = Column(Integer, default=0)
 
+    Content = relationship("DjmdContent")
+
 
 class DjmdActiveCensor(Base, StatsFull):
 
     __tablename__ = "djmdActiveCensor"
 
     ID = Column(VARCHAR(255), primary_key=True)
-    ContentID = Column(VARCHAR(255), default=None)
+    ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     InMsec = Column(Integer, default=None)
     OutMsec = Column(Integer, default=None)
     Info = Column(Integer, default=None)
     ParameterList = Column(Text, default=None)
     ContentUUID = Column(VARCHAR(255), default=None)
+
+    Content = relationship("DjmdContent")
 
 
 class DjmdAlbum(Base, StatsFull):
@@ -392,6 +400,7 @@ class DjmdSongHistory(Base, StatsFull):
     TrackNo = Column(Integer, default=None)
 
     History = relationship("DjmdHistory", back_populates="Songs")
+    Content = relationship("DjmdContent")
 
 
 class DjmdHotCueBanklist(Base, StatsFull):
@@ -440,6 +449,8 @@ class DjmdSongHotCueBanklist(Base, StatsFull):
     HotCueBanklistUUID = Column(
         VARCHAR(255), ForeignKey("djmdHotCueBanklist.UUID"), default=None
     )
+
+    Content = relationship("DjmdContent")
 
 
 class DjmdKey(Base, StatsFull):
@@ -491,6 +502,8 @@ class DjmdMixerParam(Base, StatsFull):
     PeakHigh = Column(Integer, default=None)
     PeakLow = Column(Integer, default=None)
 
+    Content = relationship("DjmdContent")
+
 
 class DjmdMyTag(Base, StatsFull):
 
@@ -519,6 +532,7 @@ class DjmdSongMyTag(Base, StatsFull):
     TrackNo = Column(Integer, default=None)
 
     MyTag = relationship("DjmdMyTag", back_populates="MyTags")
+    Content = relationship("DjmdContent")
 
 
 class DjmdPlaylist(Base, StatsFull):
@@ -550,6 +564,7 @@ class DjmdSongPlaylist(Base, StatsFull):
     TrackNo = Column(Integer, default=None)
 
     Playlist = relationship("DjmdPlaylist", back_populates="Songs")
+    Content = relationship("DjmdContent")
 
 
 class DjmdRelatedTracks(Base, StatsFull):
@@ -582,6 +597,7 @@ class DjmdSongRelatedTracks(Base, StatsFull):
     TrackNo = Column(Integer, default=None)
 
     RelatedTracks = relationship("DjmdRelatedTracks", back_populates="Songs")
+    Content = relationship("DjmdContent")
 
 
 class DjmdSampler(Base, StatsFull):
@@ -611,6 +627,7 @@ class DjmdSongSampler(Base, StatsFull):
     TrackNo = Column(Integer, default=None)
 
     Sampler = relationship("DjmdSampler", back_populates="Songs")
+    Content = relationship("DjmdContent")
 
 
 class DjmdSongTagList(Base, StatsFull):
@@ -620,6 +637,8 @@ class DjmdSongTagList(Base, StatsFull):
     ID = Column(VARCHAR(255), primary_key=True)
     ContentID = Column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     TrackNo = Column(Integer, default=None)
+
+    Content = relationship("DjmdContent")
 
 
 class DjmdSort(Base, StatsFull):
