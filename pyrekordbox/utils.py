@@ -53,15 +53,25 @@ CRC16_XMODEM_TABLE = [
     0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
     0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
 ]
-# fmt: off
+# fmt: on
 
 
 def _crc16(data, crc, table):
-    """Calculate CRC16 using the given table.
-    `data`      - data for calculating CRC, must be a string
-    `crc`       - initial value
-    `table`     - table for caclulating CRC (list of 256 integers)
-    Return calculated value of CRC
+    """Calculates the CRC16 checksum using the given table.
+
+    Parameters
+    ----------
+    data : bytes
+        The data used for calculating the CRC checksum.
+    crc : int
+        The initial value.
+    table : Sequence of int
+        The table for calculating the checksum. The table must consist of 256 integers.
+
+    Returns
+    -------
+    crc : int
+        The calculated CRC checksum.
     """
     for byte in data:
         crc = ((crc << 8) & 0xFF00) ^ table[((crc >> 8) & 0xFF) ^ byte]
@@ -69,10 +79,19 @@ def _crc16(data, crc, table):
 
 
 def crc16xmodem(data, crc=0):
-    """Calculate CRC-CCITT (XModem) variant of CRC16.
-    `data`      - data for calculating CRC, must be a string
-    `crc`       - initial value
-    Return calculated value of CRC
+    """Calculates the CRC-CCITT (XModem) variant of the CRC16 checksum.
+
+    Parameters
+    ----------
+    data : bytes
+        The data used for calculating the CRC checksum.
+    crc : int, optional
+        The initial value.
+
+    Returns
+    -------
+    crc : int
+        The calculated CRC16-XModem checksum.
     """
     return _crc16(data, crc, CRC16_XMODEM_TABLE)
 
