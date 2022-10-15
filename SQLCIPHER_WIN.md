@@ -96,7 +96,11 @@
     ````
 
 
-You should now have a working ``pysqlcipher3`` installation!
+You now should have a working ``pysqlcipher3`` installation! The directory of the
+cloned ``pysqlcipher3`` repo can be deleted after installing the package.
+
+After the installation SQLCipher-databases can be unlocked via the normal
+`pysqlite3` package by providing a key via the `PRAGMA key='db-key'` SQL statement.
 
 
 ## Pre-built SQLCipher DLL's (not recommended)
@@ -118,10 +122,10 @@ To patch the sqlite3 installation, follow these steps:
 
 - **Optional: Copy `libssl-1_1.dll` into the Python DLL directory**
 
-The last two steps are only required, if the first step is not sufficient.
+The last two steps are only required if the first step is not sufficient.
 
 After replacing the DLL files SQLCipher-databases can be unlocked via the normal
-`sqlite3` package by providing the key via the `PRAGMA key='db-key'` SQL statement.
+`sqlite3` package by providing a key via the `PRAGMA key='db-key'` SQL statement.
 
 | ❗  | The included DLL's only work with *Python 3.8 (32 bit)*! For other Python versions (specificly the version of the included SQLite3 libary) the DLL's have to be built from source. |
 |----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
