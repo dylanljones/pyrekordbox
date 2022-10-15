@@ -76,9 +76,9 @@
      ````
      to
      ````python
-     ext.extra_link_args.append("lib<NAME>.lib")
+     ext.extra_link_args.append("<NAME>")
      ````
-     where ``NAME`` is something like ``libcrypto.lib``
+     where ``<NAME>`` is something like ``libcrypto.lib`` (depending on your version).
 
 
 10. **Build using the amalgamation**
