@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/dylanljones/pyrekordbox/master/logos/light/logo_primary.svg" alt="logo" height="70"/>
+<img src="https://raw.githubusercontent.com/dylanljones/pyrekordbox/master/docs/source/_static/logos/light/logo_primary.svg" alt="logo" height="70"/>
 </p>
 
 [![Tests][tests-badge]][tests-link]
