@@ -99,7 +99,7 @@
 You should now have a working ``pysqlcipher3`` installation!
 
 
-# Pre-built SQLCipher DLL's
+## Pre-built SQLCipher DLL's
 
 Alternatively, pyrekordbox includes Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
 StackOverflow discussion), which can be used to open databases encrpyted by SQLCipher.
