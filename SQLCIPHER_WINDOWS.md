@@ -1,24 +1,18 @@
-# Building SQLCipher Python Bindings for Windows
+# Installing SQLCipher for Python on Windows
 
 
-## Requirements
+## Building SQLCipher against amalgamation and installing pysqlcipher3
 
-Building the SQLCipher bindings requires
-
-- [Visual Studio Community Edition][VS]
-- [Prebuilt OpenSSL binary][OpenSSL]
-- [pysqlcipher3]
-
-
-## Building SQLCipher against amalgamation
 
 1. **Install [Visual Studio Community Edition][VS]**
 
    Make sure to select all the GCC options (VC++, C++, etc) in the installation process.
 
+
 2. **Install a prebuilt [OpenSSL binary][OpenSSL]**
 
    Choose the latest Win32/Win64 version.
+
 
 3. **Confirm that the `OPENSSL_CONF` environment variable is set properly in environment variables**
 
@@ -36,15 +30,19 @@ Building the SQLCipher bindings requires
 
    Confirm the following path exists `../../VC/include/openssl/aes.h`
 
-5. **[Download](https://github.com/geekbrother/sqlcipher-amalgamation) or compile the SQLCipher 3 amalgamations**
 
-   To compile the amalgamations, follow [this](http://www.jerryrw.com/howtocompile.php) tutorial
+5. **Use included SQLCipher 3 amalgamations or [download](https://github.com/geekbrother/sqlcipher-amalgamation) / compile the SQLCipher 3 amalgamations**
+
+   The included SQLCipher 3 amalgamations can be found in the ``Libs/sqlcipher_amalagamations`` directory
+   of the pyrekordbox package. To compile the amalgamations, follow [this](http://www.jerryrw.com/howtocompile.php) tutorial.
+
 
 6. **Clone [pysqlcipher3] into any directory**
 
    ````commandline
    git clone https://github.com/rigglemania/pysqlcipher3
    ````
+
 
 7. **Create directory ``...\pysqlcipher3\amalagamation``**
 
@@ -85,17 +83,48 @@ Building the SQLCipher bindings requires
 
 10. **Build using the amalgamation**
 
-    Run
+    ``cd`` into the ``pysqlcipher3`` directory and run
     ````commandline
     python setup.py build_amalgamation
     ````
 
+
 11. **Install ``pysqlcipher3``**
 
-    Run
     ````commandline
     python setup.py install
     ````
+
+
+You should now have a working ``pysqlcipher3`` installation!
+
+
+# Pre-built SQLCipher DLL's
+
+Alternatively, pyrekordbox includes Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
+StackOverflow discussion), which can be used to open databases encrpyted by SQLCipher.
+The DLL's can be found in the ``Libs/sqlcipher_py38`` directory of the pyrekordbox package.
+To patch the sqlite3 installation, follow these steps:
+
+
+- **Replace ``sqlite3.dll`` in the Python DLL directory**
+
+  Rename the ``sqlcipher.dll`` file in the ``Libs/sqlcipher_py38`` directory to
+  ``sqlite3.dll`` and replace the existing DLL file in the Python DLL folder with it.
+
+  *Note*: Before replacing the original file, back up ``sqlite3.dll`` in the Python DLL directory by renaming it to something like ``sqlite3_backup.dll``.
+
+- **Optional: Copy `libcrypto-1_1.dll` into the Python DLL directory**
+
+- **Optional: Copy `libssl-1_1.dll` into the Python DLL directory**
+
+The last two steps are only required, if the first step is not sufficient.
+
+After replacing the DLL files SQLCipher-databases can be unlocked via the normal
+`sqlite3` package by providing the key via the `PRAGMA key='db-key'` SQL statement.
+
+| ❗  | The included DLL's only work with *Python 3.8 (32 bit)*! For other Python versions (specificly the version of the included SQLite3 libary) the DLL's have to be built from source. |
+|----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 ## References:
