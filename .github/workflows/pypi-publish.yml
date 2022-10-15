@@ -27,7 +27,7 @@ jobs:
         echo ${{ steps.latestrelease.outputs.releasetag }}
 
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: ${{ steps.latestrelease.outputs.releasetag }}
 

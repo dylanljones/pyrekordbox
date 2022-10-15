@@ -1,8 +1,17 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### New Features
+- add relationship for `Content` in the RB6 database tables
+
+### Improvements/Bug Fixes
+- also try to import ``pysqlcipher3`` on Windows
+
+
 <a name="0.0.8"></a>
 ## [0.0.8] - 2022-15-10
-
 ### New Features
 - add relationships between lists and contents ([#37](https://github.com/dylanljones/pyrekordbox/issues/37))
 
