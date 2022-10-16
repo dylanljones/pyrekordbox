@@ -69,7 +69,7 @@ All items in the collection can be fetched via
 <Track(Location=C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3)>
 ````
 
-The XML attributes of a `Track` element are accessable as an attribute of the ```Track``
+The XML attributes of a `Track` element are accessable as an attribute of the ``Track``
 object or via a dict-interface:
 ````python
 >>> track = xml.get_track(0)
@@ -82,3 +82,34 @@ Demo Track 1
 
 See the {ref}`XML file documentation <XML Database Format>` for a list of valid
 attributes. All XML attributes start with a capital letter.
+
+
+## Playlists
+
+Playlists or playlist folders can be accessed by supplying the path:
+````python
+folder = xml.get_playlist("Folder")
+paylist = xml.get_playlist("Folder", "Sub Playlist")
+````
+Content in a playlist is stored as a key, which can either be the ``TrackID`` or the
+``Location`` (file path):
+````python
+>>> playlist.key_type
+TrackID
+````
+
+The keys can be retrieved by calling
+````python
+keys = playlist.get_tracks()
+````
+
+A new track can be added to a playlist by specifying the corresponding key:
+````python
+playlist.add_track(track_key)
+````
+
+A new sub-folder or -playlist can be added by supplying the name:
+````python
+folder.add_playlist("Playlist")
+folder.add_playlist_folder("Folder")
+````
