@@ -243,6 +243,9 @@ corresponding ID.
    * - `ID`
      - The ID of the content
      - referenced as `ContentID` in other tables
+   * - `FolderPath`
+     - The full path of the file
+     -
    * - `FileNameL`
      - The long file name
      - This is the normal file name

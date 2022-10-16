@@ -240,6 +240,12 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
 
+
+| ❗  | Please make sure to backup your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog can be found under "File" > "Library" > "Backup Library" |
+|----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+
+
 ### To Do
 
 

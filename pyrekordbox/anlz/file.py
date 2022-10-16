@@ -170,3 +170,7 @@ class AnlzFile(abc.Mapping):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.tag_types})"
+
+    def set_path(self, path):
+        tag = self.get_tag("PPTH")
+        tag.set(path)
