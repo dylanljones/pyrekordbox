@@ -205,8 +205,14 @@ an easy interface for accessing the data stored in it:
 from pyrekordbox import Rekordbox6Database
 
 db = Rekordbox6Database()
-for item in db.get_content():
-    print(item.Title, item.Artist.Name)
+
+for content in db.get_content():
+    print(content.Title, content.Artist.Name)
+
+playlist = db.get_playlist()[0]
+for song in playlist.Songs:
+    content = song.Content
+    print(content.Title, content.Artist.Name)
 ````
 Changing entries of the database is not yet supported. Writing to the database without
 knowing how Rekordbox generates the UUID/ID's for the DB entries could corrupt the
