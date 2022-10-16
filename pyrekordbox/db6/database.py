@@ -113,6 +113,12 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     return con
 
 
+def _parse_query_result(result, kwargs):
+    if "ID" in kwargs:
+        result = result.one()
+    return result
+
+
 class Rekordbox6Database:
     def __init__(self, path="", unlock=True):
         self.engine = create_rekordbox_engine(path, unlock=unlock)
@@ -137,26 +143,34 @@ class Rekordbox6Database:
     def query(self, *entities, **kwargs):
         return self.session.query(*entities, **kwargs)
 
+    def commit(self):
+        self.session.commit()
+
     # -- Djmd Tables -------------------------------------------------------------------
 
     def get_active_censor(self, **kwargs):
-        return self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
+        res = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_album(self, **kwargs):
-        return self.query(tables.DjmdAlbum).filter_by(**kwargs)
+        res = self.query(tables.DjmdAlbum).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_artist(self, **kwargs):
-        return self.query(tables.DjmdArtist).filter_by(**kwargs)
+        res = self.query(tables.DjmdArtist).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_category(self, **kwargs):
-        return self.query(tables.DjmdCategory).filter_by(**kwargs)
+        res = self.query(tables.DjmdCategory).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_color(self, **kwargs):
-        return self.query(tables.DjmdColor).filter_by(**kwargs)
+        res = self.query(tables.DjmdColor).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_content(self, **kwargs):
-        query = self.query(tables.DjmdContent).filter_by(**kwargs)
-        return query
+        res = self.query(tables.DjmdContent).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def search_content(self, search):
 
@@ -185,100 +199,130 @@ class Rekordbox6Database:
         return results
 
     def get_cue(self, **kwargs):
-        query = self.query(tables.DjmdCue).filter_by(**kwargs)
-        return query
+        res = self.query(tables.DjmdCue).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_device(self, **kwargs):
-        return self.query(tables.DjmdDevice).filter_by(**kwargs)
+        res = self.query(tables.DjmdDevice).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_genre(self, **kwargs):
-        return self.query(tables.DjmdGenre).filter_by(**kwargs)
+        res = self.query(tables.DjmdGenre).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_history(self, **kwargs):
-        return self.query(tables.DjmdHistory).filter_by(**kwargs)
+        res = self.query(tables.DjmdHistory).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_history_songs(self, id_):
-        return self.query(tables.DjmdSongHistory).filter_by(HistoryID=id_)
+        res = self.query(tables.DjmdSongHistory).filter_by(HistoryID=id_)
+        return res
 
     def get_hot_cue_banklist(self, **kwargs):
-        return self.query(tables.DjmdHotCueBanklist).filter_by(**kwargs)
+        res = self.query(tables.DjmdHotCueBanklist).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_hot_cue_banklist_songs(self, id_):
-        return self.query(tables.DjmdSongHotCueBanklist).filter_by(HotCueBanklistID=id_)
+        res = self.query(tables.DjmdSongHotCueBanklist).filter_by(HotCueBanklistID=id_)
+        return res
 
     def get_key(self, **kwargs):
-        return self.query(tables.DjmdKey).filter_by(**kwargs)
+        res = self.query(tables.DjmdKey).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_label(self, **kwargs):
-        return self.query(tables.DjmdLabel).filter_by(**kwargs)
+        res = self.query(tables.DjmdLabel).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_menu_items(self, **kwargs):
-        return self.query(tables.DjmdMenuItems).filter_by(**kwargs)
+        res = self.query(tables.DjmdMenuItems).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_mixer_param(self, **kwargs):
-        return self.query(tables.DjmdMixerParam).filter_by(**kwargs)
+        res = self.query(tables.DjmdMixerParam).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_my_tag(self, **kwargs):
-        return self.query(tables.DjmdMyTag).filter_by(**kwargs)
+        res = self.query(tables.DjmdMyTag).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_my_tag_songs(self, id_):
-        return self.query(tables.DjmdSongMyTag).filter_by(MyTagID=id_)
+        res = self.query(tables.DjmdSongMyTag).filter_by(MyTagID=id_)
+        return res
 
     def get_playlist(self, **kwargs):
-        return self.query(tables.DjmdPlaylist).filter_by(**kwargs)
+        res = self.query(tables.DjmdPlaylist).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_playlist_songs(self, id_):
-        return self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=id_)
+        res = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=id_)
+        return res
 
     def get_property(self, **kwargs):
-        return self.query(tables.DjmdProperty).filter_by(**kwargs)
+        res = self.query(tables.DjmdProperty).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_related_tracks(self, **kwargs):
-        return self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
+        res = self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_related_tracks_songs(self, id_):
-        return self.query(tables.DjmdSongRelatedTracks).filter_by(RelatedTracksID=id_)
+        res = self.query(tables.DjmdSongRelatedTracks).filter_by(RelatedTracksID=id_)
+        return res
 
     def get_sampler(self, **kwargs):
-        return self.query(tables.DjmdSampler).filter_by(**kwargs)
+        res = self.query(tables.DjmdSampler).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_sampler_songs(self, id_):
-        return self.query(tables.DjmdSongSampler).filter_by(SamplerID=id_)
+        res = self.query(tables.DjmdSongSampler).filter_by(SamplerID=id_)
+        return res
 
     def get_tag_list_songs(self, id_):
-        return self.query(tables.DjmdSongTagList).filter_by(ID=id_)
+        res = self.query(tables.DjmdSongTagList).filter_by(ID=id_)
+        return res
 
     def get_sort(self, **kwargs):
-        return self.query(tables.DjmdSort).filter_by(**kwargs)
+        res = self.query(tables.DjmdSort).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     # -- Other tables ------------------------------------------------------------------
 
     def get_agent_registry(self, **kwargs):
-        return self.query(tables.AgentRegistry).filter_by(**kwargs)
+        res = self.query(tables.AgentRegistry).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_cloud_agent_registry(self, **kwargs):
-        return self.query(tables.CloudAgentRegistry).filter_by(**kwargs)
+        res = self.query(tables.CloudAgentRegistry).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_content_active_censor(self, **kwargs):
-        return self.query(tables.ContentActiveCensor).filter_by(**kwargs)
+        res = self.query(tables.ContentActiveCensor).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_content_cue(self, **kwargs):
-        return self.query(tables.ContentCue).filter_by(**kwargs)
+        res = self.query(tables.ContentCue).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_content_file(self, **kwargs):
-        return self.query(tables.ContentFile).filter_by(**kwargs)
+        res = self.query(tables.ContentFile).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_hot_cue_banklist_cue(self, **kwargs):
-        return self.query(tables.HotCueBanklistCue).filter_by(**kwargs)
+        res = self.query(tables.HotCueBanklistCue).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_image_file(self, **kwargs):
-        return self.query(tables.ImageFile).filter_by(**kwargs)
+        res = self.query(tables.ImageFile).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_setting_file(self, **kwargs):
-        return self.query(tables.SettingFile).filter_by(**kwargs)
+        res = self.query(tables.SettingFile).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     def get_uuid_map(self, **kwargs):
-        return self.query(tables.UuidIDMap).filter_by(**kwargs)
+        res = self.query(tables.UuidIDMap).filter_by(**kwargs)
+        return _parse_query_result(res, kwargs)
 
     # ==================================================================================
 
@@ -289,7 +333,7 @@ class Rekordbox6Database:
         return paths
 
     def get_anlz_dir(self, content_id):
-        item = self.get_content(ID=content_id).one()
+        item = self.get_content(ID=content_id)
         dat_path = os.path.normpath(item.AnalysisDataPath).strip("\\/")
         path = os.path.join(self._anlz_root, os.path.dirname(dat_path))
         assert os.path.exists(path)
