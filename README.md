@@ -241,8 +241,8 @@ pyrekordbox is tested on Windows and MacOS, however some features can't be teste
 the CI setup since it requires a working Rekordbox installation.
 
 
-| ❗  | Please make sure to backup your Rekordbox collection before making changes with pyrekordbox or testing new features. The backup dialog can be found under "File" > "" > "" |
-|----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ❗  | Please make sure to backup your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog can be found under "File" > "Library" > "Backup Library" |
+|----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 
