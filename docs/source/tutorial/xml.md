@@ -69,7 +69,7 @@ All items in the collection can be fetched via
 <Track(Location=C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3)>
 ````
 
-The XML attributes of a `Track` element are accessable as an attribute of the ```Track``
+The XML attributes of a `Track` element are accessable as an attribute of the ``Track``
 object or via a dict-interface:
 ````python
 >>> track = xml.get_track(0)
