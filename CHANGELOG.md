@@ -1,18 +1,22 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.1.0"></a>
+## [0.1.0] - 2022-16-10
 
 ### New Features
+- add `set_content_path` to `Rekordbox6Database` object
+- add `set_path` to `AnlzFile` object
 - add name properties for linked tables in the ``DjmdContent`` table of the RB6 database
 - add relationship for `Content` in the RB6 database tables
 
 ### Improvements/Bug Fixes
+- return first query result when using ID as argument
 - add type annotation to ``read_mysetting_file``
 - fix ``items()`` method in MySettings objects
 - also try to import ``pysqlcipher3`` on Windows
 
 ### Documentation
+- add missing ``FolderPath`` in RB6 database documentation
 - add MySettings tutorial to documentation
 - Add simple XML playlist tutorial
 - Add logo to documentation
@@ -119,7 +123,8 @@
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.0.8...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/dylanljones/pyrekordbox/compare/0.0.8...0.1.0
 [0.0.8]: https://github.com/dylanljones/pyrekordbox/compare/0.0.7...0.0.8
 [0.0.7]: https://github.com/dylanljones/pyrekordbox/compare/0.0.6...0.0.7
 [0.0.6]: https://github.com/dylanljones/pyrekordbox/compare/0.0.5...0.0.6
