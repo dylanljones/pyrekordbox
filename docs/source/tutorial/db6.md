@@ -12,8 +12,7 @@ from pyrekordbox import Rekordbox6Database
 db = Rekordbox6Database()
 ````
 
-The class has simple getters for executing queries on all the tables
-(see [Rekordbox 6 Database Format](../formats/db6.md)), for example:
+The class has simple getters for executing queries on all the tables, for example:
 
 ````python
 from pyrekordbox.db6 import DjmdHistory
@@ -26,7 +25,10 @@ for history in db.get_history().order_by(DjmdHistory.DateCreated):
     print(history)
 ````
 
-
 ```{seealso}
 See the {ref}`Rekordbox 6 Database Format <Rekordbox 6 Database Format>` documentation for more information.
+```
+
+```{note}
+More coming soon!
 ```
