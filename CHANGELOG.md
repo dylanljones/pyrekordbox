@@ -4,10 +4,19 @@
 ## [Unreleased]
 
 ### New Features
+- add name properties for linked tables in the ``DjmdContent`` table of the RB6 database
 - add relationship for `Content` in the RB6 database tables
 
 ### Improvements/Bug Fixes
+- add type annotation to ``read_mysetting_file``
+- fix ``items()`` method in MySettings objects
 - also try to import ``pysqlcipher3`` on Windows
+
+### Documentation
+- add MySettings tutorial to documentation
+- Add simple XML playlist tutorial
+- Add logo to documentation
+- Update installation guide for SQLCipher
 
 
 <a name="0.0.8"></a>
