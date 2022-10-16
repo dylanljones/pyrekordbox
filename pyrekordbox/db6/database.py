@@ -18,7 +18,7 @@ from ..anlz import get_anlz_paths, read_anlz_files
 from . import tables
 
 try:
-    from pysqlcipher3 import dbapi2 as sqlite3
+    from pysqlcipher3 import dbapi2 as sqlite3  # noqa
 except ImportError:
     import sqlite3
 
