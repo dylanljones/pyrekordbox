@@ -302,3 +302,8 @@ class Rekordbox6Database:
     def read_anlz_files(self, content_id):
         root = self.get_anlz_dir(content_id)
         return read_anlz_files(root)
+
+    def set_content_path(self, content_id, path):
+        content = self.get_content(ID=content_id)
+        path = path.replace("\\", "/")
+        content.FolderPath = path.replace("\\", "/")
