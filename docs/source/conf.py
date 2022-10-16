@@ -76,8 +76,11 @@ html_static_path = ["_static"]
 html_theme_options = {
     "light_logo": "logos/dark/logo_primary.svg",
     "dark_logo": "logos/light/logo_primary.svg",
-    # "sidebar_hide_name": True,
+    "sidebar_hide_name": True,
 }
+
+# html_title = f"{release} documentation"
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

@@ -42,7 +42,7 @@ class SettingsFile(MutableMapping):
     def __init__(self):
         super().__init__()
         self.parsed = None
-        self.items = dict()
+        self._items = dict()
 
     @classmethod
     def parse(cls, data: bytes):
@@ -93,12 +93,12 @@ class SettingsFile(MutableMapping):
             items[key] = str(parsed.data[key])
 
         self.parsed = parsed
-        self.items.update(items)
+        self._items.update(items)
 
     def build(self):
         # Copy defaults and update with cuirrent data
         items = self.defaults.copy()
-        items.update(self.items)
+        items.update(self._items)
 
         # Create file data
         file_items = {"data": items, "checksum": 0}
@@ -128,17 +128,17 @@ class SettingsFile(MutableMapping):
 
     def __getitem__(self, key):
         try:
-            return self.items[key]
+            return self._items[key]
         except KeyError:
             return self.defaults[key]
 
     def __setitem__(self, key, value):
         if key not in self.defaults.keys():
             raise KeyError(f"Key {key} not a valid field of {self.__class__.__name__}")
-        self.items[key] = value
+        self._items[key] = value
 
     def __delitem__(self, key):
-        del self.items[key]
+        del self._items[key]
 
     def get(self, key, default=None):
         try:

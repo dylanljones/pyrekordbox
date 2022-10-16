@@ -80,8 +80,33 @@ Demo Track 1
 Demo Track 1
 ````
 
-See the {ref}`XML file documentation <XML Database Format>` for a list of valid
+Each track can contain a ``Tempo`` or ``PositionMark`` element. The ``Tempo`` element
+stores the beat grid information:
+````python
+>>> track = xml.get_track(0)
+>>> tempo = track.tempos[0]
+>>> tempo.Bpm
+128.0
+````
+
+and the ``PositionMark`` element stores the cue points of a track (not included in the XML example above):
+````python
+>>> track = xml.get_track(0)
+>>> mark = track.marks[0]
+>>> mark.Type
+cue
+
+>>> mark.Start
+0.0
+
+>>> mark.Num
+-1
+````
+
+```{seealso}
+See the {ref}`XML Database Format<XML Database Format>` documentation for a list of valid
 attributes. All XML attributes start with a capital letter.
+```
 
 
 ## Playlists
