@@ -320,6 +320,69 @@ class DjmdContent(Base, StatsFull):
         s = f"{self.ID: <10} Title={self.Title}"
         return f"<{self.__class__.__name__}({s})>"
 
+    @property
+    def ArtistName(self) -> str:
+        try:
+            return self.Artist.Name
+        except AttributeError:
+            return ""
+
+    @property
+    def AlbumName(self) -> str:
+        try:
+            return self.Album.Name
+        except AttributeError:
+            return ""
+
+    @property
+    def GenreName(self) -> str:
+        try:
+            return self.Genre.Name
+        except AttributeError:
+            return ""
+
+    @property
+    def RemixerName(self) -> str:
+        try:
+            return self.Remixer.Name
+        except AttributeError:
+            return ""
+
+    @property
+    def LabelName(self) -> str:
+        try:
+            return self.Label.Name
+        except AttributeError:
+            return ""
+
+    @property
+    def OrgArtistName(self) -> str:
+        try:
+            return self.OrgArtist.Name
+        except AttributeError:
+            return ""
+
+    @property
+    def KeyName(self) -> str:
+        try:
+            return self.Key.ScaleName
+        except AttributeError:
+            return ""
+
+    @property
+    def ColorName(self) -> str:
+        try:
+            return self.Color.Commnt
+        except AttributeError:
+            return ""
+
+    @property
+    def ComposerName(self) -> str:
+        try:
+            return self.Composer.Name
+        except AttributeError:
+            return ""
+
 
 class DjmdCue(Base, StatsFull):
 
