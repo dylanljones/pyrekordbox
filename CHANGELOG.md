@@ -4,6 +4,7 @@
 ## [Unreleased]
 
 ### New Features
+- `AnlzFile` now stores the path of the parsed file
 - add `update_content_path` and `update_content_filename` to RB6 database
 
 ### Improvements/Bug Fixes
