@@ -51,7 +51,7 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 SQLCipher can be used by building the libary against
 an amalgamation with [pysqlcipher3] or by using pre-built DLL's (not recommended). For a detailed instruction,
-see [INSTALLATION][installation].
+see [INSTALLATION].
 
 #### MacOS
 
@@ -69,18 +69,12 @@ C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/ho
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
 
 
-
-
-## 📖 Documentation
-
-[Read the documentation on ReadTheDocs!][documentation]
-
 ## 🚀 Quick-Start
 
-See the [tutorial](https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html) for more information and examples.
+[Read the full documentation on ReadTheDocs!][documentation]
 
-| ❗  | Please make sure to backup your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog can be found under "File" > "Library" > "Backup Library" |
-|----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ❗  | Please make sure to back up your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog of Rekordbox can be found under "File" > "Library" > "Backup Library" |
+|----|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 ### Configuration
@@ -304,6 +298,7 @@ the CI setup since it requires a working Rekordbox installation.
 [black-link]: https://github.com/psf/black
 
 [documentation]: https://pyrekordbox.readthedocs.io/en/stable/
+[tutorial]: https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html
 [db6-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/db6.html
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
@@ -312,6 +307,7 @@ the CI setup since it requires a working Rekordbox installation.
 [new-issue]: https://github.com/dylanljones/pyrekordbox/issues/new/choose
 [CONTRIBUTING]: https://github.com/dylanljones/pyrekordbox/blob/master/CONTRIBUTING.md
 [CHANGELOG]: https://github.com/dylanljones/pyrekordbox/blob/master/CHANGELOG.md
+[INSTALLATION]: https://github.com/dylanljones/pyrekordbox/blob/master/INSTALLATION.md
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [dlls]: https://github.com/dylanljones/pyrekordbox/tree/master/Libs
@@ -321,4 +317,3 @@ the CI setup since it requires a working Rekordbox installation.
 [rekordcrate]: https://github.com/Holzhaus/rekordcrate
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
-[installation]: https://github.com/dylanljones/pyrekordbox/blob/master/INSTALLATION.md
