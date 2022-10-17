@@ -496,7 +496,125 @@ class Rekordbox6Database:
         root = self.get_anlz_dir(content)
         return read_anlz_files(root)
 
-    def set_content_path(self, content_id, path):
-        content = self.get_content(ID=content_id)
+    def update_content_path(self, content, path, save=True, check_path=True):
+        """Update the file path of a track in the Rekordbox v6 database.
+
+        This changes the `FolderPath` entry in the `DjmdContent` table and the
+        path tag (PPTH) of the corresponding ANLZ analysis files.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The `DjmdContent` element to change. If an integer is passed the database
+            is queried for the content.
+        path : str
+            The new file path of the database entry.
+        save : bool, optional
+            If True, the changes made are written to disc.
+        check_path : bool, optional
+            If True, raise an assertion error if the given file path does not exist.
+
+        Examples
+        --------
+        If, for example, the file `NOISE.wav` was moved up a few directories
+        (from `.../Sampler/OSC_SAMPLER/PRESET ONESHOT/` to `.../Sampler/`) the file
+        could no longer be opened in Rekordbox, since the database still contains the
+        old file path:
+        >>> db = Rekordbox6Database()
+        >>> cont = db.get_content()[0]
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET ONESHOT/NOISE.wav
+
+        Updating the path changes the database entry
+        >>> new_path = "C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav"
+        >>> db.update_content_path(cont, new_path)
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav
+
+        and updates the file path in the corresponding ANLZ analysis files:
+        >>> files = self.read_anlz_files(cont.ID)
+        >>> file = list(files.values())[0]
+        >>> file.get("path")
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav
+
+        """
+        if isinstance(content, (int, str)):
+            content = self.get_content(ID=content)
+        cid = content.ID
+
+        # Check and format path (the database and ANLZ files use "/" as path delimiter)
+        if check_path:
+            assert os.path.exists(path)
         path = path.replace("\\", "/")
-        content.FolderPath = path.replace("\\", "/")
+        old_path = content.FolderPath
+        logger.info("Replacing '%s' with '%s' of content [%s]", old_path, path, cid)
+
+        # Update path in ANLZ files
+        anlz_files = self.read_anlz_files(cid)
+        for anlz_path, anlz in anlz_files.items():
+            logger.debug("Updating path of %s: %s", anlz_path, path)
+            anlz.set_path(path)
+
+        # Update path in database (DjmdContent)
+        logger.debug("Updating database file path: %s", path)
+        content.FolderPath = path
+
+        if save:
+            logger.debug("Saving changes")
+            # Save ANLZ files
+            for anlz_path, anlz in anlz_files.items():
+                anlz.save(anlz_path)
+            # Commit database changes
+            self.commit()
+
+    def update_content_filename(self, content, name, save=True, check_path=True):
+        """Update the file name of a track in the Rekordbox v6 database.
+
+        This changes the `FolderPath` entry in the `DjmdContent` table and the
+        path tag (PPTH) of the corresponding ANLZ analysis files.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The `DjmdContent` element to change. If an integer is passed the database
+            is queried for the content.
+        name : str
+            The new file name of the database entry.
+        save : bool, optional
+            If True, the changes made are written to disc.
+        check_path : bool, optional
+            If True, raise an assertion error if the new file path does not exist.
+
+        See Also
+        --------
+        update_content_path: Update the file path of a track in the Rekordbox database.
+
+        Examples
+        --------
+        Updating the file name changes the database entry
+        >>> db = Rekordbox6Database()
+        >>> cont = db.get_content()[0]
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET ONESHOT/NOISE.wav
+
+        >>> new_name = "noise"
+        >>> db.update_content_filename(cont, new_name)
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/noise.wav
+
+        and updates the file path in the corresponding ANLZ analysis files:
+        >>> files = self.read_anlz_files(cont.ID)
+        >>> file = list(files.values())[0]
+        >>> file.get("path")
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/noise.wav
+
+        """
+        if isinstance(content, (int, str)):
+            content = self.get_content(ID=content)
+
+        old_path = os.path.normpath(content.FolderPath)
+        name = os.path.splitext(name)[0]
+        ext = os.path.splitext(old_path)[1]
+        new_path = os.path.join(os.path.dirname(old_path), name + ext)
+
+        self.update_content_path(content, new_path, save, check_path)
