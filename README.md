@@ -94,10 +94,8 @@ Pioneer:
    install_dir =  C:\Program Files\Pioneer
 Rekordbox 5:
    app_dir =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox
-   db_dir =       C:\Users\user\AppData\Roaming\Pioneer\rekordbox
-   db_path =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox\datafile.edb
    install_dir =  C:\Program Files\Pioneer\rekordbox 5.8.6
-   version =      5.8.6
+   ...
 ````
 
 If for some reason the configuration fails the values can be updated by providing the
