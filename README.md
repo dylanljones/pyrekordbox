@@ -305,7 +305,7 @@ the CI setup since it requires a working Rekordbox installation.
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
 [codecov-link]: https://codecov.io/gh/dylanljones/pyrekordbox
-[codecov-dev-link]: https://codecov.io/gh/dylanljones/pyrekordbox/dev
+[codecov-dev-link]: https://codecov.io/gh/dylanljones/pyrekordbox/tree/dev
 [docs-latest-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?logo=readthedocs&style=flat
 [docs-dev-badge]: https://img.shields.io/readthedocs/pyrekordbox/dev?logo=readthedocs&style=flat
 
