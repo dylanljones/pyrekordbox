@@ -14,9 +14,12 @@ import os
 import sys
 import json
 import logging
+import warnings
 import xml.etree.cElementTree as xml
 
 logger = logging.getLogger(__name__)
+
+warnings.simplefilter("always", DeprecationWarning)
 
 # fmt: off
 CRC16_XMODEM_TABLE = [
@@ -96,6 +99,23 @@ def crc16xmodem(data, crc=0):
     return _crc16(data, crc, CRC16_XMODEM_TABLE)
 
 
+def warn_deprecated(name, new_name="", hint="", remove_in=""):  # pragma: no cover
+    s = f"'{name}' is deprecated"
+    if remove_in:
+        s += f" and will be removed in version '{remove_in}'"
+
+    if new_name:
+        s += f", use '{new_name}' instead!"
+    else:
+        s += "!"
+
+    if hint:
+        s += "\n" + hint
+
+    warnings.warn(s, DeprecationWarning, stacklevel=3)
+
+
+# noinspection PyPackageRequirements,PyUnresolvedReferences
 def _read_config_file(path):
     ext = os.path.splitext(path)[1].lower()
     if ext == ".cfg":
