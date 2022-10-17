@@ -248,7 +248,6 @@ the CI setup since it requires a working Rekordbox installation.
 ### To Do
 
 
-- [ ] Improve Rekordbox 6 `master.db` database parsing.
 - [ ] Writing to the Rekordbox 6 `master.db` database:
   - Figure out how Rekordbox generates UUID's for the DB entries.
 - [ ] Rekordbox 6 `master.db` database tests.
@@ -261,6 +260,7 @@ the CI setup since it requires a working Rekordbox installation.
   - PWVC
 - [ ] ANLZ tests.
 - [ ] Add USB export database support (`.pdb`).
+- [x] Improve Rekordbox 6 `master.db` database parsing.
 - [x] Add MySettings support.
 - [x] MySetting tests.
 
@@ -304,8 +304,8 @@ the CI setup since it requires a working Rekordbox installation.
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
-[codecov-link]: https://codecov.io/gh/dylanljones/pyrekordbox
-[codecov-dev-link]: https://codecov.io/gh/dylanljones/pyrekordbox/tree/dev
+[codecov-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/master
+[codecov-dev-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/dev
 [docs-latest-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?logo=readthedocs&style=flat
 [docs-dev-badge]: https://img.shields.io/readthedocs/pyrekordbox/dev?logo=readthedocs&style=flat
 
