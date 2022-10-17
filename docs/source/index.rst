@@ -41,6 +41,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
    This project is not affiliated with Pioneer Corp. or its related companies
    in any way or form and has been written independently! Pyrekordbox is licensed
    under the `MIT license <https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE>`_.
+   The maintainers of the project are not liable for any damages to your Rekordbox library.
 
 
 .. warning::
