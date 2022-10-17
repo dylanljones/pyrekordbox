@@ -7,7 +7,6 @@
 import os
 import re
 import base64
-import warnings
 import blowfish
 import logging
 from sqlalchemy import create_engine
@@ -49,6 +48,26 @@ def _get_masterdb_key():
 
 
 def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
+    """Opens the Rekordbox v6 master.db SQLite3 database for the use with SQLAlchemy.
+
+    Parameters
+    ----------
+    path : str, optional
+        The path of the database file. Uses the main Rekordbox v6 master.db database
+        by default.
+    unlock : bool, optional
+        Flag if the database is encrypted and needs to be unlocked.
+    sql_driver : Callable, optional
+        The SQLite driver to used for opening the database. The standard `sqlite3`
+        package is used as default driver.
+    echo : bool, optional
+        Echo flag for SQLAlchemy.
+
+    Returns
+    -------
+    engine : sqlalchemy.engine.Engine
+        The open SQLAlchemy engine instance for the Rekordbox v6 database.
+    """
     if not path:
         path = rb6_config["db_path"]
 
@@ -74,11 +93,43 @@ def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
 
 
 def open_rekordbox_database(path="", unlock=True, sql_driver=None):
-    warnings.warn(
-        "This method is deprecated and will be removed in a future version!"
-        "Use the `Rekordbox6Database` class instead!",
-        DeprecationWarning,
-    )
+    """Opens a connection to the Rekordbox v6 master.db SQLite3 database.
+
+    Parameters
+    ----------
+    path : str, optional
+        The path of the database file. Uses the main Rekordbox v6 master.db database
+        by default.
+    unlock : bool, optional
+        Flag if the database is encrypted and needs to be unlocked.
+    sql_driver : Callable, optional
+        The SQLite driver to used for opening the database. The standard `sqlite3`
+        package is used as default driver.
+
+    Returns
+    -------
+    con : sql_driver.Connection
+        The opened Rekordbox v6 database connection.
+
+    Examples
+    --------
+    Open the Rekordbox v6 master.db database:
+    >>> db = open_rekordbox_database()
+
+    Open a copy of the database:
+    >>> db = open_rekordbox_database("path/to/master_copy.db")
+
+    Open a decrypted copy of the database:
+    >>> db = open_rekordbox_database("path/to/master_unlocked.db", unlock=False)
+
+    To use the `pysqlcipher3` package as SQLite driver, either import it as
+    >>> from pysqlcipher3 import dbapi2 as sqlite3
+    >>> db = open_rekordbox_database("path/to/master_copy.db")
+
+    or supply the package as driver:
+    >>> from pysqlcipher3 import dbapi2
+    >>> db = open_rekordbox_database("path/to/master_copy.db", sql_driver=dbapi2)
+    """
     if not path:
         path = rb6_config["db_path"]
 
@@ -120,6 +171,37 @@ def _parse_query_result(result, kwargs):
 
 
 class Rekordbox6Database:
+    """Rekordbox v6 master.db database handler.
+
+    Parameters
+    ----------
+    path : str, optional
+        The path of the Rekordbox v6 database file. By default, pyrekordbox
+        automatically finds the Rekordbox v6 master.db database file.
+        This parameter is only required for opening other databases or if the
+        configuration fails.
+    unlock: bool, optional
+        Flag if the database needs to be decrypted. Set to False if you are opening
+        an unencrypted test database.
+
+    See Also
+    --------
+    pyrekordbox.db6.tables: Rekordbox v6 database table definitions
+    create_rekordbox_engine: Creates the SQLAlchemy engine for the Rekordbox v6 database
+
+    Examples
+    --------
+    Pyrekordbox automatically finds the Rekordbox v6 master.db database file and
+    opens it when initializing the object:
+
+    >>> db = Rekordbox6Database()
+
+    Use the included getters for querying the database:
+
+    >>> db.get_content()[0]
+    <DjmdContent(40110712   Title=NOISE)>
+    """
+
     def __init__(self, path="", unlock=True):
         self.engine = create_rekordbox_engine(path, unlock=unlock)
         self.Session = sessionmaker(bind=self.engine)
