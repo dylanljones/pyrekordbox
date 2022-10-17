@@ -228,7 +228,7 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 
 
 
-## 🦸 Development
+## 💻 Development
 
 If you encounter an issue or want to contribute to pyrekordbox, please feel free to get in touch,
 [open an issue][new-issue] or create a new pull request! A guide for contributing to
