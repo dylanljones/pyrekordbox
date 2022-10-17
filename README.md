@@ -238,7 +238,12 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
 
-[![codecov][codecov-badge]][codecov-link]
+| Master | [![Test][tests-badge]][tests-link]     | [![Codecov][codecov-badge]][codecov-link]         | [![Docs][docs-latest-badge]][documentation-latest] |
+|:-------|:---------------------------------------|:--------------------------------------------------|:---------------------------------------------------|
+| Dev    | [![Test][tests-dev-badge]][tests-link] | [![Codecov][codecov-dev-badge]][codecov-dev-link] | [![Docs][docs-dev-badge]][documentation-dev]       |
+
+
+
 
 ### To Do
 
@@ -285,6 +290,7 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 [tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
+[tests-dev-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/dev?label=tests&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
@@ -292,14 +298,20 @@ the CI setup since it requires a working Rekordbox installation.
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 [codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
+[codecov-dev-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/dev/graph/badge.svg?token=5Z2KVGL7N3
 
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
 [codecov-link]: https://codecov.io/gh/dylanljones/pyrekordbox
+[codecov-dev-link]: https://codecov.io/gh/dylanljones/pyrekordbox/dev
+[docs-latest-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?logo=readthedocs&style=flat
+[docs-dev-badge]: https://img.shields.io/readthedocs/pyrekordbox/dev?logo=readthedocs&style=flat
 
 [documentation]: https://pyrekordbox.readthedocs.io/en/stable/
+[documentation-latest]: https://pyrekordbox.readthedocs.io/en/latest/
+[documentation-dev]: https://pyrekordbox.readthedocs.io/en/dev/
 [tutorial]: https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html
 [db6-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/db6.html
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
