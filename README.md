@@ -73,8 +73,8 @@ Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher pa
 
 [Read the full documentation on ReadTheDocs!][documentation]
 
-| ❗  | Please make sure to back up your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog of Rekordbox can be found under "File" > "Library" > "Backup Library" |
-|----|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ❗  | Please make sure to back up your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog can be found under "File" > "Library" > "Backup Library" |
+|----|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 ### Configuration
@@ -228,7 +228,7 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 
 
 
-## 🦸 Contributing
+## 🦸 Development
 
 If you encounter an issue or want to contribute to pyrekordbox, please feel free to get in touch,
 [open an issue][new-issue] or create a new pull request! A guide for contributing to
@@ -238,6 +238,7 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
 
+[![codecov][codecov-badge]][codecov-link]
 
 ### To Do
 
@@ -283,17 +284,20 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 
-[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
+[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
+[codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
+
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
+[codecov-link]: https://codecov.io/gh/dylanljones/pyrekordbox
 
 [documentation]: https://pyrekordbox.readthedocs.io/en/stable/
 [tutorial]: https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html

@@ -1,8 +1,17 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### New Features
+- add `update_content_path` and `update_content_filename` to RB6 database
+
+### Improvements/Bug Fixes
+- Use path instead of extension as key in `read_anlz_files` output
+
+
 <a name="0.1.0"></a>
 ## [0.1.0] - 2022-16-10
-
 ### New Features
 - add `set_content_path` to `Rekordbox6Database` object
 - add `set_path` to `AnlzFile` object
