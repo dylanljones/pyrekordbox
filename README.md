@@ -213,7 +213,7 @@ for song in playlist.Songs:
     print(content.Title, content.Artist.Name)
 ````
 Adding new rows to the tables of the database is not supported since it is not yet known
-how Rekordbox generates the UUID/ID's. Using wrong values nor new database entries
+how Rekordbox generates the UUID/ID's. Using wrong values for new database entries
 could corrupt the library. This feature will be added after some testing.
 Changing existing entries like the title, artist or file path of a track in the database
 should work as expected.
