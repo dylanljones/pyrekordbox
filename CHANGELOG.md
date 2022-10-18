@@ -8,6 +8,8 @@
 - add `update_content_path` and `update_content_filename` to RB6 database
 
 ### Improvements/Bug Fixes
+- fix bugs in PQTZ/PQT2 tag handler of ANLZ files
+- improve ANLZ file path handling
 - fix bug when reading the pyrekordbox config files
 - remove wrong type hint in ``AbstractAnlzTag``
 - Use path instead of extension as key in `read_anlz_files` output
