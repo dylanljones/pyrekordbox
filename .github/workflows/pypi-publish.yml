@@ -20,16 +20,16 @@ jobs:
     - name: get latest release with tag
       id: latestrelease
       run: |
-        echo "::set-output name=releasetag::$(curl -s https://api.github.com/repos/dylanljones/pyrekordbox/releases/latest --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' | jq '.tag_name' | sed 's/\"//g')"
+        echo "releasetag=$(curl -s https://api.github.com/repos/dylanljones/pyrekordbox/releases/latest --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' | jq '.tag_name' | sed 's/\"//g')"  >> $GITHUB_ENV
 
     - name: confirm release tag
       run: |
-        echo ${{ steps.latestrelease.outputs.releasetag }}
+        echo "${{ env.releasetag }}"
 
     - name: checkout
       uses: actions/checkout@v3
       with:
-        ref: ${{ steps.latestrelease.outputs.releasetag }}
+        ref: ${{ env.releasetag }}
 
     - name: Set up Python
       uses: actions/setup-python@v4
