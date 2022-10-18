@@ -117,6 +117,9 @@ def warn_deprecated(name, new_name="", hint="", remove_in=""):  # pragma: no cov
 
 # noinspection PyPackageRequirements,PyUnresolvedReferences
 def _read_config_file(path):
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"No such file or directory: '{path}'")
+
     ext = os.path.splitext(path)[1].lower()
     if ext == ".cfg":
         from configparser import ConfigParser
@@ -151,13 +154,16 @@ def read_pyrekordbox_configuration():
     """
     files = ["pyproject.toml", "setup.cfg"]
     for ext in [".toml", ".cfg", ".yaml", ".yml"]:
-        files.append("rekordbox" + ext)
+        files.append("pyrekordbox" + ext)
 
     for file in files:
         try:
             data = _read_config_file(file)
             config = dict(data["rekordbox"])
-        except (ImportError, FileNotFoundError, KeyError):
+            logger.debug("Read configuration from '%s'", file)
+        except (ImportError, FileNotFoundError) as e:
+            logger.debug("Could not read config file '%s': %s", file, e)
+        except KeyError:
             pass
         else:
             if config:

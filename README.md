@@ -108,8 +108,8 @@ update_config(pioneer_install_dir, pioneer_app_dir)
 ````
 
 Alternatively the two paths can be specified in a configuration file under the section
-`rekordbox`. Supported configuration files are pyproject.toml, setup.cfg, rekordbox.toml,
-rekordbox.cfg and rekordbox.yml.
+`rekordbox`. Supported configuration files are pyproject.toml, setup.cfg, pyrekordbox.toml,
+pyrekordbox.cfg and pyrekordbox.yaml.
 
 
 ### Rekordbox XML
