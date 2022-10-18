@@ -41,6 +41,19 @@ def walk_anlz_paths(path):
             yield root, files
 
 
-def read_anlz_files(root=""):
+def read_anlz_files(root: str = "") -> dict:
+    """Open all ANLZ files in the given root directory.
+
+    Parameters
+    ----------
+    root : str, optional
+        The root directory of the ANLZ files to open.
+
+    Returns
+    -------
+    anlz_files : dict
+        The opened ANLZ files stored in a dict with the corresponding file paths
+        as keys.
+    """
     paths = get_anlz_paths(root)
-    return {key: AnlzFile.parse_file(path) for key, path in paths.items()}
+    return {path: AnlzFile.parse_file(path) for path in paths.values() if path}

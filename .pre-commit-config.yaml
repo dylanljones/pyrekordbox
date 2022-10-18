@@ -11,12 +11,6 @@ repos:
           - id: check-toml
           - id: check-yaml
 
-    - repo: https://github.com/asottile/setup-cfg-fmt
-      rev: v2.0.0
-      hooks:
-          - id: setup-cfg-fmt
-            args: [--include-version-classifiers]
-
     - repo: https://github.com/psf/black
       rev: 22.10.0
       hooks:

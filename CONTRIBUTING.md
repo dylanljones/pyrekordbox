@@ -1,6 +1,10 @@
 # Contributing
 
-Thank you for contributing to `pyrekordbox` :tada:
+If you encounter an issue or want to contribute to pyrekordbox, please feel free to get in touch,
+[open an issue][issue] or create a new [pull request][pulls]!
+
+pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
+the CI setup since it requires a working Rekordbox installation.
 
 ## Pre-commit Hooks
 
@@ -81,6 +85,8 @@ Breaking Change section should start with the phrase "BREAKING CHANGE: " followe
 
 Similarly, a Deprecation section should start with "DEPRECATED: " followed by a short description of what is deprecated, a blank line, and a detailed description of the deprecation that also mentions the recommended update path.
 
+[issue]: https://github.com/dylanljones/pyrekordbox/issues
+[pulls]: https://github.com/dylanljones/pyrekordbox/pulls
 [pre-commit framework]: https://pre-commit.com/
 [Black code formatter]: https://github.com/psf/black
 [Angular commit message]: https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format

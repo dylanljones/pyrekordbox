@@ -76,7 +76,7 @@ class AbstractAnlzTag(ABC):
     def get(self):
         return self.struct.content
 
-    def set(self, *args, **kwargs) -> bytes:
+    def set(self, *args, **kwargs):
         pass
 
     def update_len(self):

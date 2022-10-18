@@ -14,10 +14,10 @@
 
 pyrekordbox is a Python package for interacting with the library and export data of
 Pioneer's Rekordbox DJ Software. It currently supports
+- Rekordbox 6 `master.db` database
 - Rekordbox XML database
 - Analysis files (ANLZ)
 - My-settings files
-- Rekordbox 6 `master.db` database
 
 *Note*: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
@@ -51,7 +51,7 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 SQLCipher can be used by building the libary against
 an amalgamation with [pysqlcipher3] or by using pre-built DLL's (not recommended). For a detailed instruction,
-see [INSTALLATION][installation].
+see [INSTALLATION].
 
 #### MacOS
 
@@ -69,13 +69,13 @@ C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/ho
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
 
 
-
-
-## 📖 Documentation
-
-[Read the documentation on ReadTheDocs!][documentation]
-
 ## 🚀 Quick-Start
+
+[Read the full documentation on ReadTheDocs!][documentation]
+
+| ❗  | Please make sure to back up your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog can be found under "File" > "Library" > "Backup Library" |
+|----|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
 
 ### Configuration
 
@@ -94,10 +94,8 @@ Pioneer:
    install_dir =  C:\Program Files\Pioneer
 Rekordbox 5:
    app_dir =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox
-   db_dir =       C:\Users\user\AppData\Roaming\Pioneer\rekordbox
-   db_path =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox\datafile.edb
    install_dir =  C:\Program Files\Pioneer\rekordbox 5.8.6
-   version =      5.8.6
+   ...
 ````
 
 If for some reason the configuration fails the values can be updated by providing the
@@ -214,10 +212,11 @@ for song in playlist.Songs:
     content = song.Content
     print(content.Title, content.Artist.Name)
 ````
-Changing entries of the database is not yet supported. Writing to the database without
-knowing how Rekordbox generates the UUID/ID's for the DB entries could corrupt the
-libary. This feature will be added after some testing.
-
+Adding new rows to the tables of the database is not supported since it is not yet known
+how Rekordbox generates the UUID/ID's. Using wrong values for new database entries
+could corrupt the library. This feature will be added after some testing.
+Changing existing entries like the title, artist or file path of a track in the database
+should work as expected.
 
 ## 💡 File formats
 
@@ -230,7 +229,7 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 
 
 
-## 🦸 Contributing
+## 💻 Development
 
 If you encounter an issue or want to contribute to pyrekordbox, please feel free to get in touch,
 [open an issue][new-issue] or create a new pull request! A guide for contributing to
@@ -240,17 +239,17 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
 
+| Master | [![Test][tests-badge]][tests-link]     | [![Codecov][codecov-badge]][codecov-link]         | [![Docs][docs-latest-badge]][documentation-latest] |
+|:-------|:---------------------------------------|:--------------------------------------------------|:---------------------------------------------------|
+| Dev    | [![Test][tests-dev-badge]][tests-link] | [![Codecov][codecov-dev-badge]][codecov-dev-link] | [![Docs][docs-dev-badge]][documentation-dev]       |
 
-| ❗  | Please make sure to backup your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog can be found under "File" > "Library" > "Backup Library" |
-|----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 
 ### To Do
 
 
-- [ ] Improve Rekordbox 6 `master.db` database parsing.
-- [ ] Writing to the Rekordbox 6 `master.db` database:
+- [ ] Adding new entries to the Rekordbox 6 `master.db` database:
   - Figure out how Rekordbox generates UUID's for the DB entries.
 - [ ] Rekordbox 6 `master.db` database tests.
 - [ ] Complete ANLZ file support. This included the following tags:
@@ -262,6 +261,7 @@ the CI setup since it requires a working Rekordbox installation.
   - PWVC
 - [ ] ANLZ tests.
 - [ ] Add USB export database support (`.pdb`).
+- [x] Improve Rekordbox 6 `master.db` database parsing.
 - [x] Add MySettings support.
 - [x] MySetting tests.
 
@@ -290,19 +290,30 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 
-[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
+[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
+[tests-dev-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/dev?label=tests&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
+[codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
+[codecov-dev-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/dev/graph/badge.svg?token=5Z2KVGL7N3
+
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
+[codecov-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/master
+[codecov-dev-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/dev
+[docs-latest-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?logo=readthedocs&style=flat
+[docs-dev-badge]: https://img.shields.io/readthedocs/pyrekordbox/dev?logo=readthedocs&style=flat
 
 [documentation]: https://pyrekordbox.readthedocs.io/en/stable/
+[documentation-latest]: https://pyrekordbox.readthedocs.io/en/latest/
+[documentation-dev]: https://pyrekordbox.readthedocs.io/en/dev/
+[tutorial]: https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html
 [db6-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/db6.html
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
@@ -311,6 +322,7 @@ the CI setup since it requires a working Rekordbox installation.
 [new-issue]: https://github.com/dylanljones/pyrekordbox/issues/new/choose
 [CONTRIBUTING]: https://github.com/dylanljones/pyrekordbox/blob/master/CONTRIBUTING.md
 [CHANGELOG]: https://github.com/dylanljones/pyrekordbox/blob/master/CHANGELOG.md
+[INSTALLATION]: https://github.com/dylanljones/pyrekordbox/blob/master/INSTALLATION.md
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [dlls]: https://github.com/dylanljones/pyrekordbox/tree/master/Libs
@@ -320,4 +332,3 @@ the CI setup since it requires a working Rekordbox installation.
 [rekordcrate]: https://github.com/Holzhaus/rekordcrate
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
-[installation]: https://github.com/dylanljones/pyrekordbox/blob/master/INSTALLATION.md

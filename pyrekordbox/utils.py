@@ -14,9 +14,12 @@ import os
 import sys
 import json
 import logging
+import warnings
 import xml.etree.cElementTree as xml
 
 logger = logging.getLogger(__name__)
+
+warnings.simplefilter("always", DeprecationWarning)
 
 # fmt: off
 CRC16_XMODEM_TABLE = [
@@ -96,6 +99,23 @@ def crc16xmodem(data, crc=0):
     return _crc16(data, crc, CRC16_XMODEM_TABLE)
 
 
+def warn_deprecated(name, new_name="", hint="", remove_in=""):  # pragma: no cover
+    s = f"'{name}' is deprecated"
+    if remove_in:
+        s += f" and will be removed in version '{remove_in}'"
+
+    if new_name:
+        s += f", use '{new_name}' instead!"
+    else:
+        s += "!"
+
+    if hint:
+        s += "\n" + hint
+
+    warnings.warn(s, DeprecationWarning, stacklevel=3)
+
+
+# noinspection PyPackageRequirements,PyUnresolvedReferences
 def _read_config_file(path):
     ext = os.path.splitext(path)[1].lower()
     if ext == ".cfg":
@@ -145,7 +165,7 @@ def read_pyrekordbox_configuration():
     return dict()
 
 
-def get_pioneer_app_dir(path=""):
+def get_pioneer_app_dir(path=""):  # pragma: no cover
     """Returns the path of the Pioneer application data directory.
 
     On Windows, the Pioneer application data is stored in `/Users/user/AppData/Roaming`
@@ -185,7 +205,7 @@ def get_pioneer_app_dir(path=""):
     return path
 
 
-def get_pioneer_install_dir(path=""):
+def get_pioneer_install_dir(path=""):  # pragma: no cover
     """Returns the path of the Pioneer program installation directory.
 
     On Windows, the Pioneer program data is stored in `/ProgramFiles/Pioneer`
@@ -221,7 +241,7 @@ def get_pioneer_install_dir(path=""):
     return path
 
 
-def _convert_type(s):
+def _convert_type(s):  # pragma: no cover
     # Try to parse as int, float, list of int, list of float
     types_ = int, float
     for type_ in types_:
@@ -237,7 +257,7 @@ def _convert_type(s):
     return s
 
 
-def read_rekordbox_settings(rekordbox_app_dir):
+def read_rekordbox_settings(rekordbox_app_dir):  # pragma: no cover
     """Finds and parses the 'rekordbox3.settings' file in the Rekordbox 5 or 6 app-dir.
 
     The settings file usually is called 'rekordbox3.settings' and is
@@ -274,7 +294,7 @@ def read_rekordbox_settings(rekordbox_app_dir):
     return settings
 
 
-def read_rekordbox6_options(pioneer_app_dir):
+def read_rekordbox6_options(pioneer_app_dir):  # pragma: no cover
     """Finds and parses the Rekordbox 6 `options.json` file with additional settings.
 
     The options file contains additional settings used by Rekordbox 6, for example the
@@ -306,7 +326,7 @@ def read_rekordbox6_options(pioneer_app_dir):
     return options
 
 
-def read_rekordbox6_asar(rb6_install_dir):
+def read_rekordbox6_asar(rb6_install_dir):  # pragma: no cover
     """Finds and parses the Rekordbox 6 `app.asar` archive file.
 
     An ASAR file is an archive used to package source code for an application

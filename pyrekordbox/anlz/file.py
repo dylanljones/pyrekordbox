@@ -25,6 +25,7 @@ class AnlzFile(abc.Mapping):
     """Rekordbox `ANLZnnnn.xxx` binary file handler."""
 
     def __init__(self):
+        self._path = ""
         self.file_header = None
         self.tags = list()
 
@@ -35,6 +36,10 @@ class AnlzFile(abc.Mapping):
     @property
     def tag_types(self):
         return [tag.type for tag in self.tags]
+
+    @property
+    def path(self):
+        return self._path
 
     @classmethod
     def parse(cls, data: bytes):
@@ -80,7 +85,10 @@ class AnlzFile(abc.Mapping):
         logger.debug(f"Reading file {os.path.split(path)[1]}")
         with open(path, "rb") as fh:
             data = fh.read()
-        return cls.parse(data)
+
+        self = cls.parse(data)
+        self._path = path
+        return self
 
     def _parse(self, data: bytes):
         file_header = structs.AnlzFileHeader.parse(data)
@@ -139,7 +147,9 @@ class AnlzFile(abc.Mapping):
 
         return data
 
-    def save(self, path):
+    def save(self, path=""):
+        path = path or self._path
+
         data = self.build()
         with open(path, "wb") as fh:
             fh.write(data)

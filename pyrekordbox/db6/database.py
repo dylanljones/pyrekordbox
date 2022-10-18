@@ -7,14 +7,14 @@
 import os
 import re
 import base64
-import warnings
 import blowfish
 import logging
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
 from ..config import get_config
 from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
+from .tables import DjmdContent
 from . import tables
 
 try:
@@ -49,6 +49,26 @@ def _get_masterdb_key():
 
 
 def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
+    """Opens the Rekordbox v6 master.db SQLite3 database for the use with SQLAlchemy.
+
+    Parameters
+    ----------
+    path : str, optional
+        The path of the database file. Uses the main Rekordbox v6 master.db database
+        by default.
+    unlock : bool, optional
+        Flag if the database is encrypted and needs to be unlocked.
+    sql_driver : Callable, optional
+        The SQLite driver to used for opening the database. The standard `sqlite3`
+        package is used as default driver.
+    echo : bool, optional
+        Echo flag for SQLAlchemy.
+
+    Returns
+    -------
+    engine : sqlalchemy.engine.Engine
+        The open SQLAlchemy engine instance for the Rekordbox v6 database.
+    """
     if not path:
         path = rb6_config["db_path"]
 
@@ -74,11 +94,43 @@ def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
 
 
 def open_rekordbox_database(path="", unlock=True, sql_driver=None):
-    warnings.warn(
-        "This method is deprecated and will be removed in a future version!"
-        "Use the `Rekordbox6Database` class instead!",
-        DeprecationWarning,
-    )
+    """Opens a connection to the Rekordbox v6 master.db SQLite3 database.
+
+    Parameters
+    ----------
+    path : str, optional
+        The path of the database file. Uses the main Rekordbox v6 master.db database
+        by default.
+    unlock : bool, optional
+        Flag if the database is encrypted and needs to be unlocked.
+    sql_driver : Callable, optional
+        The SQLite driver to used for opening the database. The standard `sqlite3`
+        package is used as default driver.
+
+    Returns
+    -------
+    con : sql_driver.Connection
+        The opened Rekordbox v6 database connection.
+
+    Examples
+    --------
+    Open the Rekordbox v6 master.db database:
+    >>> db = open_rekordbox_database()
+
+    Open a copy of the database:
+    >>> db = open_rekordbox_database("path/to/master_copy.db")
+
+    Open a decrypted copy of the database:
+    >>> db = open_rekordbox_database("path/to/master_unlocked.db", unlock=False)
+
+    To use the `pysqlcipher3` package as SQLite driver, either import it as
+    >>> from pysqlcipher3 import dbapi2 as sqlite3
+    >>> db = open_rekordbox_database("path/to/master_copy.db")
+
+    or supply the package as driver:
+    >>> from pysqlcipher3 import dbapi2
+    >>> db = open_rekordbox_database("path/to/master_copy.db", sql_driver=dbapi2)
+    """
     if not path:
         path = rb6_config["db_path"]
 
@@ -120,6 +172,37 @@ def _parse_query_result(result, kwargs):
 
 
 class Rekordbox6Database:
+    """Rekordbox v6 master.db database handler.
+
+    Parameters
+    ----------
+    path : str, optional
+        The path of the Rekordbox v6 database file. By default, pyrekordbox
+        automatically finds the Rekordbox v6 master.db database file.
+        This parameter is only required for opening other databases or if the
+        configuration fails.
+    unlock: bool, optional
+        Flag if the database needs to be decrypted. Set to False if you are opening
+        an unencrypted test database.
+
+    See Also
+    --------
+    pyrekordbox.db6.tables: Rekordbox v6 database table definitions
+    create_rekordbox_engine: Creates the SQLAlchemy engine for the Rekordbox v6 database
+
+    Examples
+    --------
+    Pyrekordbox automatically finds the Rekordbox v6 master.db database file and
+    opens it when initializing the object:
+
+    >>> db = Rekordbox6Database()
+
+    Use the included getters for querying the database:
+
+    >>> db.get_content()[0]
+    <DjmdContent(40110712   Title=NOISE)>
+    """
+
     def __init__(self, path="", unlock=True):
         self.engine = create_rekordbox_engine(path, unlock=unlock)
         self.Session = sessionmaker(bind=self.engine)
@@ -146,7 +229,7 @@ class Rekordbox6Database:
     def commit(self):
         self.session.commit()
 
-    # -- Djmd Tables -------------------------------------------------------------------
+    # -- Table queries -----------------------------------------------------------------
 
     def get_active_censor(self, **kwargs):
         res = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
@@ -171,32 +254,6 @@ class Rekordbox6Database:
     def get_content(self, **kwargs):
         res = self.query(tables.DjmdContent).filter_by(**kwargs)
         return _parse_query_result(res, kwargs)
-
-    def search_content(self, search):
-
-        columns = ["Title", "Commnt", "SearchStr"]
-
-        results = list()
-        for col in columns:
-            obj = getattr(tables.DjmdContent, col)
-            res = self.query(tables.DjmdContent).filter(obj.contains(search))
-            results.extend(res.all())
-
-        rel_columns = {
-            "Album": (tables.DjmdAlbum, "Name"),
-            "Artist": (tables.DjmdArtist, "Name"),
-            "Composer": (tables.DjmdArtist, "Name"),
-            "Remixer": (tables.DjmdArtist, "Name"),
-            "Genre": (tables.DjmdGenre, "Name"),
-            "Key": (tables.DjmdKey, "ScaleName"),
-        }
-        for col, (table, attr) in rel_columns.items():
-            obj = getattr(tables.DjmdContent, col)
-            item = getattr(table, attr)
-            res = self.query(tables.DjmdContent).join(obj).filter(item.contains(search))
-            results.extend(res.all())
-
-        return results
 
     def get_cue(self, **kwargs):
         res = self.query(tables.DjmdCue).filter_by(**kwargs)
@@ -286,8 +343,6 @@ class Rekordbox6Database:
         res = self.query(tables.DjmdSort).filter_by(**kwargs)
         return _parse_query_result(res, kwargs)
 
-    # -- Other tables ------------------------------------------------------------------
-
     def get_agent_registry(self, **kwargs):
         res = self.query(tables.AgentRegistry).filter_by(**kwargs)
         return _parse_query_result(res, kwargs)
@@ -326,28 +381,240 @@ class Rekordbox6Database:
 
     # ==================================================================================
 
+    # noinspection PyUnresolvedReferences
+    def search_content(self, text):
+        """Searches the contents of the `DjmdContents` table.
+
+        Parameters
+        ----------
+        text : str
+            The search text.
+
+        Returns
+        -------
+        results : list[DjmdContent]
+            The resulting content elements.
+        """
+        # Search standard columns
+        query = self.query(tables.DjmdContent).filter(
+            or_(
+                DjmdContent.Title.contains(text),
+                DjmdContent.Commnt.contains(text),
+                DjmdContent.SearchStr.contains(text),
+            )
+        )
+        results = query.all()
+
+        # Search artist (Artist, OrgArtist, Composer and Remixer)
+        artist_attrs = ["Artist", "OrgArtist", "Composer", "Remixer"]
+        for attr in artist_attrs:
+            query = self.query(DjmdContent).join(getattr(DjmdContent, attr))
+            results += query.filter(tables.DjmdArtist.Name.contains(text)).all()
+
+        # Search album
+        query = self.query(DjmdContent).join(DjmdContent.Album)
+        results += query.filter(tables.DjmdAlbum.Name.contains(text)).all()
+
+        # Search Genre
+        query = self.query(DjmdContent).join(DjmdContent.Genre)
+        results += query.filter(tables.DjmdGenre.Name.contains(text)).all()
+
+        # Search Key
+        query = self.query(DjmdContent).join(DjmdContent.Key)
+        results += query.filter(tables.DjmdKey.ScaleName.contains(text)).all()
+
+        return results
+
     def get_mysetting_paths(self):
+        """Returns the file paths of the local Rekordbox MySetting files.
+
+        Returns
+        -------
+        paths : list[str]
+            the file paths of the local MySetting files.
+        """
         paths = list()
         for item in self.get_setting_file():
             paths.append(os.path.join(self._db_dir, item.Path.lstrip("/\\")))
         return paths
 
-    def get_anlz_dir(self, content_id):
-        item = self.get_content(ID=content_id)
-        dat_path = os.path.normpath(item.AnalysisDataPath).strip("\\/")
+    def get_anlz_dir(self, content):
+        """Returns the directory path containing the ANLZ analysis files of a track.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The content corresponding to a track in the Rekordbox v6 database.
+            If an integer is passed the database is queried for the `DjmdContent` entry.
+
+        Returns
+        -------
+        anlz_dir : str
+            The path of the directory containing the analysis files for the content.
+        """
+        if isinstance(content, (int, str)):
+            content = self.get_content(ID=content)
+
+        dat_path = os.path.normpath(content.AnalysisDataPath).strip("\\/")
         path = os.path.join(self._anlz_root, os.path.dirname(dat_path))
         assert os.path.exists(path)
         return path
 
-    def get_anlz_paths(self, content_id):
-        root = self.get_anlz_dir(content_id)
+    def get_anlz_paths(self, content):
+        """Returns all existing ANLZ analysis file paths of a track.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The content corresponding to a track in the Rekordbox v6 database.
+            If an integer is passed the database is queried for the `DjmdContent` entry.
+
+        Returns
+        -------
+        anlz_paths : dict[str, str]
+            The analysis file paths for the content as dictionary. The keys of the
+            dictionary are the file types ("DAT", "EXT" or "EX2").
+        """
+        root = self.get_anlz_dir(content)
         return get_anlz_paths(root)
 
-    def read_anlz_files(self, content_id):
-        root = self.get_anlz_dir(content_id)
+    def read_anlz_files(self, content):
+        """Reads all existing ANLZ analysis files of a track.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The content corresponding to a track in the Rekordbox v6 database.
+            If an integer is passed the database is queried for the `DjmdContent` entry.
+
+        Returns
+        -------
+        anlz_files : dict[str, AnlzFile]
+            The analysis files for the content as dictionary. The keys of the
+            dictionary are the file paths.
+        """
+        root = self.get_anlz_dir(content)
         return read_anlz_files(root)
 
-    def set_content_path(self, content_id, path):
-        content = self.get_content(ID=content_id)
+    def update_content_path(self, content, path, save=True, check_path=True):
+        """Update the file path of a track in the Rekordbox v6 database.
+
+        This changes the `FolderPath` entry in the `DjmdContent` table and the
+        path tag (PPTH) of the corresponding ANLZ analysis files.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The `DjmdContent` element to change. If an integer is passed the database
+            is queried for the content.
+        path : str
+            The new file path of the database entry.
+        save : bool, optional
+            If True, the changes made are written to disc.
+        check_path : bool, optional
+            If True, raise an assertion error if the given file path does not exist.
+
+        Examples
+        --------
+        If, for example, the file `NOISE.wav` was moved up a few directories
+        (from `.../Sampler/OSC_SAMPLER/PRESET ONESHOT/` to `.../Sampler/`) the file
+        could no longer be opened in Rekordbox, since the database still contains the
+        old file path:
+        >>> db = Rekordbox6Database()
+        >>> cont = db.get_content()[0]
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET ONESHOT/NOISE.wav
+
+        Updating the path changes the database entry
+        >>> new_path = "C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav"
+        >>> db.update_content_path(cont, new_path)
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav
+
+        and updates the file path in the corresponding ANLZ analysis files:
+        >>> files = self.read_anlz_files(cont.ID)
+        >>> file = list(files.values())[0]
+        >>> file.get("path")
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav
+
+        """
+        if isinstance(content, (int, str)):
+            content = self.get_content(ID=content)
+        cid = content.ID
+
+        # Check and format path (the database and ANLZ files use "/" as path delimiter)
+        if check_path:
+            assert os.path.exists(path)
         path = path.replace("\\", "/")
-        content.FolderPath = path.replace("\\", "/")
+        old_path = content.FolderPath
+        logger.info("Replacing '%s' with '%s' of content [%s]", old_path, path, cid)
+
+        # Update path in ANLZ files
+        anlz_files = self.read_anlz_files(cid)
+        for anlz_path, anlz in anlz_files.items():
+            logger.debug("Updating path of %s: %s", anlz_path, path)
+            anlz.set_path(path)
+
+        # Update path in database (DjmdContent)
+        logger.debug("Updating database file path: %s", path)
+        content.FolderPath = path
+
+        if save:
+            logger.debug("Saving changes")
+            # Save ANLZ files
+            for anlz_path, anlz in anlz_files.items():
+                anlz.save(anlz_path)
+            # Commit database changes
+            self.commit()
+
+    def update_content_filename(self, content, name, save=True, check_path=True):
+        """Update the file name of a track in the Rekordbox v6 database.
+
+        This changes the `FolderPath` entry in the `DjmdContent` table and the
+        path tag (PPTH) of the corresponding ANLZ analysis files.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The `DjmdContent` element to change. If an integer is passed the database
+            is queried for the content.
+        name : str
+            The new file name of the database entry.
+        save : bool, optional
+            If True, the changes made are written to disc.
+        check_path : bool, optional
+            If True, raise an assertion error if the new file path does not exist.
+
+        See Also
+        --------
+        update_content_path: Update the file path of a track in the Rekordbox database.
+
+        Examples
+        --------
+        Updating the file name changes the database entry
+        >>> db = Rekordbox6Database()
+        >>> cont = db.get_content()[0]
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET ONESHOT/NOISE.wav
+
+        >>> new_name = "noise"
+        >>> db.update_content_filename(cont, new_name)
+        >>> cont.FolderPath
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/noise.wav
+
+        and updates the file path in the corresponding ANLZ analysis files:
+        >>> files = self.read_anlz_files(cont.ID)
+        >>> file = list(files.values())[0]
+        >>> file.get("path")
+        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/noise.wav
+
+        """
+        if isinstance(content, (int, str)):
+            content = self.get_content(ID=content)
+
+        old_path = os.path.normpath(content.FolderPath)
+        name = os.path.splitext(name)[0]
+        ext = os.path.splitext(old_path)[1]
+        new_path = os.path.join(os.path.dirname(old_path), name + ext)
+
+        self.update_content_path(content, new_path, save, check_path)
