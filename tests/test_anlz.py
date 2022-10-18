@@ -172,7 +172,37 @@ def test_pwv4_tag_getters(paths):
 @pytest.mark.parametrize("paths", ANLZ_FILES)
 def test_pwv5_tag_getters(paths):
     file = anlz.AnlzFile.parse_file(paths["EXT"])
-    tag = file.get_tag("PWV3")
+    tag = file.get_tag("PWV5")
 
     heights, colors = tag.get()
     assert len(heights) == colors.shape[0]
+
+
+# -- File ------------------------------------------------------------------------------
+
+
+def test_anlzfile_getall_tags():
+    paths = ANLZ_FILES[0]
+    file = anlz.AnlzFile.parse_file(paths["DAT"])
+    key = "PPTH"
+    tags = file.getall_tags(key)
+    assert len(tags) == 1
+    assert tags[0].get() == file.get(key)
+
+
+def test_anlzfile_get():
+    paths = ANLZ_FILES[0]
+    file = anlz.AnlzFile.parse_file(paths["DAT"])
+    key = "PPTH"
+    tag = file.get_tag(key)
+    assert file.get(key) == tag.get()
+
+
+def test_anlzfile_getall():
+    paths = ANLZ_FILES[0]
+    file = anlz.AnlzFile.parse_file(paths["DAT"])
+    key = "PPTH"
+    tag = file.get_tag(key)
+    values = file.getall(key)
+    assert len(values) == 1
+    assert values[0] == tag.get()

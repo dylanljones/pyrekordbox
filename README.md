@@ -259,8 +259,8 @@ the CI setup since it requires a working Rekordbox installation.
   - PWV6
   - PWV7
   - PWVC
-- [ ] ANLZ tests.
 - [ ] Add USB export database support (`.pdb`).
+- [x] ANLZ tests.
 - [x] Improve Rekordbox 6 `master.db` database parsing.
 - [x] Add MySettings support.
 - [x] MySetting tests.
