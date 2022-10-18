@@ -14,10 +14,10 @@
 
 pyrekordbox is a Python package for interacting with the library and export data of
 Pioneer's Rekordbox DJ Software. It currently supports
+- Rekordbox 6 `master.db` database
 - Rekordbox XML database
 - Analysis files (ANLZ)
 - My-settings files
-- Rekordbox 6 `master.db` database
 
 *Note*: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
@@ -212,10 +212,11 @@ for song in playlist.Songs:
     content = song.Content
     print(content.Title, content.Artist.Name)
 ````
-Changing entries of the database is not yet supported. Writing to the database without
-knowing how Rekordbox generates the UUID/ID's for the DB entries could corrupt the
-libary. This feature will be added after some testing.
-
+Adding new rows to the tables of the database is not supported since it is not yet known
+how Rekordbox generates the UUID/ID's. Using wrong values nor new database entries
+could corrupt the library. This feature will be added after some testing.
+Changing existing entries like the title, artist or file path of a track in the database
+should work as expected.
 
 ## 💡 File formats
 
@@ -248,7 +249,7 @@ the CI setup since it requires a working Rekordbox installation.
 ### To Do
 
 
-- [ ] Writing to the Rekordbox 6 `master.db` database:
+- [ ] Adding new entries to the Rekordbox 6 `master.db` database:
   - Figure out how Rekordbox generates UUID's for the DB entries.
 - [ ] Rekordbox 6 `master.db` database tests.
 - [ ] Complete ANLZ file support. This included the following tags:
