@@ -116,7 +116,7 @@ def warn_deprecated(name, new_name="", hint="", remove_in=""):  # pragma: no cov
 
 
 # noinspection PyPackageRequirements,PyUnresolvedReferences
-def _read_config_file(path):
+def _read_config_file(path):  # pragma: no cover
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file or directory: '{path}'")
 
@@ -139,7 +139,7 @@ def _read_config_file(path):
     return dict()
 
 
-def read_pyrekordbox_configuration():
+def read_pyrekordbox_configuration():  # pragma: no cover
     """Reads the pyrekordbox configuration.
 
     So far only the `pioneer-install-dir` and `pioneer-app-dir` fileds in the
