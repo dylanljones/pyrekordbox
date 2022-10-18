@@ -87,14 +87,14 @@ class AbstractAnlzTag(ABC):
         len_tag = self.struct.len_tag
         return f"{self.__class__.__name__}(len_header={len_header}, len_tag={len_tag})"
 
-    def __str__(self):
+    def pformat(self):
         return str(self.struct)
 
 
 def _parse_wf_preview(tag):
     n = len(tag.entries)
-    wf = np.zeros(n)
-    col = np.zeros(n)
+    wf = np.zeros(n, dtype=np.int8)
+    col = np.zeros(n, dtype=np.int8)
     for i in range(n):
         data = tag.entries[i]
         wf[i] = data & 0x1F
@@ -108,6 +108,10 @@ class PQTZAnlzTag(AbstractAnlzTag):
     type = "PQTZ"
     name = "beat_grid"
     LEN_HEADER = 24
+
+    @property
+    def count(self):
+        return len(self.content.entries)
 
     @property
     def beats(self):
@@ -131,9 +135,6 @@ class PQTZAnlzTag(AbstractAnlzTag):
     def times(self):
         return self.get_times()
 
-    def check_parse(self):
-        assert self.struct.content.entry_count == len(self.struct.content.entries)
-
     def get(self):
         n = len(self.content.entries)
         beats = np.zeros(n, dtype=np.int8)
@@ -156,21 +157,64 @@ class PQTZAnlzTag(AbstractAnlzTag):
         return np.array([entry.time / 1000 for entry in self.content.entries])
 
     def set(self, beats, bpms, times):
+        n = len(self.content.entries)
+        n_beats = len(beats)
+        n_bpms = len(bpms)
+        n_times = len(times)
+        if n_bpms != n_beats:
+            raise ValueError(
+                f"Number of bpms not equal to number of beats: {n_bpms} != {n_beats}"
+            )
+        if n_times != n_beats:
+            raise ValueError(
+                f"Number of times not equal to number of beats: {n_bpms} != {n_times}"
+            )
+
+        # For now only values of existing beats can be set
+        if n_beats != n:
+            raise ValueError(
+                f"Number of beats not equal to current content length: {n_beats} != {n}"
+            )
+
         for i, (beat, bpm, t) in enumerate(zip(beats, bpms, times)):
             data = {"beat": int(beat), "tempo": int(100 * bpm), "time": int(1000 * t)}
             self.content.entries[i].update(data)
 
     def set_beats(self, beats):
+        n = len(self.content.entries)
+        n_new = len(beats)
+        if n_new != n:
+            raise ValueError(
+                f"Number of beats not equal to current content length: {n_new} != {n}"
+            )
+
         for i, beat in enumerate(beats):
             self.content.entries[i].beat = beat
 
     def set_bpms(self, bpms):
+        n = len(self.content.entries)
+        n_new = len(bpms)
+        if n_new != n:
+            raise ValueError(
+                f"Number of bpms not equal to current content length: {n_new} != {n}"
+            )
+
         for i, bpm in enumerate(bpms):
-            self.content.entries[i].bpm = int(bpm * 100)
+            self.content.entries[i].tempo = int(bpm * 100)
 
     def set_times(self, times):
+        n = len(self.content.entries)
+        n_new = len(times)
+        if n_new != n:
+            raise ValueError(
+                f"Number of times not equal to current content length: {n_new} != {n}"
+            )
+
         for i, t in enumerate(times):
             self.content.entries[i].time = int(1000 * t)
+
+    def check_parse(self):
+        assert self.struct.content.entry_count == len(self.struct.content.entries)
 
     def update_len(self):
         self.struct.len_tag = self.struct.len_header + 8 * len(self.content.entries)
@@ -182,6 +226,8 @@ class PQT2AnlzTag(AbstractAnlzTag):
     type = "PQT2"
     name = "beat_grid2"
     LEN_HEADER = 56
+
+    count = 2
 
     @property
     def beats(self):
@@ -211,11 +257,11 @@ class PQT2AnlzTag(AbstractAnlzTag):
             assert actual == expected, f"{actual} != {expected}"
 
     def get(self):
-        n = len(self.content.entries)
+        n = len(self.content.bpm)
         beats = np.zeros(n, dtype=np.int8)
         bpms = np.zeros(n, dtype=np.float64)
         times = np.zeros(n, dtype=np.float64)
-        for i, entry in enumerate(self.content.entries):
+        for i, entry in enumerate(self.content.bpm):
             _, beat, bpm, time = entry.values()
             beats[i] = beat
             bpms[i] = bpm / 100  # BPM is saved as 100 * BPM
@@ -223,25 +269,28 @@ class PQT2AnlzTag(AbstractAnlzTag):
         return beats, bpms, times
 
     def get_beats(self):
-        return np.array([entry.beat for entry in self.content.entries], dtype=np.int8)
+        return np.array([entry.beat for entry in self.content.bpm], dtype=np.int8)
 
     def get_bpms(self):
-        return np.array([entry.tempo / 100 for entry in self.content.entries])
+        return np.array([entry.tempo / 100 for entry in self.content.bpm])
 
     def get_times(self):
-        return np.array([entry.time / 1000 for entry in self.content.entries])
+        return np.array([entry.time / 1000 for entry in self.content.bpm])
+
+    def get_beat_grid(self):
+        return np.array([entry.beat for entry in self.content.entries], dtype=np.int8)
 
     def set_beats(self, beats):
         for i, beat in enumerate(beats):
-            self.content.entries[i].beat = beat
+            self.content.bpm[i].beat = beat
 
     def set_bpms(self, bpms):
         for i, bpm in enumerate(bpms):
-            self.content.entries[i].bpm = int(bpm * 100)
+            self.content.bpm[i].bpm = int(bpm * 100)
 
     def set_times(self, times):
         for i, t in enumerate(times):
-            self.content.entries[i].time = int(1000 * t)
+            self.content.bpm[i].time = int(1000 * t)
 
     def build(self):
         data = structs.AnlzTag.build(self.struct)
@@ -344,14 +393,7 @@ class PWV3AnlzTag(AbstractAnlzTag):
     LEN_HEADER = 24
 
     def get(self):
-        n = len(self.content.entries)
-        wf = np.zeros(n)
-        col = np.zeros(n)
-        for i in range(n):
-            data = self.content.entries[i]
-            wf[i] = data & 0x1F
-            col[i] = data >> 5
-        return wf, col
+        return _parse_wf_preview(self.content)
 
 
 class PWV4AnlzTag(AbstractAnlzTag):
