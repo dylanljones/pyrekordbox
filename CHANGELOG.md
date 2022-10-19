@@ -1,8 +1,7 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
-
+<a name="0.1.1"></a>
+## [0.1.1] - 2022-19-10
 ### New Features
 - `AnlzFile` now stores the path of the parsed file
 - add `update_content_path` and `update_content_filename` to RB6 database
@@ -142,7 +141,8 @@
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/dylanljones/pyrekordbox/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/dylanljones/pyrekordbox/compare/0.0.8...0.1.0
 [0.0.8]: https://github.com/dylanljones/pyrekordbox/compare/0.0.7...0.0.8
 [0.0.7]: https://github.com/dylanljones/pyrekordbox/compare/0.0.6...0.0.7
