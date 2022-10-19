@@ -115,19 +115,24 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     Examples
     --------
     Open the Rekordbox v6 master.db database:
+
     >>> db = open_rekordbox_database()
 
     Open a copy of the database:
+
     >>> db = open_rekordbox_database("path/to/master_copy.db")
 
     Open a decrypted copy of the database:
+
     >>> db = open_rekordbox_database("path/to/master_unlocked.db", unlock=False)
 
     To use the `pysqlcipher3` package as SQLite driver, either import it as
+
     >>> from pysqlcipher3 import dbapi2 as sqlite3
     >>> db = open_rekordbox_database("path/to/master_copy.db")
 
     or supply the package as driver:
+
     >>> from pysqlcipher3 import dbapi2
     >>> db = open_rekordbox_database("path/to/master_copy.db", sql_driver=dbapi2)
     """
@@ -520,18 +525,21 @@ class Rekordbox6Database:
         (from `.../Sampler/OSC_SAMPLER/PRESET ONESHOT/` to `.../Sampler/`) the file
         could no longer be opened in Rekordbox, since the database still contains the
         old file path:
+
         >>> db = Rekordbox6Database()
         >>> cont = db.get_content()[0]
         >>> cont.FolderPath
         C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET ONESHOT/NOISE.wav
 
         Updating the path changes the database entry
+
         >>> new_path = "C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav"
         >>> db.update_content_path(cont, new_path)
         >>> cont.FolderPath
         C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav
 
         and updates the file path in the corresponding ANLZ analysis files:
+
         >>> files = self.read_anlz_files(cont.ID)
         >>> file = list(files.values())[0]
         >>> file.get("path")
@@ -592,6 +600,7 @@ class Rekordbox6Database:
         Examples
         --------
         Updating the file name changes the database entry
+
         >>> db = Rekordbox6Database()
         >>> cont = db.get_content()[0]
         >>> cont.FolderPath
@@ -603,6 +612,7 @@ class Rekordbox6Database:
         C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/noise.wav
 
         and updates the file path in the corresponding ANLZ analysis files:
+
         >>> files = self.read_anlz_files(cont.ID)
         >>> file = list(files.values())[0]
         >>> file.get("path")
