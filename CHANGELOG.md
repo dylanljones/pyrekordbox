@@ -1,5 +1,13 @@
 # What's New
 
+<a name="0.1.2"></a>
+## [0.1.2] - 2022-19-10
+
+### Documentation
+- fix typos and formatting
+- fix light theme styling
+
+
 <a name="0.1.1"></a>
 ## [0.1.1] - 2022-19-10
 ### New Features
@@ -142,6 +150,7 @@
 
 
 [Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.1...HEAD
+[0.1.2]: https://github.com/dylanljones/pyrekordbox/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/dylanljones/pyrekordbox/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/dylanljones/pyrekordbox/compare/0.0.8...0.1.0
 [0.0.8]: https://github.com/dylanljones/pyrekordbox/compare/0.0.7...0.0.8
