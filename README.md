@@ -258,7 +258,8 @@ the CI setup since it requires a working Rekordbox installation.
   - PWV6
   - PWV7
   - PWVC
-- [ ] Add USB export database support (`.pdb`).
+- [ ] Planned: Add RekordboxAgent client
+- [ ] Planned: Add USB export database support (`.pdb`).
 - [x] Improve Rekordbox 6 `master.db` database parsing.
 - [x] Add MySettings support.
 
