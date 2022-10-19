@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-===========
-pyrekordbox
-===========
+=========================
+Pyrekordbox documentation
+=========================
 
 |ci-tests| |codecov| |pypi-version| |pypi-python-version| |pypi-platform| |pypi-license|
 
@@ -15,7 +15,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
 - Rekordbox 6 `master.db` database
 - Rekordbox XML database
 - Analysis files (ANLZ)
-- My-settings files
+- My-Settings files
 
 .. admonition:: Disclamer
 

@@ -70,12 +70,12 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 7. **Create directory ``...\pysqlcipher3\amalgamation``**
 
-   Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5
+   Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5 to the new `amalgamation` directory.
 
 
 8. **Create directory ``...\pysqlcipher3\src\python3\sqlcipher``**
 
-   Copy files ``sqlite3.c``, ``sqlite3.h`` and ``sqlite3ext.h`` from the amalgamation directory from step 5
+   Copy files ``sqlite3.c``, ``sqlite3.h`` and ``sqlite3ext.h`` from the amalgamation directory from step 5 to the new `sqlcipher` directory.
 
 
 9. **Modify the ``...\pysqlcipher3\setup.py`` script (optional, see [this](https://stackoverflow.com/questions/65345077/unable-to-build-sqlcipher3-on-windows) discussion)**
@@ -115,6 +115,7 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 11. **Install ``pysqlcipher3``**
 
+    In the same directory, run
     ````commandline
     python setup.py install
     ````
@@ -159,8 +160,10 @@ To patch the sqlite3 installation, follow these steps:
   Rename the ``sqlcipher.dll`` file in the ``Libs/sqlcipher_py38`` directory to
   ``sqlite3.dll`` and replace the existing DLL file in the Python DLL folder with it.
 
-  *Note*: Before replacing the original file, back up ``sqlite3.dll`` in the Python DLL directory by renaming it to something like ``sqlite3_backup.dll``.
-
+   ```{tip}
+   Before replacing the original file, back up ``sqlite3.dll`` in the Python DLL
+   directory by renaming it to something like ``sqlite3_backup.dll``.
+   ```
 - **Optional: Copy `libcrypto-1_1.dll` into the Python DLL directory**
 
 - **Optional: Copy `libssl-1_1.dll` into the Python DLL directory**
