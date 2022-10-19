@@ -1,7 +1,7 @@
-MySetting Files Format
+My-Setting Files Format
 ======================
 
-This document explains the file format of the following Rekordbox MySetting files:
+This document explains the file format of the following Rekordbox My-Setting files:
 
 - `DEVSETTING.DAT`
 - `DJMMYSETTING.DAT`
@@ -9,17 +9,17 @@ This document explains the file format of the following Rekordbox MySetting file
 - `MYSETTING2.DAT`
 
 
-MySetting File Structure
+My-Setting File Structure
 ------------------------
 
-The MySetting files of Rekordbox are made up of a file header, a body structure
+The My-Setting files of Rekordbox are made up of a file header, a body structure
 containing the main data and a file footer. In contrast to the analysis files the
-MySetting files use little endian data types.
+My-Setting files use little endian data types.
 
 The files starts with a single byte `len_strings` specifying the combined size of the
 string data fields (should be always 96). The next 3 bytes are always zero.
 The first 4 bytes can also be interpreted as a little endian 32-bit integer.
-After that the MySettings files contain three 32 byte long ASCII strings.
+After that the My-Setting files contain three 32 byte long ASCII strings.
 The first 32 byte field `brand` contains the name of the brand. The value seems to
 depend on the file:
 
@@ -41,17 +41,17 @@ which describes some kind of version number.
 The last value of the header is `len_data`, which describes
 the size of the `data` data in bytes. The total length of the header is 104 bytes.
 
-The MySetting files end with an 4 byte long file footer, which contain a 2 byte checksum
+The My-Setting files end with an 4 byte long file footer, which contain a 2 byte checksum
 and an 2 byte unknown value, which seems to always be `0x00`. The checksum is calculated
 over the contents of the `data` field, except for `DJMSETTING.DAT` files where
 the checksum is calculated over all preceding bytes including the length fields and
 uses the CRC16 XMODEM algorithm
 
 
-MySettings File Body
+My-Settings File Body
 --------------------
 
-After the file header of the MySettings files the main data begins. The format depends
+After the file header of the My-Settings files the main data begins. The format depends
 on the kind of file. All settings are stored as enums, starting at the value
 ``0x80 = 129``. Note that even integers are not stored directly but mapped to the enum
 values, for example ``0x80`` -> 1, ``0x81`` -> 2, etc. Sometimes the enum values are
