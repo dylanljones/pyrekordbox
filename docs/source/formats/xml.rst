@@ -2,7 +2,7 @@ XML Database Format
 ===================
 
 
-The Rekordbox XML format is well documented by Pioneer in [ref1]_ and [ref2]_.
+The Rekordbox XML format is well documented by Pioneer in [1]_ and [2]_.
 
 
 The first entry of the XML file should be displayed as follows:
@@ -373,8 +373,8 @@ Rekordbox track colors:
 References
 ----------
 
-.. [ref1] Rekordbox for developers.
+.. [1] Rekordbox for developers.
 	https://rekordbox.com/en/support/developer/
 
-.. [ref2] Rekordbox XML format
+.. [2] Rekordbox XML format
 	https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf

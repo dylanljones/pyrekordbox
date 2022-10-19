@@ -19,6 +19,13 @@ Rekordbox 5:
    db_path =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox\datafile.edb
    install_dir =  C:\Program Files\Pioneer\rekordbox 5.8.6
    version =      5.8.6
+Rekordbox 6:
+   app_dir =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox6
+   db_dir =       C:\Users\user\AppData\Roaming\Pioneer\rekordbox
+   db_path =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox\master.db
+   dp =           FJ9s0iA+hiPZg...
+   install_dir =  C:\Program Files\Pioneer\rekordbox 6.5.3
+   version =      6.5.3
 ````
 
 If for some reason the configuration fails the values can be updated by providing the
@@ -37,7 +44,7 @@ rekordbox.cfg and rekordbox.yml.
 
 **pyproject.toml** / **pyrekordbox.toml**
 `````toml
-[pyrekordbox]
+[rekordbox]
 pioneer-install-dir = "C:/Program Files/Pioneer"
 pioneer-app-dir = "C:/Users/user/AppData/Roaming/Pioneer"
 `````
@@ -45,13 +52,13 @@ pioneer-app-dir = "C:/Users/user/AppData/Roaming/Pioneer"
 
 **setup.cfg** / **pyrekordbox.cfg**
 `````ini
-[pyrekordbox]
+[rekordbox]
 pioneer-install-dir = C:/Program Files/Pioneer
 pioneer-app-dir = C:/Users/user/AppData/Roaming/Pioneer
 `````
 
 
-**rekordbox.yml**
+**pyrekordbox.yml**
 ````yaml
 rekordbox:
   pioneer-install-dir: C:/Program Files/Pioneer

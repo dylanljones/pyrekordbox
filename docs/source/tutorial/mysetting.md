@@ -10,7 +10,7 @@ tempo fader range, crossfader curve and other settings for Pioneer professional
 DJ equipment.
 
 ```{seealso}
-See the {ref}`MySetting Files Format<MySetting Files Format>` documentation for more information.
+See the {ref}`My-Setting Files Format<My-Setting Files Format>` documentation for more information.
 ```
 
 Pyrekordbox includes a file handler for each of the four My-Settings files. To read any of the four files, use
@@ -30,7 +30,7 @@ file3 = DjmMySettingFile.parse_file("DJMMYSETTING.DAT")
 file4 = DevSettingFile.parse_file("DEVSETTING.DAT")
 ````
 
-After parsing a My-Settings file, the settings can be accessed as dictionary:
+After parsing a My-Setting file, the settings can be accessed as dictionary:
 ````python
 >>> file = read_mysetting_file("MYSETTING.DAT")
 >>> file["quantize"]

@@ -12,12 +12,12 @@
 [![style: black][black-badge]][black-link]
 
 
-pyrekordbox is a Python package for interacting with the library and export data of
+Pyrekordbox is a Python package for interacting with the library and export data of
 Pioneer's Rekordbox DJ Software. It currently supports
 - Rekordbox 6 `master.db` database
 - Rekordbox XML database
 - Analysis files (ANLZ)
-- My-settings files
+- My-Setting files
 
 *Note*: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
@@ -108,8 +108,8 @@ update_config(pioneer_install_dir, pioneer_app_dir)
 ````
 
 Alternatively the two paths can be specified in a configuration file under the section
-`rekordbox`. Supported configuration files are pyproject.toml, setup.cfg, rekordbox.toml,
-rekordbox.cfg and rekordbox.yml.
+`rekordbox`. Supported configuration files are pyproject.toml, setup.cfg, pyrekordbox.toml,
+pyrekordbox.cfg and pyrekordbox.yaml.
 
 
 ### Rekordbox XML
@@ -168,7 +168,7 @@ Changing and creating the Rekordbox analysis files is planned as well, but for t
 full structure of the analysis files has to be understood.
 
 
-### Rekordbox MySettings
+### Rekordbox My-Settings
 
 Rekordbox stores the user settings in `*SETTING.DAT` files, which get exported to USB
 devices. These files are either in the `PIONEER`directory of a USB drive
@@ -177,7 +177,7 @@ The setting files store the settings found on the "DJ System" > "My Settings" pa
 the Rekordbox preferences. These include language, LCD brightness, tempo fader range,
 crossfader curve and other settings for Pioneer professional DJ equipment.
 
-pyrekordbox supports both parsing and writing MySetting files.
+pyrekordbox supports both parsing and writing My-Setting files.
 
 ````python
 from pyrekordbox.mysettings import read_mysetting_file
@@ -224,7 +224,7 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 
 - [Rekordbox XML format][xml-doc]
 - [ANLZ file format][anlz-doc]
-- [MySetting file format][mysettings-doc]
+- [My-Setting file format][mysettings-doc]
 - [Rekordbox 6 database][db6-doc]
 
 
@@ -247,11 +247,10 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 ### To Do
-
+- [ ] Improve unit testing.
 
 - [ ] Adding new entries to the Rekordbox 6 `master.db` database:
   - Figure out how Rekordbox generates UUID's for the DB entries.
-- [ ] Rekordbox 6 `master.db` database tests.
 - [ ] Complete ANLZ file support. This included the following tags:
   - PCOB
   - PCO2
@@ -259,11 +258,9 @@ the CI setup since it requires a working Rekordbox installation.
   - PWV6
   - PWV7
   - PWVC
-- [ ] ANLZ tests.
 - [ ] Add USB export database support (`.pdb`).
 - [x] Improve Rekordbox 6 `master.db` database parsing.
 - [x] Add MySettings support.
-- [x] MySetting tests.
 
 
 

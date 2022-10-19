@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 rb6_config = get_config("rekordbox6")
 
 
-def _get_masterdb_key():
+def _get_masterdb_key():  # pragma: no cover
     # See https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
 
     # Read password key from app.asar file

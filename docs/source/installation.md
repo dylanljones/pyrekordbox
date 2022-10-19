@@ -198,7 +198,7 @@ C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/ho
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
 
 
-### References:
+### References
 
 - [Sqlcipher](https://www.zetetic.net/sqlcipher/open-source/)
 - [https://stackoverflow.com/questions/33618565/how-to-build-sql-cipher-python-binding-for-windows](https://stackoverflow.com/questions/33618565/how-to-build-sql-cipher-python-binding-for-windows)

@@ -5,8 +5,8 @@ This document explains the file format of the Rekordbox ANLZ analysis files, whi
 with the extionsions `.DAT`, `.EXT` and `.2EX`.
 
 The following information was mainly taken from the excellent reverse engineering
-work [ref3]_ of the people behind DeepSymmetry's `crate-digger`_.
-All figures were taken or modified from [ref3]_ as well.
+work [1]_ of the people behind DeepSymmetry's `crate-digger`_.
+All figures were taken or modified from [1]_ as well.
 
 
 File Header
@@ -345,7 +345,7 @@ PWV2: Tiny Waveform Preview Tag
 Seen in `.DAT` analysis files. This kind of section holds an even smaller fixed-width
 monochrome preview of the track waveform, which seems to be displayed on the CDJ-900.
 It is identified by the four-character code `PWV2` but otherwise has the same structure
-as the larger waveform preview tags [PWAV](#pwav-waveform-preview-tag).
+as the larger waveform preview tags :ref:`PWAV <PWAV: Waveform Preview Tag>`.
 
 
 PWV3: Waveform Detail Tag
@@ -369,7 +369,7 @@ how many entries are present in the tag. Each entry represents one half-frame of
 data, and there are 75 frames per second, so for each second of track audio there are
 150 waveform detail entries. The purpose of the header `unknown` is not known yet;
 they always seem to have the value `0x00960000`. The interpretation of each byte of the
-entriesis the same as for [PWAV](#pwav-waveform-preview-tag).
+entriesis the same as for :ref:`PWAV <PWAV: Waveform Preview Tag>`.
 
 
 PWV4: Waveform Color Preview Tag
@@ -484,11 +484,11 @@ these maybe RBG values? But for what?
 References
 ----------
 
-.. [ref3] Rekordbox Export Structure Analysis: Analysis Files.
+.. [1] Rekordbox Export Structure Analysis: Analysis Files.
    https://djl-analysis.deepsymmetry.org/rekordbox-export-analysis/anlz.html.
 
 
-.. [ref4] https://github.com/Deep-Symmetry/crate-digger/issues/22
+.. [2] https://github.com/Deep-Symmetry/crate-digger/issues/22
 
 
 .. _crate-digger: https://github.com/Deep-Symmetry/crate-digger
