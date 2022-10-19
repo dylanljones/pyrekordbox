@@ -5,8 +5,8 @@ This document explains the file format of the Rekordbox ANLZ analysis files, whi
 with the extionsions `.DAT`, `.EXT` and `.2EX`.
 
 The following information was mainly taken from the excellent reverse engineering
-work [ref3]_ of the people behind DeepSymmetry's `crate-digger`_.
-All figures were taken or modified from [ref3]_ as well.
+work [1]_ of the people behind DeepSymmetry's `crate-digger`_.
+All figures were taken or modified from [1]_ as well.
 
 
 File Header
@@ -484,11 +484,11 @@ these maybe RBG values? But for what?
 References
 ----------
 
-.. [ref3] Rekordbox Export Structure Analysis: Analysis Files.
+.. [1] Rekordbox Export Structure Analysis: Analysis Files.
    https://djl-analysis.deepsymmetry.org/rekordbox-export-analysis/anlz.html.
 
 
-.. [ref4] https://github.com/Deep-Symmetry/crate-digger/issues/22
+.. [2] https://github.com/Deep-Symmetry/crate-digger/issues/22
 
 
 .. _crate-digger: https://github.com/Deep-Symmetry/crate-digger

@@ -392,5 +392,5 @@ The talk-over level in the `DJMMYSETTING.DAT` files are encoded as follows:
 References
 ----------
 
-.. [ref5] Jan Holthuis. rekordcrate. Module setting
+.. [1] Jan Holthuis. rekordcrate. Module setting
    https://holzhaus.github.io/rekordcrate/rekordcrate/setting/struct.Setting.html
