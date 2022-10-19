@@ -90,11 +90,6 @@ html_theme_options = {
             "class": "",
         },
     ],
-    "light_css_variables": {
-        "color-brand-primary": "red",
-        "color-brand-content": "#CC3333",
-        "color-admonition-background": "orange",
-    },
 }
 
 # html_title = f"{release} documentation"
