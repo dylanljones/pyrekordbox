@@ -247,8 +247,8 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 ### To Do
-- [ ] Improve unit testing.
 
+- [ ] Improve unit testing.
 - [ ] Adding new entries to the Rekordbox 6 `master.db` database:
   - Figure out how Rekordbox generates UUID's for the DB entries.
 - [ ] Complete ANLZ file support. This included the following tags:
@@ -258,7 +258,8 @@ the CI setup since it requires a working Rekordbox installation.
   - PWV6
   - PWV7
   - PWVC
-- [ ] Add USB export database support (`.pdb`).
+- [ ] Planned: Add RekordboxAgent client
+- [ ] Planned: Add USB export database support (`.pdb`).
 - [x] Improve Rekordbox 6 `master.db` database parsing.
 - [x] Add MySettings support.
 
