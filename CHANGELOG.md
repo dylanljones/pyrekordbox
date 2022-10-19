@@ -14,6 +14,11 @@
 - remove wrong type hint in ``AbstractAnlzTag``
 - Use path instead of extension as key in `read_anlz_files` output
 
+### Documentation
+- update Quick-Start and change reference labels
+- add initial version of API Reference
+- fix links in ANLZ file documentation
+
 
 <a name="0.1.0"></a>
 ## [0.1.0] - 2022-16-10
