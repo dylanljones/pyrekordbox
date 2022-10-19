@@ -345,7 +345,7 @@ PWV2: Tiny Waveform Preview Tag
 Seen in `.DAT` analysis files. This kind of section holds an even smaller fixed-width
 monochrome preview of the track waveform, which seems to be displayed on the CDJ-900.
 It is identified by the four-character code `PWV2` but otherwise has the same structure
-as the larger waveform preview tags [PWAV](#pwav-waveform-preview-tag).
+as the larger waveform preview tags :ref:`PWAV <PWAV: Waveform Preview Tag>`.
 
 
 PWV3: Waveform Detail Tag
@@ -369,7 +369,7 @@ how many entries are present in the tag. Each entry represents one half-frame of
 data, and there are 75 frames per second, so for each second of track audio there are
 150 waveform detail entries. The purpose of the header `unknown` is not known yet;
 they always seem to have the value `0x00960000`. The interpretation of each byte of the
-entriesis the same as for [PWAV](#pwav-waveform-preview-tag).
+entriesis the same as for :ref:`PWAV <PWAV: Waveform Preview Tag>`.
 
 
 PWV4: Waveform Color Preview Tag
