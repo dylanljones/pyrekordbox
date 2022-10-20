@@ -4,11 +4,12 @@
 #
 # Copyright (c) 2022, Dylan Jones
 
-"""Rekordbox XML database file interface."""
+r"""Rekordbox XML database file interface."""
 
 import logging
 import os.path
 import urllib.parse
+from abc import abstractmethod
 from collections import abc
 from xml.dom import minidom
 import xml.etree.cElementTree as xml
@@ -125,13 +126,31 @@ class XmlAttributeKeyError(Exception):
 
 
 class AbstractElement(abc.Mapping):
-    """Abstract base class for Rekordbox XML elements."""
+    """Abstract base class for Rekordbox XML elements.
+
+    Implements attribute getters and setters for an XML element
+    """
 
     TAG: str
-    ATTRIBS: list
+    """str: Name of the XML element"""
 
-    SETTERS = dict()
+    ATTRIBS: list
+    """list[str]: List of all attribute keys of the XML element"""
+
     GETTERS = dict()
+    """dict[str, Callable]: Dictionary of attribute getter conversion methods.
+
+    See Also
+    --------
+    AbstractElement.get
+    """
+    SETTERS = dict()
+    """dict[str, Callable]: Dictionary of attribute setter conversion methods.
+
+    See Also
+    --------
+    AbstractElement.set
+    """
 
     def __init__(self, element=None, *args, **kwargs):
         self._element = element
@@ -140,13 +159,35 @@ class AbstractElement(abc.Mapping):
         else:
             self._load_subelements()
 
+    @abstractmethod
     def _init(self, *args, **kwargs):
+        """Initializes a new XML element."""
         pass
 
     def _load_subelements(self):
+        """Loads the sub-elements of an existing XML element."""
         pass
 
     def get(self, key, default=None):
+        """Returns the value of an attribute of the XML element.
+
+        The type of the attribute value is converted if a conversion method is specified
+        in the ``GETTERS`` class attribute. If no conversion method is found the value
+        is returned unconverted as the default type ``str``.
+
+        Parameters
+        ----------
+        key : str
+            The key of the attribute.
+        default : Any, opzonal
+            The default value returned if the attribute does not exist.
+
+        Returns
+        -------
+        value : Any
+            The value of the atttribute. The type of the attribute is converted
+            acccording to the data of the field.
+        """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
         value = self._element.attrib.get(key, default)
@@ -160,6 +201,20 @@ class AbstractElement(abc.Mapping):
         return value
 
     def set(self, key, value):
+        """Sets the value of an attribute of the XML element.
+
+        The type of the given value is converted before updating the attribute if a
+        conversion method is specified in the ``SETTERS`` class attribute.
+        If no conversion method is found the value updated set as given.
+
+        Parameters
+        ----------
+        key : str
+            The key of the attribute.
+        value : Any
+            The value for updating the attribute. The type conversion is handled
+            automatically.
+        """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
         try:
@@ -171,18 +226,42 @@ class AbstractElement(abc.Mapping):
         self._element.attrib.set(key, value)
 
     def __len__(self):
+        """int: The number of attributes of the XML element."""
         return len(self._element.attrib)
 
     def __iter__(self):
+        """Iterable: An iterator of the attribute keys of the XML element."""
         return iter(self._element.attrib.keys())
 
     def __getitem__(self, key):
+        """Returns the raw value of an attribute of the XML element.
+
+        Parameters
+        ----------
+        key : str
+            The key of the attribute.
+
+        Returns
+        -------
+        value : Any
+            The raw value of the attribute.
+        """
         return self.get(key)
 
     def __setitem__(self, key, value):
+        """Sets the raw value of an attribute of the XML element.
+
+        Parameters
+        ----------
+        key : str
+            The key of the attribute.
+        value : Any
+            The raw value for updating the attribute.
+        """
         self.set(key, value)
 
     def __getattr__(self, key):
+        """Returns the raw value of an attribute of the XML element (same as `get`)."""
         return self.get(key)
 
     def __repr__(self):
@@ -194,7 +273,7 @@ class AbstractElement(abc.Mapping):
 
 # noinspection PyPep8Naming
 class Tempo(AbstractElement):
-    """Tempo element representing the beat grid.
+    """Tempo element representing the beat grid of a track.
 
     Attributes
     ----------
@@ -202,7 +281,7 @@ class Tempo(AbstractElement):
         The start position of the beat grid item.
     Bpm : float
         The BPM value of the beat grid item.
-    Metro : str, optional
+    Metro : str
         The kind of musical meter, for example '4/4'. The default is '4/4'.
     Battito : int
         The beat number in the bar. If `metro` is '4/4', the value can be 1, 2, 3 or 4.
@@ -240,7 +319,7 @@ class Tempo(AbstractElement):
 
 # noinspection PyPep8Naming
 class PositionMark(AbstractElement):
-    """Position element for storing position markers like cue points.
+    """Position element for storing position markers like cue points of a track.
 
     Attributes
     ----------
@@ -445,10 +524,59 @@ class Track(AbstractElement):
         if mark_elements is not None:
             self.marks = [PositionMark(element=el) for el in mark_elements]
 
-    def add_tempo(self, Inizio=0.0, Bpm=0.0, Metro="4/4", Battito=1):
+    def add_tempo(self, Inizio, Bpm, Metro, Battito):
+        """Adds a new ``Tempo`` XML element to the track element.
+
+        Parameters
+        ----------
+        Inizio : float
+            The start position of the beat grid item.
+        Bpm : float
+            The BPM value of the beat grid item.
+        Metro : str, optional
+            The kind of musical meter, for example '4/4'. The default is '4/4'.
+        Battito : int
+            The beat number in the bar. If `metro` is '4/4', the value can be 1, 2, 3
+            or 4.
+
+        Returns
+        -------
+        tempo : Tempo
+            The newly created tempo XML element.
+
+        See Also
+        --------
+        Tempo: Beat grid XML element handler
+        """
         return Tempo(self, Inizio, Bpm, Metro, Battito)
 
     def add_mark(self, Name="", Type="cue", Start=0.0, End=None, Num=-1):
+        """Adds a new ``PositionMark`` XML element to the track element.
+
+        Parameters
+        ----------
+        Name : str
+            The name of the position mark.
+        Type : str
+            The type of position mark. Can be 'cue', 'fadein', 'fadeout', 'load' or
+            'loop'.
+        Start : float
+            Start position of the position mark in seconds.
+        End : float, optionl
+            End position of the position mark in seconds.
+        Num : int, optional
+            Charakter for identification of the position mark (for hot cues). For memory
+            cues this is always -1.
+
+        Returns
+        -------
+        position_mark : PositionMark
+            The newly created position mark XML element.
+
+        See Also
+        --------
+        PositionMark: Position mark XML element handler
+        """
         return PositionMark(self, Name, Type, Start, End, Num)
 
     def __repr__(self):
@@ -459,9 +587,17 @@ class Track(AbstractElement):
 
 
 class Node:
-    """Node element used for storing playlist folders and playlists."""
+    """Node element used for representing playlist folders and playlists.
+
+    A node configured as playlist folder can store other nodes as well as tracks, a node
+    configured as playlist can only store tracks. The tracks in playlists are stored via
+    a key depending on the key type of the playlist. The key type can either be the
+    ID of the track in the XML database ('TrackID') or the file path of the track
+    (`Location`).
+    """
 
     TAG = "NODE"
+    """str: Name of the XML element"""
 
     FOLDER = 0
     PLAYLIST = 1
@@ -474,11 +610,32 @@ class Node:
 
     @classmethod
     def folder(cls, parent, name):
+        """Initializes a playlist folder node XML element.
+
+        Parameters
+        ----------
+        parent : xml.Element
+            The parent node XML element of the new playlist folder node.
+        name : str
+            The name of the playlist folder node.
+        """
         attrib = {"Name": name, "Type": str(cls.FOLDER), "Count": "0"}
         return cls(parent, **attrib)
 
     @classmethod
     def playlist(cls, parent, name, keytype="TrackID"):
+        """Initializes a playlist node XML element.
+
+        Parameters
+        ----------
+        parent : xml.Element
+            The parent node XML element of the new playlist node.
+        name : str
+            The name of the playlist node.
+        keytype : str, optional
+            The key type used by the playlist node. Can be 'TrackID' or `Location`
+            (file path of the track).
+        """
         attrib = {
             "Name": name,
             "Type": str(cls.PLAYLIST),
@@ -489,36 +646,42 @@ class Node:
 
     @property
     def parent(self):
+        """Node: The parent of the node."""
         return self._parent
 
     @property
     def name(self):
-        """str: Name of Node."""
+        """str: The name of node."""
         return self._element.attrib.get("Name")
 
     @property
     def type(self):
-        """int: Type of Node (0=folder or 1=playlist)."""
+        """int: The type of the node (0=folder or 1=playlist)."""
         return int(self._element.attrib.get("Type"))
 
     @property
     def count(self):
+        """int: The number of attributes of the XML element."""
         return int(self._element.attrib.get("Count", 0))
 
     @property
     def entries(self):
+        """int: The number of entries of the node."""
         return int(self._element.attrib.get("Entries", 0))
 
     @property
     def key_type(self):
+        """str: The type of key used by the playlist node"""
         return NODE_KEYTYPE_MAPPING.get(self._element.attrib.get("KeyType"))
 
     @property
     def is_folder(self):
+        """bool: True if the node is a playlist folder, false if otherwise."""
         return self.type == self.FOLDER
 
     @property
     def is_playlist(self):
+        """bool: True if the node is a playlist, false if otherwise."""
         return self.type == self.PLAYLIST
 
     def _update_count(self):
@@ -556,6 +719,13 @@ class Node:
         return Node(self, element=self._element.find(f'.//{self.TAG}[@Name="{name}"]'))
 
     def get_playlists(self):
+        """Returns all sub-nodes that are playlists.
+
+        Returns
+        -------
+        playlists : list[Node]
+            The playlist nodes in the current node.
+        """
         return [Node(self, element=el) for el in self._element]
 
     def add_playlist_folder(self, name):
@@ -602,23 +772,58 @@ class Node:
         return node
 
     def remove_playlist(self, name):
+        """Removes a playlist from the playlist folder node.
+
+        Parameters
+        ----------
+        name : str
+            The name of the playlist to remove.
+        """
         item = self.get_playlist(name)
         self._element.remove(item._element)  # noqa
         self._update_count()
         self._update_entries()
 
     def add_track(self, key):
+        """Adds a new track to the playlist node.
+
+        Parameters
+        ----------
+        key : int or str
+            The key of the track to add, depending on the `type` of the playlist node.
+
+        Returns
+        -------
+        el : xml.SubElement
+            The newly created playlist track element.
+        """
         el = xml.SubElement(self._element, Track.TAG, attrib={"Key": str(key)})
         self._update_entries()
         return el
 
     def remove_track(self, key):
+        """Removes a track from the playlist node.
+
+        Parameters
+        ----------
+        key : int or str
+            The key of the track to remove, depending on the `type` attribute of the
+            playlist node.
+        """
         el = self._element.find(f'{Track.TAG}[@Key="{key}"]')
         self._element.remove(el)
         self._update_entries()
         return el
 
     def get_tracks(self):
+        """Returns the keys of all tracks contained in the playlist node.
+
+        Returns
+        -------
+        keys : list
+            The keys of the tracks in the playlist. The format depends on the `type`
+            attribute of the playlist node.
+        """
         if self.type == self.FOLDER:
             return list()
         elements = self._element.findall(f".//{Track.TAG}")
@@ -631,13 +836,29 @@ class Node:
         return items
 
     def get_track(self, key):
+        """Returns the formatted key of the track."""
+        # Todo: Is this neccessary?
         el = self._element.find(f'{Track.TAG}[@Key="{key}"]')
         val = el.attrib["Key"]
         if self.key_type == "TrackID":
             val = int(val)
         return val
 
-    def treestr(self, lvl=0, indent=4):
+    def treestr(self, indent=4, lvl=0):
+        """returns a formatted string of the node tree strucutre.
+
+        Parameters
+        ----------
+        indent : int, optional
+            Number of spaces used for indenting.
+        lvl : int, optional
+            Internal parameter for recursion, don't use!
+
+        Returns
+        -------
+        s : str
+            The formatted tree string.
+        """
         space = indent * lvl * " "
         string = ""
         if self.type == self.PLAYLIST:
@@ -645,7 +866,7 @@ class Node:
         elif self.type == self.FOLDER:
             string += space + f"Folder: {self.name}\n"
             for node in self.get_playlists():
-                string += node.treestr(lvl + 1, indent)
+                string += node.treestr(indent, lvl + 1)
         return string
 
     def __eq__(self, other):
@@ -736,6 +957,7 @@ class RekordboxXml:
 
     @property
     def root_playlist_folder(self):
+        """Node: The node of the root playlist folder containing all other nodes."""
         return self._root_node
 
     def _parse(self, path):
@@ -943,6 +1165,11 @@ class RekordboxXml:
         See Also
         --------
         Node.add_playlist_folder
+
+        Examples
+        --------
+        >>> file = RekordboxXml("database.xml")
+        >>> file.add_playlist_folder("New Folder")
         """
         return self._root_node.add_playlist_folder(name)
 
@@ -965,6 +1192,17 @@ class RekordboxXml:
         See Also
         --------
         Node.add_playlist
+
+        Examples
+        --------
+        Create playlist using the track ID as keys
+
+        >>> file = RekordboxXml("database.xml")
+        >>> file.add_playlist("New Playlist", keytype="TrackID")
+
+        Create playlist using the file paths as keys
+
+        >>> file.add_playlist("New Playlist 2", keytype="Location")
         """
         return self._root_node.add_playlist(name, keytype)
 
@@ -984,7 +1222,7 @@ class RekordboxXml:
         return pretty_xml(self._root, indent, encoding="utf-8")
 
     def save(self, path="", indent=None):
-        """Writes the contents of the XML file to disk.
+        """Saves the contents to an XML file.
 
         Parameters
         ----------
