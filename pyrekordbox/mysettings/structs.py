@@ -7,10 +7,11 @@
 """Binary structures of Rekordbox MySettings files.
 
 Files in this format include:
-- DEVSETTINGS.DAT
-- DJMMYSETTING.DAT
-- MYSETTING.DAT
-- MYSETTING2.DAT
+
+- `DEVSETTINGS.DAT`
+- `DJMMYSETTING.DAT`
+- `MYSETTING.DAT`
+- `MYSETTING2.DAT`
 
 References
 ----------
