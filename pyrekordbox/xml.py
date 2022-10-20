@@ -179,7 +179,7 @@ class AbstractElement(abc.Mapping):
         ----------
         key : str
             The key of the attribute.
-        default : Any, opzonal
+        default : Any, optional
             The default value returned if the attribute does not exist.
 
         Returns
@@ -190,7 +190,8 @@ class AbstractElement(abc.Mapping):
 
         Raises
         ------
-        XmlAttributeKeyError: Raised if `key` is not a valid attribute key.
+        XmlAttributeKeyError:
+            Raised if `key` is not a valid attribute key.
         """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
@@ -221,7 +222,8 @@ class AbstractElement(abc.Mapping):
 
         Raises
         ------
-        XmlAttributeKeyError: Raised if `key` is not a valid attribute key.
+        XmlAttributeKeyError:
+            Raised if `key` is not a valid attribute key.
         """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
@@ -462,7 +464,8 @@ class Track(AbstractElement):
 
     Raises
     ------
-    XmlAttributeKeyError: Raised if initialized with invalid key in attributes.
+    XmlAttributeKeyError:
+        Raised if initialized with invalid key in attributes.
     """
 
     TAG = "TRACK"
@@ -754,7 +757,8 @@ class Node:
 
         Raises
         ------
-        ValueError: Raised if called on a playlist `Node`.
+        ValueError:
+            Raised if called on a playlist `Node`.
         """
         if self.is_playlist:
             raise ValueError("Sub-elements can only be added to a folder node!")
@@ -781,7 +785,8 @@ class Node:
 
         Raises
         ------
-        ValueError: Raised if called on a playlist `Node`.
+        ValueError:
+            Raised if called on a playlist `Node`.
         """
         if self.is_playlist:
             raise ValueError("Sub-elements can only be added to a folder node!")
@@ -1044,7 +1049,8 @@ class RekordboxXml:
 
         Raises
         ------
-        ValueError: Raised if neither the index of the track id is specified.
+        ValueError:
+            Raised if neither the index of the track id is specified.
 
         Examples
         --------
