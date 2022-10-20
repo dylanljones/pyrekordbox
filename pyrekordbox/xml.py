@@ -69,7 +69,7 @@ def pretty_xml(element, indent=None, encoding="utf-8"):
 
 
 def encode_path(path):
-    """Encodes a file path as URI string.
+    r"""Encodes a file path as URI string.
 
     Parameters
     ----------
@@ -94,7 +94,7 @@ def encode_path(path):
 
 
 def decode_path(url):
-    """Decodes an as URI string encoded file path.
+    r"""Decodes an as URI string encoded file path.
 
     Parameters
     ----------
