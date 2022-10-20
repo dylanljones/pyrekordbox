@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2022, Dylan Jones
 
-r"""Rekordbox XML database file interface."""
+r"""Rekordbox XML database file handler."""
 
 import logging
 import os.path
@@ -48,7 +48,7 @@ def pretty_xml(element, indent=None, encoding="utf-8"):
     indent : str, optional
         The indentation used for formatting the XML element. The default is 3 spaces.
     encoding : str, optional
-        The encoding used for formatting the XML element. The default is `utf-8`.
+        The encoding used for formatting the XML element. The default is 'utf-8'.
 
     Returns
     -------
@@ -607,7 +607,7 @@ class Node:
     configured as playlist can only store tracks. The tracks in playlists are stored via
     a key depending on the key type of the playlist. The key type can either be the
     ID of the track in the XML database ('TrackID') or the file path of the track
-    (`Location`).
+    ('Location').
     """
 
     TAG = "NODE"
@@ -647,7 +647,7 @@ class Node:
         name : str
             The name of the playlist node.
         keytype : str, optional
-            The key type used by the playlist node. Can be 'TrackID' or `Location`
+            The key type used by the playlist node. Can be 'TrackID' or 'Location'
             (file path of the track).
         """
         attrib = {
@@ -758,7 +758,7 @@ class Node:
         Raises
         ------
         ValueError:
-            Raised if called on a playlist `Node`.
+            Raised if called on a playlist node.
         """
         if self.is_playlist:
             raise ValueError("Sub-elements can only be added to a folder node!")
@@ -786,7 +786,7 @@ class Node:
         Raises
         ------
         ValueError:
-            Raised if called on a playlist `Node`.
+            Raised if called on a playlist node.
         """
         if self.is_playlist:
             raise ValueError("Sub-elements can only be added to a folder node!")
@@ -908,13 +908,10 @@ class RekordboxXml:
     """Rekordbox XML database object.
 
     The XML database contains the tracks and playlists in the Rekordbox collection. By
-    importing the databse, new tracks and items can be added to the Rekordbox
+    importing the database, new tracks and items can be added to the Rekordbox
     collection.
-    The Rekordbox XML file can be created in Rekordbox 5/6 in the application menu
-    'File>Export collection in xml format'. It can be imported by setting the file path
-    in 'File>Preferences>Advanced>rekordbox xml>Imported Libary'.
 
-    If a file path is passed to the constructor of the `RekordboxXml` object, the file
+    If a file path is passed to the constructor of the ``RekordboxXml`` object, the file
     is opened and parsed. Otherwise, an empty file is created with the given arguments.
     Creating an importable XML file requires a product name, xml database version and
     company name.
