@@ -187,6 +187,10 @@ class AbstractElement(abc.Mapping):
         value : Any
             The value of the atttribute. The type of the attribute is converted
             acccording to the data of the field.
+
+        Raises
+        ------
+        XmlAttributeKeyError: Raised if `key` is not a valid attribute key.
         """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
@@ -214,6 +218,10 @@ class AbstractElement(abc.Mapping):
         value : Any
             The value for updating the attribute. The type conversion is handled
             automatically.
+
+        Raises
+        ------
+        XmlAttributeKeyError: Raised if `key` is not a valid attribute key.
         """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
@@ -450,6 +458,11 @@ class Track(AbstractElement):
         The `Tempo` elements of the track.
     marks : list
         The `PositionMark` elements of the track.
+
+
+    Raises
+    ------
+    XmlAttributeKeyError: Raised if initialized with invalid key in attributes.
     """
 
     TAG = "TRACK"
@@ -510,9 +523,7 @@ class Track(AbstractElement):
         attrib = {"Location": encode_path(Location)}
         for key, val in kwargs.items():
             if key not in self.ATTRIBS:
-                raise KeyError(
-                    f"{key} is not a valid key for {self.__class__.__name__}!"
-                )
+                raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
             attrib[key] = str(val)
         self._element = xml.SubElement(parent, self.TAG, attrib=attrib)
 
@@ -740,6 +751,10 @@ class Node:
         -------
         folder_node : Node
             The newly created playlist folder node.
+
+        Raises
+        ------
+        ValueError: Raised if called on a playlist `Node`.
         """
         if self.is_playlist:
             raise ValueError("Sub-elements can only be added to a folder node!")
@@ -763,6 +778,10 @@ class Node:
         -------
         playlist_node : Node
             The newly created playlist node.
+
+        Raises
+        ------
+        ValueError: Raised if called on a playlist `Node`.
         """
         if self.is_playlist:
             raise ValueError("Sub-elements can only be added to a folder node!")
@@ -1023,6 +1042,10 @@ class RekordboxXml:
         track : Track
             The XML track element.
 
+        Raises
+        ------
+        ValueError: Raised if neither the index of the track id is specified.
+
         Examples
         --------
         Get track by index
@@ -1104,6 +1127,12 @@ class RekordboxXml:
         -------
         track : Track
             The newly created XML track element.
+
+        Raises
+        ------
+        ValueError:
+            Raised if the database already contains a track with the track-id
+            or file path.
 
         Examples
         --------
