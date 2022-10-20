@@ -4,6 +4,8 @@
 ## [Unreleased]
 
 ### Documentation
+- add missing My-Setting docstrings
+- add missing Rekordbox v6 database docstrings
 - add missing XML docstrings
 
 
