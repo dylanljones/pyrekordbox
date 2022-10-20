@@ -48,51 +48,6 @@ def _get_masterdb_key():  # pragma: no cover
     return database_key
 
 
-def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
-    """Opens the Rekordbox v6 master.db SQLite3 database for the use with SQLAlchemy.
-
-    Parameters
-    ----------
-    path : str, optional
-        The path of the database file. Uses the main Rekordbox v6 master.db database
-        by default.
-    unlock : bool, optional
-        Flag if the database is encrypted and needs to be unlocked.
-    sql_driver : Callable, optional
-        The SQLite driver to used for opening the database. The standard `sqlite3`
-        package is used as default driver.
-    echo : bool, optional
-        Echo flag for SQLAlchemy.
-
-    Returns
-    -------
-    engine : sqlalchemy.engine.Engine
-        The open SQLAlchemy engine instance for the Rekordbox v6 database.
-    """
-    if not path:
-        path = rb6_config["db_path"]
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"File '{path}' does not exist!")
-    logger.info("Opening %s", path)
-
-    # Open database
-    if unlock:
-        key = _get_masterdb_key()
-        logger.info("Key: %s", key)
-        if sql_driver is None:
-            # Use default sqlite3 package
-            # This requires that the 'sqlite3.dll' was replaced by
-            # the 'sqlcipher.dll' (renamed to 'sqlite3.dll')
-            sql_driver = sqlite3
-        url = f"sqlite+pysqlcipher://:{key}@/{path}?"
-        engine = create_engine(url, module=sql_driver, echo=echo)
-    else:
-        engine = create_engine(f"sqlite:///{path}", echo=echo)
-
-    return engine
-
-
 def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     """Opens a connection to the Rekordbox v6 master.db SQLite3 database.
 
@@ -104,7 +59,7 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     unlock : bool, optional
         Flag if the database is encrypted and needs to be unlocked.
     sql_driver : Callable, optional
-        The SQLite driver to used for opening the database. The standard `sqlite3`
+        The SQLite driver to used for opening the database. The standard ``sqlite3``
         package is used as default driver.
 
     Returns
@@ -126,7 +81,7 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
 
     >>> db = open_rekordbox_database("path/to/master_unlocked.db", unlock=False)
 
-    To use the `pysqlcipher3` package as SQLite driver, either import it as
+    To use the ``pysqlcipher3`` package as SQLite driver, either import it as
 
     >>> from pysqlcipher3 import dbapi2 as sqlite3
     >>> db = open_rekordbox_database("path/to/master_copy.db")
@@ -170,10 +125,55 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     return con
 
 
-def _parse_query_result(result, kwargs):
+def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
+    """Opens the Rekordbox v6 master.db SQLite3 database for the use with SQLAlchemy.
+
+    Parameters
+    ----------
+    path : str, optional
+        The path of the database file. Uses the main Rekordbox v6 master.db database
+        by default.
+    unlock : bool, optional
+        Flag if the database is encrypted and needs to be unlocked.
+    sql_driver : Callable, optional
+        The SQLite driver to used for opening the database. The standard ``sqlite3``
+        package is used as default driver.
+    echo : bool, optional
+        Prints all executed SQL statements to the console if true.
+
+    Returns
+    -------
+    engine : sqlalchemy.engine.Engine
+        The SQLAlchemy engine instance for the Rekordbox v6 database.
+    """
+    if not path:
+        path = rb6_config["db_path"]
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File '{path}' does not exist!")
+    logger.info("Opening %s", path)
+
+    # Open database
+    if unlock:
+        key = _get_masterdb_key()
+        logger.info("Key: %s", key)
+        if sql_driver is None:
+            # Use default sqlite3 package
+            # This requires that the 'sqlite3.dll' was replaced by
+            # the 'sqlcipher.dll' (renamed to 'sqlite3.dll')
+            sql_driver = sqlite3
+        url = f"sqlite+pysqlcipher://:{key}@/{path}?"
+        engine = create_engine(url, module=sql_driver, echo=echo)
+    else:
+        engine = create_engine(f"sqlite:///{path}", echo=echo)
+
+    return engine
+
+
+def _parse_query_result(query, kwargs):
     if "ID" in kwargs:
-        result = result.one()
-    return result
+        query = query.one()
+    return query
 
 
 class Rekordbox6Database:
@@ -189,6 +189,13 @@ class Rekordbox6Database:
     unlock: bool, optional
         Flag if the database needs to be decrypted. Set to False if you are opening
         an unencrypted test database.
+
+    Attributes
+    ----------
+    engine : sqlalchemy.engine.Engine
+        The SQLAlchemy engine instance for the Rekordbox v6 database.
+    session : sqlalchemy.orm.Session
+        The SQLAlchemy session instance bound to the engine.
 
     See Also
     --------
@@ -210,17 +217,29 @@ class Rekordbox6Database:
 
     def __init__(self, path="", unlock=True):
         self.engine = create_rekordbox_engine(path, unlock=unlock)
-        self.Session = sessionmaker(bind=self.engine)
-        self.session = self.Session()
+        self._Session = sessionmaker(bind=self.engine)
+        self.session = self._Session()
 
         self._db_dir = os.path.normpath(rb6_config["db_dir"])
         self._anlz_root = os.path.join(self._db_dir, "share")
 
     def open(self):
-        self.session = self.Session()
+        """Open the database by instantiating a new session using the SQLAchemy engine.
+
+        A new session instance is only created if the session was closed previously.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.close()
+        >>> db.open()
+        """
+        self.session = self._Session()
 
     def close(self):
+        """Close the currently active session."""
         self.session.close()
+        self.session = None
 
     def __enter__(self):
         return self
@@ -228,167 +247,245 @@ class Rekordbox6Database:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def query(self, *entities, **kwargs):
-        return self.session.query(*entities, **kwargs)
-
     def commit(self):
+        """Commit the changes made to the database."""
         self.session.commit()
+
+    def query(self, *entities, **kwargs):
+        """Creates a new SQL query for the given entities.
+
+        Parameters
+        ----------
+        *entities : Base
+            The table objects for which the query is created.
+        **kwargs
+            Arbitrary keyword arguments used for creating the query.
+
+        Returns
+        -------
+        query : sqlalchemy.orm.query.Query
+            The SQLAlchemy ``Query`` object.
+
+        Examples
+        --------
+        Query the ``DjmdContent`` table
+
+        >>> db = Rekordbox6Database()
+        >>> query = db.query(DjmdContent)
+
+        Query the `Title` attribute of the ``DjmdContent`` table
+
+        >>> db = Rekordbox6Database()
+        >>> query = db.query(DjmdContent.Title)
+        """
+        return self.session.query(*entities, **kwargs)
 
     # -- Table queries -----------------------------------------------------------------
 
     def get_active_censor(self, **kwargs):
-        res = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdActiveCensor`` table."""
+        query = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_album(self, **kwargs):
-        res = self.query(tables.DjmdAlbum).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdAlbum`` table."""
+        query = self.query(tables.DjmdAlbum).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_artist(self, **kwargs):
-        res = self.query(tables.DjmdArtist).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdArtist`` table."""
+        query = self.query(tables.DjmdArtist).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_category(self, **kwargs):
-        res = self.query(tables.DjmdCategory).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdCategory`` table."""
+        query = self.query(tables.DjmdCategory).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_color(self, **kwargs):
-        res = self.query(tables.DjmdColor).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdActiveCensor`` table."""
+        query = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_content(self, **kwargs):
-        res = self.query(tables.DjmdContent).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdContent`` table."""
+        query = self.query(tables.DjmdContent).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_cue(self, **kwargs):
-        res = self.query(tables.DjmdCue).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdCue`` table."""
+        query = self.query(tables.DjmdCue).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_device(self, **kwargs):
-        res = self.query(tables.DjmdDevice).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdDevice`` table."""
+        query = self.query(tables.DjmdDevice).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_genre(self, **kwargs):
-        res = self.query(tables.DjmdGenre).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdGenre`` table."""
+        query = self.query(tables.DjmdGenre).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_history(self, **kwargs):
-        res = self.query(tables.DjmdHistory).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdHistory`` table."""
+        query = self.query(tables.DjmdHistory).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_history_songs(self, id_):
-        res = self.query(tables.DjmdSongHistory).filter_by(HistoryID=id_)
-        return res
+        """Creates a filtered query for the ``DjmdSongHistory`` table."""
+        query = self.query(tables.DjmdSongHistory).filter_by(HistoryID=id_)
+        return query
 
     def get_hot_cue_banklist(self, **kwargs):
-        res = self.query(tables.DjmdHotCueBanklist).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdHotCueBanklist`` table."""
+        query = self.query(tables.DjmdHotCueBanklist).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_hot_cue_banklist_songs(self, id_):
-        res = self.query(tables.DjmdSongHotCueBanklist).filter_by(HotCueBanklistID=id_)
-        return res
+        """Creates a filtered query for the ``DjmdSongHotCueBanklist`` table."""
+        query = self.query(tables.DjmdSongHotCueBanklist).filter_by(
+            HotCueBanklistID=id_
+        )
+        return query
 
     def get_key(self, **kwargs):
-        res = self.query(tables.DjmdKey).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdKey`` table."""
+        query = self.query(tables.DjmdKey).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_label(self, **kwargs):
-        res = self.query(tables.DjmdLabel).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdLabel`` table."""
+        query = self.query(tables.DjmdLabel).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_menu_items(self, **kwargs):
-        res = self.query(tables.DjmdMenuItems).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdMenuItems`` table."""
+        query = self.query(tables.DjmdMenuItems).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_mixer_param(self, **kwargs):
-        res = self.query(tables.DjmdMixerParam).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdMixerParam`` table."""
+        query = self.query(tables.DjmdMixerParam).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_my_tag(self, **kwargs):
-        res = self.query(tables.DjmdMyTag).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdMyTag`` table."""
+        query = self.query(tables.DjmdMyTag).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_my_tag_songs(self, id_):
-        res = self.query(tables.DjmdSongMyTag).filter_by(MyTagID=id_)
-        return res
+        """Creates a filtered query for the ``DjmdSongMyTag`` table."""
+        query = self.query(tables.DjmdSongMyTag).filter_by(MyTagID=id_)
+        return query
 
     def get_playlist(self, **kwargs):
-        res = self.query(tables.DjmdPlaylist).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdPlaylist`` table."""
+        query = self.query(tables.DjmdPlaylist).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_playlist_songs(self, id_):
-        res = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=id_)
-        return res
+        """Creates a filtered query for the ``DjmdSongPlaylist`` table."""
+        query = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=id_)
+        return query
 
     def get_property(self, **kwargs):
-        res = self.query(tables.DjmdProperty).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdProperty`` table."""
+        query = self.query(tables.DjmdProperty).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_related_tracks(self, **kwargs):
-        res = self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdRelatedTracks`` table."""
+        query = self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_related_tracks_songs(self, id_):
-        res = self.query(tables.DjmdSongRelatedTracks).filter_by(RelatedTracksID=id_)
-        return res
+        """Creates a filtered query for the ``DjmdSongRelatedTracks`` table."""
+        query = self.query(tables.DjmdSongRelatedTracks).filter_by(RelatedTracksID=id_)
+        return query
 
     def get_sampler(self, **kwargs):
-        res = self.query(tables.DjmdSampler).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdSampler`` table."""
+        query = self.query(tables.DjmdSampler).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_sampler_songs(self, id_):
-        res = self.query(tables.DjmdSongSampler).filter_by(SamplerID=id_)
-        return res
+        """Creates a filtered query for the ``DjmdSongSampler`` table."""
+        query = self.query(tables.DjmdSongSampler).filter_by(SamplerID=id_)
+        return query
 
     def get_tag_list_songs(self, id_):
-        res = self.query(tables.DjmdSongTagList).filter_by(ID=id_)
-        return res
+        """Creates a filtered query for the ``DjmdSongTagList`` table."""
+        query = self.query(tables.DjmdSongTagList).filter_by(ID=id_)
+        return query
 
     def get_sort(self, **kwargs):
-        res = self.query(tables.DjmdSort).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``DjmdSort`` table."""
+        query = self.query(tables.DjmdSort).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_agent_registry(self, **kwargs):
-        res = self.query(tables.AgentRegistry).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``AgentRegistry`` table."""
+        query = self.query(tables.AgentRegistry).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_cloud_agent_registry(self, **kwargs):
-        res = self.query(tables.CloudAgentRegistry).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``CloudAgentRegistry`` table."""
+        query = self.query(tables.CloudAgentRegistry).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_content_active_censor(self, **kwargs):
-        res = self.query(tables.ContentActiveCensor).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``ContentActiveCensor`` table."""
+        query = self.query(tables.ContentActiveCensor).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_content_cue(self, **kwargs):
-        res = self.query(tables.ContentCue).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``ContentCue`` table."""
+        query = self.query(tables.ContentCue).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_content_file(self, **kwargs):
-        res = self.query(tables.ContentFile).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``ContentFile`` table."""
+        query = self.query(tables.ContentFile).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_hot_cue_banklist_cue(self, **kwargs):
-        res = self.query(tables.HotCueBanklistCue).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``HotCueBanklistCue`` table."""
+        query = self.query(tables.HotCueBanklistCue).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_image_file(self, **kwargs):
-        res = self.query(tables.ImageFile).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``ImageFile`` table."""
+        query = self.query(tables.ImageFile).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_setting_file(self, **kwargs):
-        res = self.query(tables.SettingFile).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``SettingFile`` table."""
+        query = self.query(tables.SettingFile).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_uuid_map(self, **kwargs):
-        res = self.query(tables.UuidIDMap).filter_by(**kwargs)
-        return _parse_query_result(res, kwargs)
+        """Creates a filtered query for the ``UuidIDMap`` table."""
+        query = self.query(tables.UuidIDMap).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     # ==================================================================================
 
     # noinspection PyUnresolvedReferences
     def search_content(self, text):
-        """Searches the contents of the `DjmdContents` table.
+        """Searches the contents of the ``DjmdContent`` table.
+
+        The search is case insensitive and includes the following collumns of the
+        ``DjmdContent`` table:
+
+        - `Album`
+        - `Artist`
+        - `Commnt`
+        - `Composer`
+        - `Genre`
+        - `Key`
+        - `OrgArtist`
+        - `Remixer`
 
         Parameters
         ----------
@@ -450,7 +547,8 @@ class Rekordbox6Database:
         ----------
         content : DjmdContent or int or str
             The content corresponding to a track in the Rekordbox v6 database.
-            If an integer is passed the database is queried for the `DjmdContent` entry.
+            If an integer is passed the database is queried for the ``DjmdContent``
+            entry.
 
         Returns
         -------
@@ -472,7 +570,8 @@ class Rekordbox6Database:
         ----------
         content : DjmdContent or int or str
             The content corresponding to a track in the Rekordbox v6 database.
-            If an integer is passed the database is queried for the `DjmdContent` entry.
+            If an integer is passed the database is queried for the ``DjmdContent``
+            entry.
 
         Returns
         -------
@@ -490,7 +589,8 @@ class Rekordbox6Database:
         ----------
         content : DjmdContent or int or str
             The content corresponding to a track in the Rekordbox v6 database.
-            If an integer is passed the database is queried for the `DjmdContent` entry.
+            If an integer is passed the database is queried for the ``DjmdContent``
+            entry.
 
         Returns
         -------
@@ -504,13 +604,13 @@ class Rekordbox6Database:
     def update_content_path(self, content, path, save=True, check_path=True):
         """Update the file path of a track in the Rekordbox v6 database.
 
-        This changes the `FolderPath` entry in the `DjmdContent` table and the
+        This changes the `FolderPath` entry in the ``DjmdContent`` table and the
         path tag (PPTH) of the corresponding ANLZ analysis files.
 
         Parameters
         ----------
         content : DjmdContent or int or str
-            The `DjmdContent` element to change. If an integer is passed the database
+            The ``DjmdContent`` element to change. If an integer is passed the database
             is queried for the content.
         path : str
             The new file path of the database entry.
@@ -578,13 +678,13 @@ class Rekordbox6Database:
     def update_content_filename(self, content, name, save=True, check_path=True):
         """Update the file name of a track in the Rekordbox v6 database.
 
-        This changes the `FolderPath` entry in the `DjmdContent` table and the
+        This changes the `FolderPath` entry in the ``DjmdContent`` table and the
         path tag (PPTH) of the corresponding ANLZ analysis files.
 
         Parameters
         ----------
         content : DjmdContent or int or str
-            The `DjmdContent` element to change. If an integer is passed the database
+            The ``DjmdContent`` element to change. If an integer is passed the database
             is queried for the content.
         name : str
             The new file name of the database entry.
