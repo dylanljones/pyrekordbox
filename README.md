@@ -19,7 +19,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Setting files
 
-> **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
+> **Disclamer**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
 
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
@@ -46,6 +46,10 @@ python setup.py install
 ### Dependencies
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
+
+> **Note**: ``pyrekordbox`` makes no attempt to download/install SQLCipher, as it is a
+pure-Python wrapper - whereas the SQLCipher/pysqlcipher3 installation is
+platform-dependent/environment-specific and can not be installed via ``pip``.
 
 #### Windows
 
