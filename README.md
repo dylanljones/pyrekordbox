@@ -19,8 +19,11 @@ Pioneer's Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Setting files
 
-*Note*: This project is **not** affiliated with Pioneer Corp. or its related companies
-in any way and has been written independently!
+> **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
+in any way and has been written independently! ``pyrekordbox`` is licensed under the
+[MIT license][license-link]. The maintainers of the project are not liable for any damages
+to your Rekordbox library.
+
 
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
 |----|:------------------------------------------------------------------------------------------------------------------|
@@ -28,7 +31,7 @@ in any way and has been written independently!
 
 ## 🔧 Installation
 
-pyrekordbox is available on [PyPI][pypi-link]:
+Pyrekordbox is available on [PyPI][pypi-link]:
 ````commandline
 pip install pyrekordbox
 ````
@@ -46,6 +49,9 @@ python setup.py install
 ### Dependencies
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
+Pyrekordbox makes no attempt to download/install SQLCipher, as it is a
+pure-Python wrapper - whereas the SQLCipher/pysqlcipher3 installation is
+platform-dependent/environment-specific and can not be installed via ``pip``.
 
 #### Windows
 
@@ -79,7 +85,7 @@ Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher pa
 
 ### Configuration
 
-pyrekordbox looks for installed Rekordbox versions and sets up the configuration
+Pyrekordbox looks for installed Rekordbox versions and sets up the configuration
 automatically. The configuration can be checked by calling:
 ````python
 from pyrekordbox import show_config
@@ -118,7 +124,7 @@ The Rekordbox XML database is used for importing (and exporting) Rekordbox colle
 including track metadata and playlists. They can also be used to share playlists
 between two databases.
 
-pyrekordbox can read and write Rekordbox XML databases.
+Pyrekordbox can read and write Rekordbox XML databases.
 
 ````python
 from pyrekordbox.xml import RekordboxXml
@@ -153,7 +159,7 @@ They include waveforms, beat grids (information about the precise time at which
 each beat occurs), time indices to allow efficient seeking to specific positions
 inside variable bit-rate audio streams, and lists of memory cues and loop points.
 
-pyrekordbox can parse all three analysis files, although not all the information of
+Pyrekordbox can parse all three analysis files, although not all the information of
 the tracks can be extracted yet.
 
 ````python
@@ -177,7 +183,7 @@ The setting files store the settings found on the "DJ System" > "My Settings" pa
 the Rekordbox preferences. These include language, LCD brightness, tempo fader range,
 crossfader curve and other settings for Pioneer professional DJ equipment.
 
-pyrekordbox supports both parsing and writing My-Setting files.
+Pyrekordbox supports both parsing and writing My-Setting files.
 
 ````python
 from pyrekordbox.mysettings import read_mysetting_file
@@ -196,7 +202,7 @@ Unfortunatly, the new `master.db` SQLite database is encrypted using
 However, since your data is stored and used locally, the key must be present on the
 machine running Rekordbox.
 
-pyrekordbox can unlock the new Rekordbox `master.db` SQLite database and provides
+Pyrekordbox can unlock the new Rekordbox `master.db` SQLite database and provides
 an easy interface for accessing the data stored in it:
 
 ````python
@@ -236,7 +242,7 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 `pyrekordbox` and the commit-message style can be found in
 [CONTRIBUTING].
 
-pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
+Pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
 
 | Master | [![Test][tests-badge]][tests-link]     | [![Codecov][codecov-badge]][codecov-link]         | [![Docs][docs-latest-badge]][documentation-latest] |

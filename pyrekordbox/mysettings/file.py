@@ -4,6 +4,8 @@
 #
 # Copyright (c) 2022, Dylan Jones
 
+"""Rekordbox My-Setting file handlers."""
+
 import re
 from construct import Struct
 from collections.abc import MutableMapping
@@ -63,6 +65,11 @@ def crc16xmodem(data, crc=0):
     -------
     crc : int
         The calculated CRC16-XModem checksum.
+
+
+    References
+    ----------
+    https://reveng.sourceforge.io/crc-catalogue/all.htm#crc.cat.crc-16-xmodem
     """
     for byte in data:
         crc = ((crc << 8) & 0xFF00) ^ CRC16_XMODEM_TABLE[((crc >> 8) & 0xFF) ^ byte]
@@ -70,18 +77,35 @@ def crc16xmodem(data, crc=0):
 
 
 def compute_checksum(data, struct):
-    """Computes the CRC16 XMODEM checksum for MySetting files.
+    """Computes the CRC16 XModem checksum for My-Setting files.
 
     The checksum is calculated over the contents of the `data` field,
     except for `DJMSETTING.DAT` files where the checksum is calculated over all
     preceding bytes including the length fields.
+
+    Parameters
+    ----------
+    data : bytes
+        The binary filey contents of the My-Setting file for which the checksum is
+        computed.
+    struct : Struct
+        The ``Struct`` of the My-Setting file. This is used for deciding which bytes
+        are used for computing the checksum.
+
+    Returns
+    -------
+    crc : int
+        The calculated CRC16-XModem checksum.
 
     References
     ----------
     https://reveng.sourceforge.io/crc-catalogue/all.htm#crc.cat.crc-16-xmodem
     """
     start = 0 if struct == structs.DjmMySetting else 104
-    return crc16xmodem(data[start:-4])
+    crc = 0
+    for byte in data[start:-4]:
+        crc = ((crc << 8) & 0xFF00) ^ CRC16_XMODEM_TABLE[((crc >> 8) & 0xFF) ^ byte]
+    return crc
 
 
 def _is_valid_key(k: str):
@@ -89,7 +113,14 @@ def _is_valid_key(k: str):
 
 
 class SettingsFile(MutableMapping):
-    """Abtract base class of Rekordbox settings files."""
+    """Base class for the Rekordbox My-Setting file handler.
+
+    The base class implements the getters and setter defined by the keys and
+    default values in the ``defaults`` class attribute.
+    The keys of the ``defaults`` dictionary, which has to be defined by the inheriting
+    class, defines the valid attributes of the My-Setting file. The values are used
+    as default values if a new (and empty) My-Setting file is initialized.
+    """
 
     struct: Struct
     defaults: dict
@@ -151,31 +182,6 @@ class SettingsFile(MutableMapping):
         self.parsed = parsed
         self._items.update(items)
 
-    def build(self):
-        # Copy defaults and update with cuirrent data
-        items = self.defaults.copy()
-        items.update(self._items)
-
-        # Create file data
-        file_items = {"data": items, "checksum": 0}
-        if self.version:
-            file_items["version"] = self.version
-
-        # Compute and update checksum. For this the data has to be serialized twice:
-        # Once for generating the checksum and another time for writing the data
-        # with the updated checksum
-        data = self.struct.build(file_items)
-        checksum = compute_checksum(data, self.struct)
-        file_items["checksum"] = checksum
-
-        # Write data with updated checksum
-        return self.struct.build(file_items)
-
-    def save(self, path):
-        data = self.build()
-        with open(path, "wb") as fh:
-            fh.write(data)
-
     def __len__(self):
         return len(self.defaults.keys())
 
@@ -197,45 +203,97 @@ class SettingsFile(MutableMapping):
         del self._items[key]
 
     def get(self, key, default=None):
+        """Returns the value of a setting of the My-Setting file.
+
+        If the key is not found in the My-Setting data, but it is present in the
+        ``defaults`` class dictionary, that default value is used. Otherwise, the
+        parameter ``default`` is used as default value.
+
+        Parameters
+        ----------
+        key : str
+            The key of the setting.
+        default : Any, optional
+            The default value returned if the setting does not exist in the
+            My-Setting file data or the ``defaults`` dictionary.
+
+        Returns
+        -------
+        value : Any
+            The value of the setting.
+        """
         try:
             return self.__getitem__(key)
         except KeyError:
             return default
 
     def set(self, key, value):
+        """Sets the value of a setting of the My-Setting file.
+
+        Parameters
+        ----------
+        key : str
+            The key of the setting.
+        value : Any
+            The new value for updating the setting.
+        """
         self.__setitem__(key, value)
+
+    def build(self):
+        """Constructs the binary data for saving the My-Setting file.
+
+        Returns
+        -------
+        byte_data : bytes
+            The binary file contents fot eh My-Setting file.
+        """
+        # Copy defaults and update with cuirrent data
+        items = self.defaults.copy()
+        items.update(self._items)
+
+        # Create file data
+        file_items = {"data": items, "checksum": 0}
+        if self.version:
+            file_items["version"] = self.version
+
+        # Compute and update checksum. For this the data has to be serialized twice:
+        # Once for generating the checksum and another time for writing the data
+        # with the updated checksum
+        data = self.struct.build(file_items)
+        checksum = compute_checksum(data, self.struct)
+        file_items["checksum"] = checksum
+
+        # Write data with updated checksum
+        return self.struct.build(file_items)
+
+    def save(self, path):
+        """Save the contents of the My-Setting file object.
+
+        Parameters
+        ----------
+        path : str
+            The file path used for saving.
+
+        See Also
+        --------
+        build: Constructs the binary data of the file.
+        """
+        data = self.build()
+        with open(path, "wb") as fh:
+            fh.write(data)
 
     def __repr__(self):
         return f"{self.__class__.__name__}()"
 
 
-class DevSettingFile(SettingsFile):
-
-    struct = structs.DevSetting
-    defaults = dict(entries="")
-
-
-class DjmMySettingFile(SettingsFile):
-
-    struct = structs.DjmMySetting
-    defaults = {
-        "channel_fader_curve": structs.ChannelFaderCurve.linear,
-        "cross_fader_curve": structs.CrossfaderCurve.fast_cut,
-        "headphones_pre_eq": structs.HeadphonesPreEQ.post_eq,
-        "headphones_mono_split": structs.HeadphonesMonoSplit.stereo,
-        "beat_fx_quantize": structs.BeatFXQuantize.on,
-        "mic_low_cut": structs.MicLowCut.on,
-        "talk_over_mode": structs.TalkOverMode.advanced,
-        "talk_over_level": structs.TalkOverLevel.minus_18db,
-        "midi_channel": structs.MidiChannel.one,
-        "midi_button_type": structs.MidiButtonType.toggle,
-        "display_brightness": structs.MixerDisplayBrightness.five,
-        "indicator_brightness": structs.MixerIndicatorBrightness.three,
-        "channel_fader_curve_long": structs.ChannelFaderCurveLong.exponential,
-    }
-
-
 class MySettingFile(SettingsFile):
+    """Rekordbox `MYSETTING.DAT` file handler.
+
+    See Also
+    --------
+    SettingsFile : Base class implementing getters and setter defined by the keys and
+        default values in the ``defaults`` class attribute.
+    """
 
     struct = structs.MySetting
     defaults = {
@@ -265,6 +323,13 @@ class MySettingFile(SettingsFile):
 
 
 class MySetting2File(SettingsFile):
+    """Rekordbox `MYSETTING2.DAT` file handler.
+
+    See Also
+    --------
+    SettingsFile : Base class implementing getters and setter defined by the keys and
+        default values in the ``defaults`` class attribute.
+    """
 
     struct = structs.MySetting2
     defaults = {
@@ -276,6 +341,51 @@ class MySetting2File(SettingsFile):
         "waveform": structs.Waveform.waveform,
         "beat_jump_beat_value": structs.BeatJumpBeatValue.sixteen,
     }
+
+
+class DjmMySettingFile(SettingsFile):
+    """Rekordbox `DJMMYSETTING.DAT` file handler.
+
+    See Also
+    --------
+    SettingsFile : Base class implementing getters and setter defined by the keys and
+        default values in the ``defaults`` class attribute.
+    """
+
+    struct = structs.DjmMySetting
+    defaults = {
+        "channel_fader_curve": structs.ChannelFaderCurve.linear,
+        "cross_fader_curve": structs.CrossfaderCurve.fast_cut,
+        "headphones_pre_eq": structs.HeadphonesPreEQ.post_eq,
+        "headphones_mono_split": structs.HeadphonesMonoSplit.stereo,
+        "beat_fx_quantize": structs.BeatFXQuantize.on,
+        "mic_low_cut": structs.MicLowCut.on,
+        "talk_over_mode": structs.TalkOverMode.advanced,
+        "talk_over_level": structs.TalkOverLevel.minus_18db,
+        "midi_channel": structs.MidiChannel.one,
+        "midi_button_type": structs.MidiButtonType.toggle,
+        "display_brightness": structs.MixerDisplayBrightness.five,
+        "indicator_brightness": structs.MixerIndicatorBrightness.three,
+        "channel_fader_curve_long": structs.ChannelFaderCurveLong.exponential,
+    }
+
+
+class DevSettingFile(SettingsFile):
+    """Rekordbox `DEVSETTING.DAT` file handler.
+
+    Warnings
+    --------
+    The data of the `DEVSETTING.DAT` file is not supported. Only the header can be
+    parsed and written. This class is implemented for completness only.
+
+    See Also
+    --------
+    SettingsFile : Base class implementing getters and setter defined by the keys and
+        default values in the ``defaults`` class attribute.
+    """
+
+    struct = structs.DevSetting
+    defaults = dict(entries="")
 
 
 FILES = {
