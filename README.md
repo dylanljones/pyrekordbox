@@ -20,7 +20,9 @@ Pioneer's Rekordbox DJ Software. It currently supports
 - My-Setting files
 
 > **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
-in any way and has been written independently!
+in any way and has been written independently! ``pyrekordbox`` is licensed under the
+MIT license. The maintainers of the project are not liable for any damages to your Rekordbox library.
+
 
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
 |----|:------------------------------------------------------------------------------------------------------------------|
