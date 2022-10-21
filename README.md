@@ -50,8 +50,8 @@ python setup.py install
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
 Pyrekordbox makes no attempt to download/install SQLCipher, as it is a
-pure-Python wrapper - whereas the SQLCipher/pysqlcipher3 installation is
-platform-dependent/environment-specific and can not be installed via ``pip``.
+pure Python package - whereas the SQLCipher/pysqlcipher3 installation is
+platform-dependent and can not be installed via ``pip``.
 
 #### Windows
 
