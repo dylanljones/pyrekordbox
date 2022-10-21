@@ -19,7 +19,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Setting files
 
-> **Warning**: This project is **not** affiliated with Pioneer Corp. or its related companies
+> **Attention**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently!
 
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
