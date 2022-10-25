@@ -3,6 +3,10 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+- add local USN handlers to database handler
+- add process-id getters
+
 ### Documentation
 - add missing My-Setting docstrings
 - add missing Rekordbox v6 database docstrings
