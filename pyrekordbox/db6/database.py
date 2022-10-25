@@ -471,6 +471,85 @@ class Rekordbox6Database:
 
     # ==================================================================================
 
+    def get_local_usn(self):
+        """Returns the local sequence number (update count) of Rekordbox.
+
+        Any changes made to the `Djmd...` tables increments the local update count of
+        Rekordbox. The ``usn`` entry of the changed row is set to the corresponding
+        update count.
+
+        Returns
+        -------
+        usn : int
+            The value of the local update count.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+        """
+        return (
+            self.get_agent_registry(
+                registry_id="localUpdateCount",
+            )
+            .one()
+            .int_1
+        )
+
+    def set_local_usn(self, usn):
+        """Sets the local sequence number (update count) of Rekordbox.
+
+        Parameters
+        ----------
+        usn : int or str
+            The new update sequence number.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+
+        >>> db.set_local_usn(70501)
+        >>> db.get_local_usn()
+        70501
+        """
+        item = self.get_agent_registry(registry_id="localUpdateCount").one()
+        item.int_1 = usn
+
+    def increment_local_usn(self, num=1):
+        """Increments the local update sequence number (update count) of Rekordbox.
+
+        Parameters
+        ----------
+        num : int, optional
+            The number of times to increment the update counter. By default, the counter
+            is incremented by 1.
+
+        Returns
+        -------
+        usn : int
+            The value of the incremented local update count.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+
+        >>> db.increment_local_usn()
+        70501
+
+        >>> db.get_local_usn()
+        70501
+        """
+        new = self.get_local_usn() + num
+        self.set_local_usn(new)
+        return new
+
+    # ==================================================================================
+
     # noinspection PyUnresolvedReferences
     def search_content(self, text):
         """Searches the contents of the ``DjmdContent`` table.
