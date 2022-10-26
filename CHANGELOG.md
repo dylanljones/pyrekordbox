@@ -12,12 +12,11 @@ handling.
 - add update and transaction tracking to the RBv6 database object
 
   This feature is intended for automatic tracking of the USN's.
-
 - add local USN handlers to database handlers:
+
   - ``get_local_usn``
   - ``set_local_usn``
   - ``increment_local_usn``
-
 - add process-id getters
 
 ### Documentation
