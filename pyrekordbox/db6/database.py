@@ -9,8 +9,9 @@ import re
 import base64
 import blowfish
 import logging
-from sqlalchemy import create_engine, or_
-from sqlalchemy.orm import sessionmaker
+from typing import Optional
+from sqlalchemy import create_engine, or_, event
+from sqlalchemy.orm import sessionmaker, Session
 from ..config import get_config
 from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
@@ -176,6 +177,55 @@ def _parse_query_result(query, kwargs):
     return query
 
 
+class UpdateTracker:
+    def __init__(self, session=None):
+        self.session: Optional[Session] = None
+        self._created = list()
+        self._updated = list()
+        self._deleted = list()
+        if session:
+            self.connect(session)
+
+    def connect(self, session):
+        self.session = session
+        event.listen(self.session, "before_flush", self.before_flush)
+        event.listen(self.session, "after_commit", self.clear)
+        event.listen(self.session, "after_rollback", self.clear)
+
+    def disconnect(self):
+        self.session = None
+        event.remove(self.session, "before_flush", self.before_flush)
+        event.remove(self.session, "after_commit", self.clear)
+        event.remove(self.session, "after_rollback", self.clear)
+
+    def get_updates(self):
+        # now = datetime.datetime.now()
+        created = self._created + [x for x in list(self.session.new)]
+        updated = self._updated + [x for x in self.session.dirty]
+        deleted = self._deleted + [x for x in self.session.deleted]
+        for item in deleted:
+            if item in created:
+                created.remove(item)
+            if item in updated:
+                updated.remove(item)
+        return {"created": created, "updated": updated, "deleted": deleted}
+
+    def copy_unflushed_buffer(self):
+        # now = datetime.datetime.now()
+        self._created.extend([x for x in self.session.new])
+        self._updated.extend([x for x in self.session.dirty])
+        self._deleted.extend([x for x in self.session.deleted])
+
+    def before_flush(self, *_):
+        self.copy_unflushed_buffer()
+
+    def clear(self, *_):
+        # Reset number of rows changed on commit/rollback
+        self._created.clear()
+        self._updated.clear()
+        self._deleted.clear()
+
+
 class Rekordbox6Database:
     """Rekordbox v6 master.db database handler.
 
@@ -218,10 +268,14 @@ class Rekordbox6Database:
     def __init__(self, path="", unlock=True):
         self.engine = create_rekordbox_engine(path, unlock=unlock)
         self._Session = sessionmaker(bind=self.engine)
-        self.session = self._Session()
+        self.session: Optional[Session] = None
+
+        self.tracker = UpdateTracker()
 
         self._db_dir = os.path.normpath(rb6_config["db_dir"])
         self._anlz_root = os.path.join(self._db_dir, "share")
+
+        self.open()
 
     def open(self):
         """Open the database by instantiating a new session using the SQLAchemy engine.
@@ -234,10 +288,13 @@ class Rekordbox6Database:
         >>> db.close()
         >>> db.open()
         """
-        self.session = self._Session()
+        if self.session is None:
+            self.session = self._Session()
+            self.tracker.connect(self.session)
 
     def close(self):
         """Close the currently active session."""
+        self.tracker.disconnect()
         self.session.close()
         self.session = None
 
@@ -247,9 +304,7 @@ class Rekordbox6Database:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def commit(self):
-        """Commit the changes made to the database."""
-        self.session.commit()
+    # -- Table queries -----------------------------------------------------------------
 
     def query(self, *entities, **kwargs):
         """Creates a new SQL query for the given entities.
@@ -280,8 +335,6 @@ class Rekordbox6Database:
         """
         return self.session.query(*entities, **kwargs)
 
-    # -- Table queries -----------------------------------------------------------------
-
     def get_active_censor(self, **kwargs):
         """Creates a filtered query for the ``DjmdActiveCensor`` table."""
         query = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
@@ -311,6 +364,62 @@ class Rekordbox6Database:
         """Creates a filtered query for the ``DjmdContent`` table."""
         query = self.query(tables.DjmdContent).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
+
+    # noinspection PyUnresolvedReferences
+    def search_content(self, text):
+        """Searches the contents of the ``DjmdContent`` table.
+
+        The search is case-insensitive and includes the following collumns of the
+        ``DjmdContent`` table:
+
+        - `Album`
+        - `Artist`
+        - `Commnt`
+        - `Composer`
+        - `Genre`
+        - `Key`
+        - `OrgArtist`
+        - `Remixer`
+
+        Parameters
+        ----------
+        text : str
+            The search text.
+
+        Returns
+        -------
+        results : list[DjmdContent]
+            The resulting content elements.
+        """
+        # Search standard columns
+        query = self.query(tables.DjmdContent).filter(
+            or_(
+                DjmdContent.Title.contains(text),
+                DjmdContent.Commnt.contains(text),
+                DjmdContent.SearchStr.contains(text),
+            )
+        )
+        results = query.all()
+
+        # Search artist (Artist, OrgArtist, Composer and Remixer)
+        artist_attrs = ["Artist", "OrgArtist", "Composer", "Remixer"]
+        for attr in artist_attrs:
+            query = self.query(DjmdContent).join(getattr(DjmdContent, attr))
+            results += query.filter(tables.DjmdArtist.Name.contains(text)).all()
+
+        # Search album
+        query = self.query(DjmdContent).join(DjmdContent.Album)
+        results += query.filter(tables.DjmdAlbum.Name.contains(text)).all()
+
+        # Search Genre
+        query = self.query(DjmdContent).join(DjmdContent.Genre)
+        results += query.filter(tables.DjmdGenre.Name.contains(text)).all()
+
+        # Search Key
+        query = self.query(DjmdContent).join(DjmdContent.Key)
+        results += query.filter(tables.DjmdKey.ScaleName.contains(text)).all()
+
+        return results
 
     def get_cue(self, **kwargs):
         """Creates a filtered query for the ``DjmdCue`` table."""
@@ -469,7 +578,7 @@ class Rekordbox6Database:
         query = self.query(tables.UuidIDMap).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    # ==================================================================================
+    # -- Database updates --------------------------------------------------------------
 
     def get_local_usn(self):
         """Returns the local sequence number (update count) of Rekordbox.
@@ -489,13 +598,8 @@ class Rekordbox6Database:
         >>> db.get_local_usn()
         70500
         """
-        return (
-            self.get_agent_registry(
-                registry_id="localUpdateCount",
-            )
-            .one()
-            .int_1
-        )
+        reg = self.get_agent_registry(registry_id="localUpdateCount").one()
+        return reg.int_1
 
     def set_local_usn(self, usn):
         """Sets the local sequence number (update count) of Rekordbox.
@@ -548,63 +652,27 @@ class Rekordbox6Database:
         self.set_local_usn(new)
         return new
 
-    # ==================================================================================
-
-    # noinspection PyUnresolvedReferences
-    def search_content(self, text):
-        """Searches the contents of the ``DjmdContent`` table.
-
-        The search is case insensitive and includes the following collumns of the
-        ``DjmdContent`` table:
-
-        - `Album`
-        - `Artist`
-        - `Commnt`
-        - `Composer`
-        - `Genre`
-        - `Key`
-        - `OrgArtist`
-        - `Remixer`
+    def delete(self, instance):
+        """Delete an element from the Rekordbox database.
 
         Parameters
         ----------
-        text : str
-            The search text.
-
-        Returns
-        -------
-        results : list[DjmdContent]
-            The resulting content elements.
+        instance : tables.Base
+            The table entry to delte.
         """
-        # Search standard columns
-        query = self.query(tables.DjmdContent).filter(
-            or_(
-                DjmdContent.Title.contains(text),
-                DjmdContent.Commnt.contains(text),
-                DjmdContent.SearchStr.contains(text),
-            )
-        )
-        results = query.all()
+        self.session.delete(instance)
 
-        # Search artist (Artist, OrgArtist, Composer and Remixer)
-        artist_attrs = ["Artist", "OrgArtist", "Composer", "Remixer"]
-        for attr in artist_attrs:
-            query = self.query(DjmdContent).join(getattr(DjmdContent, attr))
-            results += query.filter(tables.DjmdArtist.Name.contains(text)).all()
+    def commit(self):
+        """Commit the changes made to the database."""
+        self.session.commit()
+        tables.reset_update_counts()
 
-        # Search album
-        query = self.query(DjmdContent).join(DjmdContent.Album)
-        results += query.filter(tables.DjmdAlbum.Name.contains(text)).all()
+    def rollback(self):
+        """Rolls back the uncommited changes to the database."""
+        self.session.rollback()
+        tables.reset_update_counts()
 
-        # Search Genre
-        query = self.query(DjmdContent).join(DjmdContent.Genre)
-        results += query.filter(tables.DjmdGenre.Name.contains(text)).all()
-
-        # Search Key
-        query = self.query(DjmdContent).join(DjmdContent.Key)
-        results += query.filter(tables.DjmdKey.ScaleName.contains(text)).all()
-
-        return results
+    # ----------------------------------------------------------------------------------
 
     def get_mysetting_paths(self):
         """Returns the file paths of the local Rekordbox MySetting files.
