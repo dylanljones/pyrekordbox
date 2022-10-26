@@ -6,7 +6,7 @@
 [![Tests][tests-badge]][tests-link]
 [![Docs][docs-badge]][documentation]
 [![Version][pypi-badge]][pypi-link]
-[![Python][python-badge]][pypi-link]
+[![Python][python-badge+]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
@@ -21,8 +21,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
 
 > **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently! ``pyrekordbox`` is licensed under the
-[MIT license][license-link]. The maintainers of the project are not liable for any damages
-to your Rekordbox library.
+[MIT license][license-link].
 
 
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
@@ -298,6 +297,7 @@ the CI setup since it requires a working Rekordbox installation.
 [tests-dev-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/dev?label=tests&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
+[python-badge+]: https://img.shields.io/badge/python-3.7+-blue.svg
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
