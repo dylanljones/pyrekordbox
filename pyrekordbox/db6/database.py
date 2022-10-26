@@ -35,14 +35,13 @@ def _get_masterdb_key():  # pragma: no cover
     asar_data = read_rekordbox6_asar(rb6_config["install_dir"])
     match = re.search('pass: ".(.*?)"', asar_data).group(0)
     password = match.replace("pass: ", "").strip('"')
-    password_bytes = password.encode()
 
     # Decode database key data
     encoded_key_data = rb6_config["dp"]  # from 'options.json'
     decoded_key_data = base64.standard_b64decode(encoded_key_data)
 
     # Decrypt database key
-    cipher = blowfish.Cipher(password_bytes)
+    cipher = blowfish.Cipher(password.encode())
     decrypted_bytes = b"".join(cipher.decrypt_ecb(decoded_key_data))
     database_key = decrypted_bytes.decode()
 
@@ -84,7 +83,7 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
 
     To use the ``pysqlcipher3`` package as SQLite driver, either import it as
 
-    >>> from pysqlcipher3 import dbapi2 as sqlite3
+    >>> from pysqlcipher3 import dbapi2 as sqlite3  # noqa
     >>> db = open_rekordbox_database("path/to/master_copy.db")
 
     or supply the package as driver:
@@ -180,9 +179,8 @@ def _parse_query_result(query, kwargs):
 class UpdateTracker:
     def __init__(self, session=None):
         self.session: Optional[Session] = None
-        self._created = list()
-        self._updated = list()
-        self._deleted = list()
+        self._idx = 0
+        self._sequence = list()
         if session:
             self.connect(session)
 
@@ -198,32 +196,33 @@ class UpdateTracker:
         event.remove(self.session, "after_commit", self.clear)
         event.remove(self.session, "after_rollback", self.clear)
 
-    def get_updates(self):
-        # now = datetime.datetime.now()
-        created = self._created + [x for x in list(self.session.new)]
-        updated = self._updated + [x for x in self.session.dirty]
-        deleted = self._deleted + [x for x in self.session.deleted]
-        for item in deleted:
-            if item in created:
-                created.remove(item)
-            if item in updated:
-                updated.remove(item)
-        return {"created": created, "updated": updated, "deleted": deleted}
-
-    def copy_unflushed_buffer(self):
-        # now = datetime.datetime.now()
-        self._created.extend([x for x in self.session.new])
-        self._updated.extend([x for x in self.session.dirty])
-        self._deleted.extend([x for x in self.session.deleted])
+    def _get_unflushed(self, i):
+        seq = list()
+        seq += [(i, x, "create") for x in self.session.new]
+        seq += [(i, x, "update") for x in self.session.dirty]
+        seq += [(i, x, "delete") for x in self.session.deleted]
+        return seq
 
     def before_flush(self, *_):
-        self.copy_unflushed_buffer()
+        self._sequence.extend(self._get_unflushed(self._idx))
+        self._idx += 1
 
     def clear(self, *_):
         # Reset number of rows changed on commit/rollback
-        self._created.clear()
-        self._updated.clear()
-        self._deleted.clear()
+        self._idx = 0
+        self._sequence.clear()
+
+    def get_updates(self):
+        seq = self._sequence.copy()
+        seq += self._get_unflushed(self._idx + 1)
+        seq.sort(key=lambda _x: _x[0])
+        return seq
+
+    def get_update_dict(self):
+        d = {"created": list(), "updated": list(), "deleted": list()}
+        for i, instance, op in self.get_updates():
+            d[op].append((i, instance))
+        return d
 
 
 class Rekordbox6Database:
@@ -314,7 +313,7 @@ class Rekordbox6Database:
         ----------
         identifier : str
             The identifier of the event, for example 'before_flush', 'after_commit', ...
-            See the SQLAlchemy documentation for a list of valud event identifiers.
+            See the SQLAlchemy documentation for a list of valid event identifiers.
         fn : callable
             The event callback method.
         """
@@ -608,6 +607,16 @@ class Rekordbox6Database:
 
     # -- Database updates --------------------------------------------------------------
 
+    def delete(self, instance):
+        """Delete an element from the Rekordbox database.
+
+        Parameters
+        ----------
+        instance : tables.Base
+            The table entry to delte.
+        """
+        self.session.delete(instance)
+
     def get_local_usn(self):
         """Returns the local sequence number (update count) of Rekordbox.
 
@@ -619,12 +628,6 @@ class Rekordbox6Database:
         -------
         usn : int
             The value of the local update count.
-
-        Examples
-        --------
-        >>> db = Rekordbox6Database()
-        >>> db.get_local_usn()
-        70500
         """
         reg = self.get_agent_registry(registry_id="localUpdateCount").one()
         return reg.int_1
@@ -636,16 +639,6 @@ class Rekordbox6Database:
         ----------
         usn : int or str
             The new update sequence number.
-
-        Examples
-        --------
-        >>> db = Rekordbox6Database()
-        >>> db.get_local_usn()
-        70500
-
-        >>> db.set_local_usn(70501)
-        >>> db.get_local_usn()
-        70501
         """
         item = self.get_agent_registry(registry_id="localUpdateCount").one()
         item.int_1 = usn
@@ -680,18 +673,64 @@ class Rekordbox6Database:
         self.set_local_usn(new)
         return new
 
-    def delete(self, instance):
-        """Delete an element from the Rekordbox database.
+    def autoincrement_usn(self, set_row_usn=True):
+        """Auto-increments the local USN for all uncommited changes.
 
         Parameters
         ----------
-        instance : tables.Base
-            The table entry to delte.
-        """
-        self.session.delete(instance)
+        set_row_usn : bool, optional
+            If True, set the ``rb_local_usn`` value of updated or added rows according
+            to the uncommited update sequence.
 
-    def commit(self):
-        """Commit the changes made to the database."""
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+
+        >>> content = db.get_content().first()
+        >>> playlist = db.get_playlist().first()
+        >>> content.Title = "New Title"
+        >>> playlist.Name = "New Name"
+        >>> db.autoincrement_usn(set_row_usn=True)
+        >>> db.get_local_usn()
+        70502
+
+        >>> content.rb_local_usn
+        70501
+
+        >>> playlist.rb_local_usn
+        70502
+        """
+        for i, instance, op in self.tracker.get_updates():
+            if op == "create":
+                last_usn = self.increment_local_usn()
+                if set_row_usn and hasattr(instance, "rb_local_usn"):
+                    instance.rb_local_usn = last_usn
+            elif op == "update":
+                num = tables.get_update_count(instance)
+                last_usn = self.increment_local_usn(num)
+                if set_row_usn and hasattr(instance, "rb_local_usn"):
+                    instance.rb_local_usn = last_usn
+            elif op == "delete":
+                self.increment_local_usn()
+
+    def commit(self, autoinc=True):
+        """Commit the changes made to the database.
+
+        Parameters
+        ----------
+        autoinc : bool, optional
+            If True, auto-increment the local and row USN's before commiting the
+            changes made to the database.
+
+        See Also
+        --------
+        autoincrement_usn: Auto-increments the local Rekordbox USN's.
+        """
+        if autoinc:
+            self.autoincrement_usn()
+
         self.session.commit()
         tables.reset_update_counts()
 
