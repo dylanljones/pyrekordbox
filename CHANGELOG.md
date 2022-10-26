@@ -3,8 +3,21 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+This release mainly consists of improvements on the Rekordbox v6 database
+handling.
+
+
 ### New Features
-- add local USN handlers to database handler
+- add session-event callbacks to the RBv6 database object
+- add update and transaction tracking to the RBv6 database object
+
+  This feature is intended for automatic tracking of the USN's.
+
+- add local USN handlers to database handlers:
+  - ``get_local_usn``
+  - ``set_local_usn``
+  - ``increment_local_usn``
+
 - add process-id getters
 
 ### Documentation
@@ -15,6 +28,9 @@
 
 <a name="0.1.2"></a>
 ## [0.1.2] - 2022-19-10
+
+This release contains documentation fixes.
+
 ### Documentation
 - fix typos and formatting
 - fix light theme styling
@@ -25,6 +41,7 @@
 ### New Features
 - `AnlzFile` now stores the path of the parsed file
 - add `update_content_path` and `update_content_filename` to RB6 database
+  These methods update the path in the Rekordbox v6 database and the corresponding ANLZ analysis files.
 
 ### Improvements/Bug Fixes
 - fix bugs in PQTZ/PQT2 tag handler of ANLZ files
@@ -33,10 +50,12 @@
 - remove wrong type hint in ``AbstractAnlzTag``
 - Use path instead of extension as key in `read_anlz_files` output
 
+
 ### Documentation
 - update Quick-Start and change reference labels
 - add initial version of API Reference
 - fix links in ANLZ file documentation
+
 
 
 <a name="0.1.0"></a>
@@ -45,6 +64,16 @@
 - add `set_content_path` to `Rekordbox6Database` object
 - add `set_path` to `AnlzFile` object
 - add name properties for linked tables in the ``DjmdContent`` table of the RB6 database
+  The new properties include:
+  - ArtistName
+  - AlbumName
+  - GenreName
+  - RemixerName
+  - LabelName
+  - OrgArtistName
+  - KeyName
+  - ColorName
+  - ComposerName
 - add relationship for `Content` in the RB6 database tables
 
 ### Improvements/Bug Fixes
