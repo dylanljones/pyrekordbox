@@ -270,6 +270,7 @@ class Rekordbox6Database:
         self._Session = sessionmaker(bind=self.engine)
         self.session: Optional[Session] = None
 
+        self._events = dict()
         self.tracker = UpdateTracker()
 
         self._db_dir = os.path.normpath(rb6_config["db_dir"])
@@ -294,6 +295,8 @@ class Rekordbox6Database:
 
     def close(self):
         """Close the currently active session."""
+        for key in self._events:
+            self.unregister_event(key)
         self.tracker.disconnect()
         self.session.close()
         self.session = None
@@ -303,6 +306,31 @@ class Rekordbox6Database:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+    def register_event(self, identifier, fn):
+        """Registers a session event callback.
+
+        Parameters
+        ----------
+        identifier : str
+            The identifier of the event, for example 'before_flush', 'after_commit', ...
+            See the SQLAlchemy documentation for a list of valud event identifiers.
+        fn : callable
+            The event callback method.
+        """
+        event.listen(self.session, identifier, fn)
+        self._events[identifier] = fn
+
+    def unregister_event(self, identifier):
+        """Removes an existing session event callback.
+
+        Parameters
+        ----------
+        identifier : str
+            The identifier of the event
+        """
+        fn = self._events[identifier]
+        event.remove(self.session, identifier, fn)
 
     # -- Table queries -----------------------------------------------------------------
 
