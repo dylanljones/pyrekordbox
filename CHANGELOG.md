@@ -11,7 +11,7 @@ handling.
 - add session-event callbacks to the RBv6 database object
 - add update and transaction tracking to the RBv6 database object  
   This feature is intended for automatic tracking of the USN's.
-- add local USN handlers to database handlers:
+- add local USN handlers to database handlers:  
   - ``get_local_usn``
   - ``set_local_usn``
   - ``increment_local_usn``
@@ -37,7 +37,7 @@ This release contains documentation fixes.
 ## [0.1.1] - 2022-19-10
 ### New Features
 - `AnlzFile` now stores the path of the parsed file
-- add `update_content_path` and `update_content_filename` to RB6 database
+- add `update_content_path` and `update_content_filename` to RB6 database  
   These methods update the path in the Rekordbox v6 database and the corresponding ANLZ analysis files.
 
 ### Improvements/Bug Fixes
@@ -60,7 +60,7 @@ This release contains documentation fixes.
 ### New Features
 - add `set_content_path` to `Rekordbox6Database` object
 - add `set_path` to `AnlzFile` object
-- add name properties for linked tables in the ``DjmdContent`` table of the RB6 database
+- add name properties for linked tables in the ``DjmdContent`` table of the RB6 database  
   The new properties include:
   - ArtistName
   - AlbumName
