@@ -40,10 +40,6 @@ Alternatively, it can be installed via [GitHub][repo]
 pip install git+https://github.com/dylanljones/pyrekordbox.git@VERSION
 ```
 where `VERSION` is a release, tag or branch name.
-The project can also be cloned/forked and installed via
-````commandline
-python setup.py install
-````
 
 ### Dependencies
 
