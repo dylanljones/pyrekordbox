@@ -1,6 +1,6 @@
 # This workflow will run the tests of the project
 
-name: Test
+name: Tests
 
 
 # Controls when the action will run.
@@ -43,7 +43,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
-        python-version: ["3.7", "3.10", "3.11.0-rc - 3.11"]  # check oldest and latest supported version
+        python-version: ["3.7", "3.11"]  # check oldest and latest supported version
         other-os: [false]
 
     runs-on: ${{ matrix.os }}
