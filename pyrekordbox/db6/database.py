@@ -179,8 +179,9 @@ def _parse_query_result(query, kwargs):
 class UpdateTracker:
     def __init__(self, session=None):
         self.session: Optional[Session] = None
-        self._idx = 0
+        self._count = 0
         self._sequence = list()
+        self.history = list()
         if session:
             self.connect(session)
 
@@ -191,31 +192,43 @@ class UpdateTracker:
         event.listen(self.session, "after_rollback", self.clear)
 
     def disconnect(self):
-        self.session = None
         event.remove(self.session, "before_flush", self.before_flush)
         event.remove(self.session, "after_commit", self.clear)
         event.remove(self.session, "after_rollback", self.clear)
+        self.session = None
 
-    def _get_unflushed(self, i):
+    def _get_unflushed(self):
         seq = list()
-        seq += [(i, x, "create") for x in self.session.new]
-        seq += [(i, x, "update") for x in self.session.dirty]
-        seq += [(i, x, "delete") for x in self.session.deleted]
-        return seq
+        i = 0
+        for x in self.session.new:
+            i += 1
+            seq.append((self._count + i, x, "create"))
+        for x in self.session.dirty:
+            i += 1
+            seq.append((self._count + i, x, "update"))
+        for x in self.session.deleted:
+            i += 1
+            seq.append((self._count + i, x, "delete"))
+        return i, seq
 
     def before_flush(self, *_):
-        self._sequence.extend(self._get_unflushed(self._idx))
-        self._idx += 1
+        count, seq = self._get_unflushed()
+        self._count += count
+        self._sequence.extend(seq)
 
     def clear(self, *_):
         # Reset number of rows changed on commit/rollback
-        self._idx = 0
+        self.history.extend(self._sequence)
+        self._count = 0
         self._sequence.clear()
+        tables.reset_update_counts()
 
     def get_updates(self):
         seq = self._sequence.copy()
-        seq += self._get_unflushed(self._idx + 1)
-        seq.sort(key=lambda _x: _x[0])
+        _, new = self._get_unflushed()
+        seq.extend(new)
+        seq.sort(key=lambda _x: int(_x[0]))
+        # seq.reverse()
         return seq
 
     def get_update_dict(self):
@@ -383,8 +396,8 @@ class Rekordbox6Database:
         return _parse_query_result(query, kwargs)
 
     def get_color(self, **kwargs):
-        """Creates a filtered query for the ``DjmdActiveCensor`` table."""
-        query = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
+        """Creates a filtered query for the ``DjmdColor`` table."""
+        query = self.query(tables.DjmdColor).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
     def get_content(self, **kwargs):
@@ -426,26 +439,28 @@ class Rekordbox6Database:
                 DjmdContent.SearchStr.contains(text),
             )
         )
-        results = query.all()
+        results = set(query.all())
 
         # Search artist (Artist, OrgArtist, Composer and Remixer)
         artist_attrs = ["Artist", "OrgArtist", "Composer", "Remixer"]
         for attr in artist_attrs:
             query = self.query(DjmdContent).join(getattr(DjmdContent, attr))
-            results += query.filter(tables.DjmdArtist.Name.contains(text)).all()
+            results.update(query.filter(tables.DjmdArtist.Name.contains(text)).all())
 
         # Search album
         query = self.query(DjmdContent).join(DjmdContent.Album)
-        results += query.filter(tables.DjmdAlbum.Name.contains(text)).all()
+        results.update(query.filter(tables.DjmdAlbum.Name.contains(text)).all())
 
         # Search Genre
         query = self.query(DjmdContent).join(DjmdContent.Genre)
-        results += query.filter(tables.DjmdGenre.Name.contains(text)).all()
+        results.update(query.filter(tables.DjmdGenre.Name.contains(text)).all())
 
         # Search Key
         query = self.query(DjmdContent).join(DjmdContent.Key)
-        results += query.filter(tables.DjmdKey.ScaleName.contains(text)).all()
+        results.update(query.filter(tables.DjmdKey.ScaleName.contains(text)).all())
 
+        results = list(results)
+        results.sort(key=lambda x: x.ID)
         return results
 
     def get_cue(self, **kwargs):
@@ -669,6 +684,9 @@ class Rekordbox6Database:
         >>> db.get_local_usn()
         70501
         """
+        if not isinstance(num, int) or num < 1:
+            raise ValueError("The USN can only be increment by a positive integer!")
+
         new = self.get_local_usn() + num
         self.set_local_usn(new)
         return new
@@ -732,12 +750,12 @@ class Rekordbox6Database:
             self.autoincrement_usn()
 
         self.session.commit()
-        tables.reset_update_counts()
+        self.tracker.clear()
 
     def rollback(self):
         """Rolls back the uncommited changes to the database."""
         self.session.rollback()
-        tables.reset_update_counts()
+        self.tracker.clear()
 
     # ----------------------------------------------------------------------------------
 
