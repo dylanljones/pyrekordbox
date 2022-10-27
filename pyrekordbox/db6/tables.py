@@ -48,13 +48,69 @@ __all__ = [
     "ImageFile",
     "SettingFile",
     "UuidIDMap",
+    "get_update_count",
+    "reset_update_counts",
 ]
+
+__update_count__ = dict()
+
+
+def get_update_count(instance):
+    return __update_count__[instance]
+
+
+def reset_update_counts():
+    __update_count__.clear()
 
 
 # -- Base- and Mixin classes -----------------------------------------------------------
 
 
-Base = declarative_base()
+class _Base(object):
+
+    __tablename__ = ""
+
+    def __init__(self):
+        super().__init__()
+
+    def __iter__(self):
+        exc = "registry", "metadata"
+        return filter(
+            lambda x: not (x.startswith("_") or x in exc or callable(getattr(self, x))),
+            dir(self),
+        )
+
+    def __len__(self):
+        return sum(1 for _ in self.__iter__())
+
+    def __getitem__(self, item):
+        return self.__getattribute__(item)
+
+    # noinspection PyUnresolvedReferences
+    def __setattr__(self, key, value):
+        if not key.startswith("_"):
+            # Increment entry in instance update count dictionary
+            k = self
+            try:
+                __update_count__[k] += 1
+            except KeyError:
+                __update_count__[k] = 1
+
+        super().__setattr__(key, value)
+
+    def columns(self):
+        return list(self.__iter__())
+
+    def pformat(self, indent="   "):
+        lines = [f"{self.__tablename__}"]
+        columns = self.columns()
+        w = max(len(col) for col in columns)
+        for col in columns:
+            lines.append(f"{indent}{col:<{w}} {self.__getitem__(col)}")
+        return "\n".join(lines)
+
+
+Base = declarative_base(cls=_Base)
 
 
 class StatsTime:
@@ -76,6 +132,9 @@ class StatsFull:
     rb_local_usn = Column(BigInteger, default=None)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
+
+    def __init__(self, **kwargs):
+        pass
 
     def __repr__(self):
         return f"<{self.__class__.__name__}({self.ID})>"

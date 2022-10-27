@@ -9,8 +9,9 @@ import re
 import base64
 import blowfish
 import logging
-from sqlalchemy import create_engine, or_
-from sqlalchemy.orm import sessionmaker
+from typing import Optional
+from sqlalchemy import create_engine, or_, event
+from sqlalchemy.orm import sessionmaker, Session
 from ..config import get_config
 from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
@@ -34,14 +35,13 @@ def _get_masterdb_key():  # pragma: no cover
     asar_data = read_rekordbox6_asar(rb6_config["install_dir"])
     match = re.search('pass: ".(.*?)"', asar_data).group(0)
     password = match.replace("pass: ", "").strip('"')
-    password_bytes = password.encode()
 
     # Decode database key data
     encoded_key_data = rb6_config["dp"]  # from 'options.json'
     decoded_key_data = base64.standard_b64decode(encoded_key_data)
 
     # Decrypt database key
-    cipher = blowfish.Cipher(password_bytes)
+    cipher = blowfish.Cipher(password.encode())
     decrypted_bytes = b"".join(cipher.decrypt_ecb(decoded_key_data))
     database_key = decrypted_bytes.decode()
 
@@ -83,7 +83,7 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
 
     To use the ``pysqlcipher3`` package as SQLite driver, either import it as
 
-    >>> from pysqlcipher3 import dbapi2 as sqlite3
+    >>> from pysqlcipher3 import dbapi2 as sqlite3  # noqa
     >>> db = open_rekordbox_database("path/to/master_copy.db")
 
     or supply the package as driver:
@@ -176,6 +176,68 @@ def _parse_query_result(query, kwargs):
     return query
 
 
+class UpdateTracker:
+    def __init__(self, session=None):
+        self.session: Optional[Session] = None
+        self._count = 0
+        self._sequence = list()
+        self.history = list()
+        if session:
+            self.connect(session)
+
+    def connect(self, session):
+        self.session = session
+        event.listen(self.session, "before_flush", self.before_flush)
+        event.listen(self.session, "after_commit", self.clear)
+        event.listen(self.session, "after_rollback", self.clear)
+
+    def disconnect(self):
+        event.remove(self.session, "before_flush", self.before_flush)
+        event.remove(self.session, "after_commit", self.clear)
+        event.remove(self.session, "after_rollback", self.clear)
+        self.session = None
+
+    def _get_unflushed(self):
+        seq = list()
+        i = 0
+        for x in self.session.new:
+            i += 1
+            seq.append((self._count + i, x, "create"))
+        for x in self.session.dirty:
+            i += 1
+            seq.append((self._count + i, x, "update"))
+        for x in self.session.deleted:
+            i += 1
+            seq.append((self._count + i, x, "delete"))
+        return i, seq
+
+    def before_flush(self, *_):
+        count, seq = self._get_unflushed()
+        self._count += count
+        self._sequence.extend(seq)
+
+    def clear(self, *_):
+        # Reset number of rows changed on commit/rollback
+        self.history.extend(self._sequence)
+        self._count = 0
+        self._sequence.clear()
+        tables.reset_update_counts()
+
+    def get_updates(self):
+        seq = self._sequence.copy()
+        _, new = self._get_unflushed()
+        seq.extend(new)
+        seq.sort(key=lambda _x: int(_x[0]))
+        # seq.reverse()
+        return seq
+
+    def get_update_dict(self):
+        d = {"created": list(), "updated": list(), "deleted": list()}
+        for i, instance, op in self.get_updates():
+            d[op].append((i, instance))
+        return d
+
+
 class Rekordbox6Database:
     """Rekordbox v6 master.db database handler.
 
@@ -218,10 +280,15 @@ class Rekordbox6Database:
     def __init__(self, path="", unlock=True):
         self.engine = create_rekordbox_engine(path, unlock=unlock)
         self._Session = sessionmaker(bind=self.engine)
-        self.session = self._Session()
+        self.session: Optional[Session] = None
+
+        self._events = dict()
+        self.tracker = UpdateTracker()
 
         self._db_dir = os.path.normpath(rb6_config["db_dir"])
         self._anlz_root = os.path.join(self._db_dir, "share")
+
+        self.open()
 
     def open(self):
         """Open the database by instantiating a new session using the SQLAchemy engine.
@@ -234,10 +301,15 @@ class Rekordbox6Database:
         >>> db.close()
         >>> db.open()
         """
-        self.session = self._Session()
+        if self.session is None:
+            self.session = self._Session()
+            self.tracker.connect(self.session)
 
     def close(self):
         """Close the currently active session."""
+        for key in self._events:
+            self.unregister_event(key)
+        self.tracker.disconnect()
         self.session.close()
         self.session = None
 
@@ -247,9 +319,32 @@ class Rekordbox6Database:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def commit(self):
-        """Commit the changes made to the database."""
-        self.session.commit()
+    def register_event(self, identifier, fn):
+        """Registers a session event callback.
+
+        Parameters
+        ----------
+        identifier : str
+            The identifier of the event, for example 'before_flush', 'after_commit', ...
+            See the SQLAlchemy documentation for a list of valid event identifiers.
+        fn : callable
+            The event callback method.
+        """
+        event.listen(self.session, identifier, fn)
+        self._events[identifier] = fn
+
+    def unregister_event(self, identifier):
+        """Removes an existing session event callback.
+
+        Parameters
+        ----------
+        identifier : str
+            The identifier of the event
+        """
+        fn = self._events[identifier]
+        event.remove(self.session, identifier, fn)
+
+    # -- Table queries -----------------------------------------------------------------
 
     def query(self, *entities, **kwargs):
         """Creates a new SQL query for the given entities.
@@ -280,8 +375,6 @@ class Rekordbox6Database:
         """
         return self.session.query(*entities, **kwargs)
 
-    # -- Table queries -----------------------------------------------------------------
-
     def get_active_censor(self, **kwargs):
         """Creates a filtered query for the ``DjmdActiveCensor`` table."""
         query = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
@@ -303,14 +396,72 @@ class Rekordbox6Database:
         return _parse_query_result(query, kwargs)
 
     def get_color(self, **kwargs):
-        """Creates a filtered query for the ``DjmdActiveCensor`` table."""
-        query = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
+        """Creates a filtered query for the ``DjmdColor`` table."""
+        query = self.query(tables.DjmdColor).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
     def get_content(self, **kwargs):
         """Creates a filtered query for the ``DjmdContent`` table."""
         query = self.query(tables.DjmdContent).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
+
+    # noinspection PyUnresolvedReferences
+    def search_content(self, text):
+        """Searches the contents of the ``DjmdContent`` table.
+
+        The search is case-insensitive and includes the following collumns of the
+        ``DjmdContent`` table:
+
+        - `Album`
+        - `Artist`
+        - `Commnt`
+        - `Composer`
+        - `Genre`
+        - `Key`
+        - `OrgArtist`
+        - `Remixer`
+
+        Parameters
+        ----------
+        text : str
+            The search text.
+
+        Returns
+        -------
+        results : list[DjmdContent]
+            The resulting content elements.
+        """
+        # Search standard columns
+        query = self.query(tables.DjmdContent).filter(
+            or_(
+                DjmdContent.Title.contains(text),
+                DjmdContent.Commnt.contains(text),
+                DjmdContent.SearchStr.contains(text),
+            )
+        )
+        results = set(query.all())
+
+        # Search artist (Artist, OrgArtist, Composer and Remixer)
+        artist_attrs = ["Artist", "OrgArtist", "Composer", "Remixer"]
+        for attr in artist_attrs:
+            query = self.query(DjmdContent).join(getattr(DjmdContent, attr))
+            results.update(query.filter(tables.DjmdArtist.Name.contains(text)).all())
+
+        # Search album
+        query = self.query(DjmdContent).join(DjmdContent.Album)
+        results.update(query.filter(tables.DjmdAlbum.Name.contains(text)).all())
+
+        # Search Genre
+        query = self.query(DjmdContent).join(DjmdContent.Genre)
+        results.update(query.filter(tables.DjmdGenre.Name.contains(text)).all())
+
+        # Search Key
+        query = self.query(DjmdContent).join(DjmdContent.Key)
+        results.update(query.filter(tables.DjmdKey.ScaleName.contains(text)).all())
+
+        results = list(results)
+        results.sort(key=lambda x: x.ID)
+        return results
 
     def get_cue(self, **kwargs):
         """Creates a filtered query for the ``DjmdCue`` table."""
@@ -469,63 +620,144 @@ class Rekordbox6Database:
         query = self.query(tables.UuidIDMap).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    # ==================================================================================
+    # -- Database updates --------------------------------------------------------------
 
-    # noinspection PyUnresolvedReferences
-    def search_content(self, text):
-        """Searches the contents of the ``DjmdContent`` table.
-
-        The search is case insensitive and includes the following collumns of the
-        ``DjmdContent`` table:
-
-        - `Album`
-        - `Artist`
-        - `Commnt`
-        - `Composer`
-        - `Genre`
-        - `Key`
-        - `OrgArtist`
-        - `Remixer`
+    def delete(self, instance):
+        """Delete an element from the Rekordbox database.
 
         Parameters
         ----------
-        text : str
-            The search text.
+        instance : tables.Base
+            The table entry to delte.
+        """
+        self.session.delete(instance)
+
+    def get_local_usn(self):
+        """Returns the local sequence number (update count) of Rekordbox.
+
+        Any changes made to the `Djmd...` tables increments the local update count of
+        Rekordbox. The ``usn`` entry of the changed row is set to the corresponding
+        update count.
 
         Returns
         -------
-        results : list[DjmdContent]
-            The resulting content elements.
+        usn : int
+            The value of the local update count.
         """
-        # Search standard columns
-        query = self.query(tables.DjmdContent).filter(
-            or_(
-                DjmdContent.Title.contains(text),
-                DjmdContent.Commnt.contains(text),
-                DjmdContent.SearchStr.contains(text),
-            )
-        )
-        results = query.all()
+        reg = self.get_agent_registry(registry_id="localUpdateCount").one()
+        return reg.int_1
 
-        # Search artist (Artist, OrgArtist, Composer and Remixer)
-        artist_attrs = ["Artist", "OrgArtist", "Composer", "Remixer"]
-        for attr in artist_attrs:
-            query = self.query(DjmdContent).join(getattr(DjmdContent, attr))
-            results += query.filter(tables.DjmdArtist.Name.contains(text)).all()
+    def set_local_usn(self, usn):
+        """Sets the local sequence number (update count) of Rekordbox.
 
-        # Search album
-        query = self.query(DjmdContent).join(DjmdContent.Album)
-        results += query.filter(tables.DjmdAlbum.Name.contains(text)).all()
+        Parameters
+        ----------
+        usn : int or str
+            The new update sequence number.
+        """
+        item = self.get_agent_registry(registry_id="localUpdateCount").one()
+        item.int_1 = usn
 
-        # Search Genre
-        query = self.query(DjmdContent).join(DjmdContent.Genre)
-        results += query.filter(tables.DjmdGenre.Name.contains(text)).all()
+    def increment_local_usn(self, num=1):
+        """Increments the local update sequence number (update count) of Rekordbox.
 
-        # Search Key
-        query = self.query(DjmdContent).join(DjmdContent.Key)
-        results += query.filter(tables.DjmdKey.ScaleName.contains(text)).all()
+        Parameters
+        ----------
+        num : int, optional
+            The number of times to increment the update counter. By default, the counter
+            is incremented by 1.
 
-        return results
+        Returns
+        -------
+        usn : int
+            The value of the incremented local update count.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+
+        >>> db.increment_local_usn()
+        70501
+
+        >>> db.get_local_usn()
+        70501
+        """
+        if not isinstance(num, int) or num < 1:
+            raise ValueError("The USN can only be increment by a positive integer!")
+
+        new = self.get_local_usn() + num
+        self.set_local_usn(new)
+        return new
+
+    def autoincrement_usn(self, set_row_usn=True):
+        """Auto-increments the local USN for all uncommited changes.
+
+        Parameters
+        ----------
+        set_row_usn : bool, optional
+            If True, set the ``rb_local_usn`` value of updated or added rows according
+            to the uncommited update sequence.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+
+        >>> content = db.get_content().first()
+        >>> playlist = db.get_playlist().first()
+        >>> content.Title = "New Title"
+        >>> playlist.Name = "New Name"
+        >>> db.autoincrement_usn(set_row_usn=True)
+        >>> db.get_local_usn()
+        70502
+
+        >>> content.rb_local_usn
+        70501
+
+        >>> playlist.rb_local_usn
+        70502
+        """
+        for i, instance, op in self.tracker.get_updates():
+            if op == "create":
+                last_usn = self.increment_local_usn()
+                if set_row_usn and hasattr(instance, "rb_local_usn"):
+                    instance.rb_local_usn = last_usn
+            elif op == "update":
+                num = tables.get_update_count(instance)
+                last_usn = self.increment_local_usn(num)
+                if set_row_usn and hasattr(instance, "rb_local_usn"):
+                    instance.rb_local_usn = last_usn
+            elif op == "delete":
+                self.increment_local_usn()
+
+    def commit(self, autoinc=True):
+        """Commit the changes made to the database.
+
+        Parameters
+        ----------
+        autoinc : bool, optional
+            If True, auto-increment the local and row USN's before commiting the
+            changes made to the database.
+
+        See Also
+        --------
+        autoincrement_usn: Auto-increments the local Rekordbox USN's.
+        """
+        if autoinc:
+            self.autoincrement_usn()
+
+        self.session.commit()
+        self.tracker.clear()
+
+    def rollback(self):
+        """Rolls back the uncommited changes to the database."""
+        self.session.rollback()
+        self.tracker.clear()
+
+    # ----------------------------------------------------------------------------------
 
     def get_mysetting_paths(self):
         """Returns the file paths of the local Rekordbox MySetting files.

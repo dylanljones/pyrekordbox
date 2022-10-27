@@ -4,9 +4,9 @@
 </p>
 
 [![Tests][tests-badge]][tests-link]
-[![Docs][docs-badge]][documentation]
+[![Codecov][codecov-badge]][codecov-link]
 [![Version][pypi-badge]][pypi-link]
-[![Python][python-badge]][pypi-link]
+[![Python][python-badge+]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
@@ -21,8 +21,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
 
 > **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently! ``pyrekordbox`` is licensed under the
-[MIT license][license-link]. The maintainers of the project are not liable for any damages
-to your Rekordbox library.
+[MIT license][license-link].
 
 
 |⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
@@ -50,8 +49,8 @@ python setup.py install
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
 Pyrekordbox makes no attempt to download/install SQLCipher, as it is a
-pure-Python wrapper - whereas the SQLCipher/pysqlcipher3 installation is
-platform-dependent/environment-specific and can not be installed via ``pip``.
+pure Python package - whereas the SQLCipher/pysqlcipher3 installation is
+platform-dependent and can not be installed via ``pip``.
 
 #### Windows
 
@@ -298,17 +297,20 @@ the CI setup since it requires a working Rekordbox installation.
 [tests-dev-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/dev?label=tests&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
+[python-badge+]: https://img.shields.io/badge/python-3.7+-blue.svg
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 [codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
 [codecov-dev-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/dev/graph/badge.svg?token=5Z2KVGL7N3
+[lgtm-badge]: https://img.shields.io/lgtm/grade/python/github/dylanljones/pyrekordbox?label=code%20quality&logo=lgtm&style=flat
 
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
+[lgtm-link]: https://lgtm.com/projects/g/dylanljones/pyrekordbox/context:python
 [codecov-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/master
 [codecov-dev-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/dev
 [docs-latest-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?logo=readthedocs&style=flat
