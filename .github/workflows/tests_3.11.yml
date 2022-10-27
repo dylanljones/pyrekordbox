@@ -1,6 +1,6 @@
 # This workflow will run the tests of the project
 
-name: Test
+name: Test Python 3.11
 
 
 # Controls when the action will run.
