@@ -4,7 +4,6 @@
 </p>
 
 [![Tests][tests-badge]][tests-link]
-[![Docs][docs-badge]][documentation]
 [![Codecov][codecov-badge]][codecov-link]
 [![Version][pypi-badge]][pypi-link]
 [![Python][python-badge+]][pypi-link]
