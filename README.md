@@ -5,6 +5,7 @@
 
 [![Tests][tests-badge]][tests-link]
 [![Docs][docs-badge]][documentation]
+[![Codecov][codecov-badge]][codecov-link]
 [![Version][pypi-badge]][pypi-link]
 [![Python][python-badge+]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
@@ -304,11 +305,13 @@ the CI setup since it requires a working Rekordbox installation.
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 [codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
 [codecov-dev-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/dev/graph/badge.svg?token=5Z2KVGL7N3
+[lgtm-badge]: https://img.shields.io/lgtm/grade/python/github/dylanljones/pyrekordbox?label=code%20quality&logo=lgtm&style=flat
 
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
+[lgtm-link]: https://lgtm.com/projects/g/dylanljones/pyrekordbox/context:python
 [codecov-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/master
 [codecov-dev-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/dev
 [docs-latest-badge]: https://img.shields.io/readthedocs/pyrekordbox/latest?logo=readthedocs&style=flat
