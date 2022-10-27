@@ -14,12 +14,16 @@ handling.
 - **add session-event callbacks to the RBv6 database object**  
 - **add update and transaction tracking to the RBv6 database object**  
   This feature is intended for automatic tracking of the USN's.
-- **add local USN handlers to database handler**  
+- **add local USN handlers to RBv6 database object**  
   Methods added:
   - ``get_local_usn``
   - ``set_local_usn``
   - ``increment_local_usn``
 - **add process-id getters**  
+
+### Improvements/Bug Fixes
+
+- **fix bugs in RBv6 database object**  
 
 ### Documentation
 
