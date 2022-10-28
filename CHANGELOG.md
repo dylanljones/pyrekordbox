@@ -23,6 +23,7 @@ handling.
 
 ### Improvements/Bug Fixes
 
+- **fix small bug in ``read_rekordbox6_asar``**  
 - **fix bugs in RBv6 database object**  
 
 ### Documentation
