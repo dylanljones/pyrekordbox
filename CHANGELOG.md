@@ -1,7 +1,7 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.1.3"></a>
+## [0.1.3] - 2022-28-10
 
 This release mainly consists of improvements on the Rekordbox v6 database
 handling.
@@ -23,6 +23,7 @@ handling.
 
 ### Improvements/Bug Fixes
 
+- **make ``columns`` in the RBv6 table classes a class method** 
 - **fix small bug in ``read_rekordbox6_asar``**  
 - **fix bugs in RBv6 database object**  
 
@@ -225,8 +226,7 @@ This release contains documentation fixes.
 
 ### Documentation
 
-- **add missing djmd tables to `master.db` database documentation**  
-- **add missing djmd tables to `master.db` database documentation**  
+- **add missing djmd tables to `master.db` database documentation**
 
 
 <a name="0.0.1"></a>
@@ -242,7 +242,8 @@ This release contains documentation fixes.
 
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.2...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.3...HEAD
+[0.1.3]: https://github.com/dylanljones/pyrekordbox/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/dylanljones/pyrekordbox/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/dylanljones/pyrekordbox/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/dylanljones/pyrekordbox/compare/0.0.8...0.1.0

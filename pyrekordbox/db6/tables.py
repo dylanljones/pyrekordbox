@@ -98,12 +98,18 @@ class _Base(object):
 
         super().__setattr__(key, value)
 
-    def columns(self):
-        return list(self.__iter__())
+    @classmethod
+    def columns(cls):
+        exc = "registry", "metadata"
+        keys = filter(
+            lambda x: not (x.startswith("_") or x in exc or callable(getattr(cls, x))),
+            dir(cls),
+        )
+        return list(keys)
 
     def pformat(self, indent="   "):
         lines = [f"{self.__tablename__}"]
-        columns = self.columns()
+        columns = self.__iter__()
         w = max(len(col) for col in columns)
         for col in columns:
             lines.append(f"{indent}{col:<{w}} {self.__getitem__(col)}")
