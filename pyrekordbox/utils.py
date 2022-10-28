@@ -376,7 +376,8 @@ def read_rekordbox6_asar(rb6_install_dir):
         location = os.path.join(root, "rekordboxAgent.app", "Contents", "Resources")
         encoding = "cp437"
     else:
-        raise logger.warning(f"OS {sys.platform} not supported!")
+        logger.warning(f"OS {sys.platform} not supported!")
+        return ""
 
     # Read asar file
     path = os.path.abspath(os.path.join(location, "app.asar"))
