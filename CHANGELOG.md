@@ -5,6 +5,7 @@
 
 ### Improvements/Bug Fixes
 
+- **prevent autoflush in ``autoincrement_local_usn`` in the RBv6 database object**  
 - **small improvements of the ``Rekordbox6Database``**  
 - **fix bug in ``pformat`` of RBv6 database tables**  
 
