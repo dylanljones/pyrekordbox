@@ -251,8 +251,7 @@ the CI setup since it requires a working Rekordbox installation.
 ### To Do
 
 - [ ] Improve unit testing.
-- [ ] Adding new entries to the Rekordbox 6 `master.db` database:
-  - Figure out how Rekordbox generates UUID's for the DB entries.
+- [ ] Adding new entries to the Rekordbox 6 `master.db` database
 - [ ] Complete ANLZ file support. This included the following tags:
   - PCOB
   - PCO2

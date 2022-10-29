@@ -88,6 +88,7 @@ class _Base(object):
 
     # noinspection PyUnresolvedReferences
     def __setattr__(self, key, value):
+        super().__setattr__(key, value)
         if not key.startswith("_"):
             # Increment entry in instance update count dictionary
             k = self
@@ -95,8 +96,6 @@ class _Base(object):
                 __update_count__[k] += 1
             except KeyError:
                 __update_count__[k] = 1
-
-        super().__setattr__(key, value)
 
     @classmethod
     def columns(cls):
@@ -109,7 +108,7 @@ class _Base(object):
 
     def pformat(self, indent="   "):
         lines = [f"{self.__tablename__}"]
-        columns = self.__iter__()
+        columns = self.columns()
         w = max(len(col) for col in columns)
         for col in columns:
             lines.append(f"{indent}{col:<{w}} {self.__getitem__(col)}")
