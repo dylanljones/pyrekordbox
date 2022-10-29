@@ -1,5 +1,13 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **small improvements of the ``Rekordbox6Database``**  
+- **fix bug in ``pformat`` of RBv6 database tables**  
+
 <a name="0.1.3"></a>
 ## [0.1.3] - 2022-28-10
 
