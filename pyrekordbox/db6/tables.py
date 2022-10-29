@@ -9,6 +9,7 @@
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, DateTime
 from sqlalchemy import Text, ForeignKey, Float
 from sqlalchemy.orm import declarative_base, relationship
+from .registry import RekordboxAgentRegistry
 
 __all__ = [
     "AgentRegistry",
@@ -48,19 +49,7 @@ __all__ = [
     "ImageFile",
     "SettingFile",
     "UuidIDMap",
-    "get_update_count",
-    "reset_update_counts",
 ]
-
-__update_count__ = dict()
-
-
-def get_update_count(instance):
-    return __update_count__[instance]
-
-
-def reset_update_counts():
-    __update_count__.clear()
 
 
 # -- Base- and Mixin classes -----------------------------------------------------------
@@ -68,10 +57,17 @@ def reset_update_counts():
 
 class _Base(object):
 
-    __tablename__ = ""
+    __tablename__: str
 
-    def __init__(self):
-        super().__init__()
+    @classmethod
+    def create(cls, **kwargs):
+        RekordboxAgentRegistry.disable_tracking()
+        # noinspection PyArgumentList
+        self = cls(**kwargs)
+        RekordboxAgentRegistry.enable_tracking()
+
+        RekordboxAgentRegistry.on_create(self)
+        return self
 
     def __iter__(self):
         exc = "registry", "metadata"
@@ -88,14 +84,9 @@ class _Base(object):
 
     # noinspection PyUnresolvedReferences
     def __setattr__(self, key, value):
-        super().__setattr__(key, value)
         if not key.startswith("_"):
-            # Increment entry in instance update count dictionary
-            k = self
-            try:
-                __update_count__[k] += 1
-            except KeyError:
-                __update_count__[k] = 1
+            RekordboxAgentRegistry.on_update(self, key, value)
+        super().__setattr__(key, value)
 
     @classmethod
     def columns(cls):

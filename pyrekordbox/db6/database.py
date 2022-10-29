@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from ..config import get_config
 from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
+from .registry import RekordboxAgentRegistry
 from .tables import DjmdContent
 from . import tables
 
@@ -176,68 +177,6 @@ def _parse_query_result(query, kwargs):
     return query
 
 
-class UpdateTracker:
-    def __init__(self, session=None):
-        self.session: Optional[Session] = None
-        self._count = 0
-        self._sequence = list()
-        self.history = list()
-        if session:
-            self.connect(session)
-
-    def connect(self, session):
-        self.session = session
-        event.listen(self.session, "before_flush", self.before_flush)
-        event.listen(self.session, "after_commit", self.clear)
-        event.listen(self.session, "after_rollback", self.clear)
-
-    def disconnect(self):
-        event.remove(self.session, "before_flush", self.before_flush)
-        event.remove(self.session, "after_commit", self.clear)
-        event.remove(self.session, "after_rollback", self.clear)
-        self.session = None
-
-    def _get_unflushed(self):
-        seq = list()
-        i = 0
-        for x in list(self.session.new):
-            i += 1
-            seq.append((self._count + i, x, "create"))
-        for x in list(self.session.dirty):
-            i += 1
-            seq.append((self._count + i, x, "update"))
-        for x in list(self.session.deleted):
-            i += 1
-            seq.append((self._count + i, x, "delete"))
-        return i, seq
-
-    def before_flush(self, *_):
-        count, seq = self._get_unflushed()
-        self._count += count
-        self._sequence.extend(seq)
-
-    def clear(self, *_):
-        # Reset number of rows changed on commit/rollback
-        self.history.extend(self._sequence)
-        self._count = 0
-        self._sequence.clear()
-        tables.reset_update_counts()
-
-    def get_updates(self):
-        seq = self._sequence.copy()
-        _, new = self._get_unflushed()
-        seq.extend(new)
-        seq.sort(key=lambda _x: int(_x[0]))
-        # seq.reverse()
-        return list(seq)
-
-    def get_update_dict(self):
-        d = {"created": list(), "updated": list(), "deleted": list()}
-        for i, instance, op in self.get_updates():
-            d[op].append((i, instance))
-        return d
-
-
 class Rekordbox6Database:
     """Rekordbox v6 master.db database handler.
 
@@ -282,8 +221,8 @@ class Rekordbox6Database:
         self._Session = sessionmaker(bind=self.engine)
         self.session: Optional[Session] = None
 
+        self.registry = RekordboxAgentRegistry(self)
         self._events = dict()
-        self.tracker = UpdateTracker()
 
         self._db_dir = os.path.normpath(rb6_config["db_dir"])
         self._anlz_root = os.path.join(self._db_dir, "share")
@@ -303,13 +242,13 @@ class Rekordbox6Database:
         """
         if self.session is None:
             self.session = self._Session()
-            self.tracker.connect(self.session)
+            self.registry.clear_buffer()
 
     def close(self):
         """Close the currently active session."""
         for key in self._events:
             self.unregister_event(key)
-        self.tracker.disconnect()
+        self.registry.clear_buffer()
         self.session.close()
         self.session = None
 
@@ -631,6 +570,7 @@ class Rekordbox6Database:
             The table entry to delte.
         """
         self.session.delete(instance)
+        self.registry.on_delete(instance)
 
     def get_local_usn(self):
         """Returns the local sequence number (update count) of Rekordbox.
@@ -644,8 +584,7 @@ class Rekordbox6Database:
         usn : int
             The value of the local update count.
         """
-        reg = self.get_agent_registry(registry_id="localUpdateCount")
-        return reg.int_1
+        return self.registry.get_local_update_count()
 
     def set_local_usn(self, usn):
         """Sets the local sequence number (update count) of Rekordbox.
@@ -655,8 +594,7 @@ class Rekordbox6Database:
         usn : int or str
             The new update sequence number.
         """
-        item = self.get_agent_registry(registry_id="localUpdateCount")
-        item.int_1 = usn
+        self.registry.set_local_update_count(usn)
 
     def increment_local_usn(self, num=1):
         """Increments the local update sequence number (update count) of Rekordbox.
@@ -684,11 +622,7 @@ class Rekordbox6Database:
         >>> db.get_local_usn()
         70501
         """
-        if not isinstance(num, int) or num < 1:
-            raise ValueError("The USN can only be increment by a positive integer!")
-        item = self.get_agent_registry(registry_id="localUpdateCount")
-        item.int_1 = item.int_1 + num
-        return item.int_1
+        return self.registry.increment_local_update_count(num)
 
     def autoincrement_usn(self, set_row_usn=True):
         """Auto-increments the local USN for all uncommited changes.
@@ -726,22 +660,7 @@ class Rekordbox6Database:
         >>> db.get_local_usn()
         70502
         """
-
-        with self.session.no_autoflush:
-            for i, instance, op in self.tracker.get_updates():
-                if op == "create":
-                    last_usn = self.increment_local_usn()
-                    if set_row_usn and hasattr(instance, "rb_local_usn"):
-                        instance.rb_local_usn = last_usn
-                elif op == "update":
-                    num = tables.get_update_count(instance)
-                    last_usn = self.increment_local_usn(num)
-                    if set_row_usn and hasattr(instance, "rb_local_usn"):
-                        instance.rb_local_usn = last_usn
-                elif op == "delete":
-                    self.increment_local_usn()
-            new_usn = self.get_local_usn()
-        return new_usn
+        return self.registry.autoincrement_local_update_count(set_row_usn)
 
     def flush(self):
         """Flushes the buffer of the SQLAlchemy session instance."""
@@ -764,12 +683,12 @@ class Rekordbox6Database:
             self.autoincrement_usn()
 
         self.session.commit()
-        self.tracker.clear()
+        self.registry.clear_buffer()
 
     def rollback(self):
         """Rolls back the uncommited changes to the database."""
         self.session.rollback()
-        self.tracker.clear()
+        self.registry.clear_buffer()
 
     # ----------------------------------------------------------------------------------
 
