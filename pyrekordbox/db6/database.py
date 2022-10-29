@@ -726,19 +726,22 @@ class Rekordbox6Database:
         >>> db.get_local_usn()
         70502
         """
-        for i, instance, op in self.tracker.get_updates():
-            if op == "create":
-                last_usn = self.increment_local_usn()
-                if set_row_usn and hasattr(instance, "rb_local_usn"):
-                    instance.rb_local_usn = last_usn
-            elif op == "update":
-                num = tables.get_update_count(instance)
-                last_usn = self.increment_local_usn(num)
-                if set_row_usn and hasattr(instance, "rb_local_usn"):
-                    instance.rb_local_usn = last_usn
-            elif op == "delete":
-                self.increment_local_usn()
-        return self.get_local_usn()
+
+        with self.session.no_autoflush:
+            for i, instance, op in self.tracker.get_updates():
+                if op == "create":
+                    last_usn = self.increment_local_usn()
+                    if set_row_usn and hasattr(instance, "rb_local_usn"):
+                        instance.rb_local_usn = last_usn
+                elif op == "update":
+                    num = tables.get_update_count(instance)
+                    last_usn = self.increment_local_usn(num)
+                    if set_row_usn and hasattr(instance, "rb_local_usn"):
+                        instance.rb_local_usn = last_usn
+                elif op == "delete":
+                    self.increment_local_usn()
+            new_usn = self.get_local_usn()
+        return new_usn
 
     def flush(self):
         """Flushes the buffer of the SQLAlchemy session instance."""
