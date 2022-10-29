@@ -171,7 +171,7 @@ def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
 
 
 def _parse_query_result(query, kwargs):
-    if "ID" in kwargs:
+    if "ID" in kwargs or "registry_id" in kwargs:
         query = query.one()
     return query
 
@@ -200,13 +200,13 @@ class UpdateTracker:
     def _get_unflushed(self):
         seq = list()
         i = 0
-        for x in self.session.new:
+        for x in list(self.session.new):
             i += 1
             seq.append((self._count + i, x, "create"))
-        for x in self.session.dirty:
+        for x in list(self.session.dirty):
             i += 1
             seq.append((self._count + i, x, "update"))
-        for x in self.session.deleted:
+        for x in list(self.session.deleted):
             i += 1
             seq.append((self._count + i, x, "delete"))
         return i, seq
@@ -229,7 +229,7 @@ class UpdateTracker:
         seq.extend(new)
         seq.sort(key=lambda _x: int(_x[0]))
         # seq.reverse()
-        return seq
+        return list(seq)
 
     def get_update_dict(self):
         d = {"created": list(), "updated": list(), "deleted": list()}
@@ -644,7 +644,7 @@ class Rekordbox6Database:
         usn : int
             The value of the local update count.
         """
-        reg = self.get_agent_registry(registry_id="localUpdateCount").one()
+        reg = self.get_agent_registry(registry_id="localUpdateCount")
         return reg.int_1
 
     def set_local_usn(self, usn):
@@ -655,7 +655,7 @@ class Rekordbox6Database:
         usn : int or str
             The new update sequence number.
         """
-        item = self.get_agent_registry(registry_id="localUpdateCount").one()
+        item = self.get_agent_registry(registry_id="localUpdateCount")
         item.int_1 = usn
 
     def increment_local_usn(self, num=1):
@@ -686,10 +686,9 @@ class Rekordbox6Database:
         """
         if not isinstance(num, int) or num < 1:
             raise ValueError("The USN can only be increment by a positive integer!")
-
-        new = self.get_local_usn() + num
-        self.set_local_usn(new)
-        return new
+        item = self.get_agent_registry(registry_id="localUpdateCount")
+        item.int_1 = item.int_1 + num
+        return item.int_1
 
     def autoincrement_usn(self, set_row_usn=True):
         """Auto-increments the local USN for all uncommited changes.
@@ -732,6 +731,7 @@ class Rekordbox6Database:
                     instance.rb_local_usn = last_usn
             elif op == "delete":
                 self.increment_local_usn()
+        return self.get_local_usn()
 
     def commit(self, autoinc=True):
         """Commit the changes made to the database.
