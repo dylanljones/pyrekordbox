@@ -20,8 +20,6 @@ from .utils import (
     read_rekordbox6_asar,
 )
 
-_P = 609598638604627604609608632620576601619628573625
-
 logger = logging.getLogger(__name__)
 
 # Define empty pyrekordbox configuration
