@@ -207,13 +207,9 @@ def test_autoincrement_local_usn():
 
     # Change one field in first track (+1)
     track1.Title = "New title 1"
-    db.flush()  # flush to ensure correct order of row USN's
-
     # Change two fields in second track (+2)
     track2.Title = "New title 2"
     track2.BPM = 12900
-    db.flush()  # flush to ensure correct order of row USN's
-
     # Change name of playlist (+1)
     playlist.Name = "New name"  # last change doesn't have to be flushed
 
@@ -223,7 +219,3 @@ def test_autoincrement_local_usn():
 
     # Check local Rekordbox USN
     assert new_usn == old_usn + 4
-    # Check updated row USN's
-    assert track1.rb_local_usn == old_usn + 1
-    assert track2.rb_local_usn == old_usn + 3
-    assert playlist.rb_local_usn == new_usn
