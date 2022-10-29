@@ -102,8 +102,7 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     # Open database
     if sql_driver is None:
         # Use default sqlite3 package
-        # This requires that the 'sqlite3.dll' was replaced by
-        # the 'sqlcipher.dll' (renamed to 'sqlite3.dll')
+        # This requires that the 'sqlite3.dll' was replaced by the 'sqlcipher.dll'
         sql_driver = sqlite3
     con = sql_driver.connect(path)
 
@@ -124,51 +123,6 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
         logger.info("Database unlocked!")
 
     return con
-
-
-def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
-    """Opens the Rekordbox v6 master.db SQLite3 database for the use with SQLAlchemy.
-
-    Parameters
-    ----------
-    path : str, optional
-        The path of the database file. Uses the main Rekordbox v6 master.db database
-        by default.
-    unlock : bool, optional
-        Flag if the database is encrypted and needs to be unlocked.
-    sql_driver : Callable, optional
-        The SQLite driver to used for opening the database. The standard ``sqlite3``
-        package is used as default driver.
-    echo : bool, optional
-        Prints all executed SQL statements to the console if true.
-
-    Returns
-    -------
-    engine : sqlalchemy.engine.Engine
-        The SQLAlchemy engine instance for the Rekordbox v6 database.
-    """
-    if not path:
-        path = rb6_config["db_path"]
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"File '{path}' does not exist!")
-    logger.info("Opening %s", path)
-
-    # Open database
-    if unlock:
-        key = _get_masterdb_key()
-        logger.info("Key: %s", key)
-        if sql_driver is None:
-            # Use default sqlite3 package
-            # This requires that the 'sqlite3.dll' was replaced by
-            # the 'sqlcipher.dll' (renamed to 'sqlite3.dll')
-            sql_driver = sqlite3
-        url = f"sqlite+pysqlcipher://:{key}@/{path}?"
-        engine = create_engine(url, module=sql_driver, echo=echo)
-    else:
-        engine = create_engine(f"sqlite:///{path}", echo=echo)
-
-    return engine
 
 
 def _parse_query_result(query, kwargs):
@@ -217,7 +171,19 @@ class Rekordbox6Database:
     """
 
     def __init__(self, path="", unlock=True):
-        self.engine = create_rekordbox_engine(path, unlock=unlock)
+        if not path:
+            path = rb6_config["db_path"]
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"File '{path}' does not exist!")
+        # Open database
+        if unlock:
+            key = _get_masterdb_key()
+            url = f"sqlite+pysqlcipher://:{key}@/{path}?"
+            engine = create_engine(url, module=sqlite3)
+        else:
+            engine = create_engine(f"sqlite:///{path}")
+
+        self.engine = engine
         self._Session = sessionmaker(bind=self.engine)
         self.session: Optional[Session] = None
 
@@ -228,6 +194,11 @@ class Rekordbox6Database:
         self._anlz_root = os.path.join(self._db_dir, "share")
 
         self.open()
+
+    @property
+    def no_autoflush(self):
+        """Creates a no-autoflush context."""
+        return self.session.no_autoflush
 
     def open(self):
         """Open the database by instantiating a new session using the SQLAchemy engine.
