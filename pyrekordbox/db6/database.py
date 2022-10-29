@@ -699,6 +699,19 @@ class Rekordbox6Database:
             If True, set the ``rb_local_usn`` value of updated or added rows according
             to the uncommited update sequence.
 
+        Returns
+        -------
+        new_usn : int
+            The new local update sequence number after applying all updates.
+
+        Warnings
+        --------
+        The order of the rw USN's may not be the order the changes where actually made.
+        This is a result of the unordered update buffer of SQLAlchemy sessions.
+        If you want to ensure the row USN values are set in the exact order the changes
+        where made, either commit each change or flush the changes by calling
+        ``db.flush()``.
+
         Examples
         --------
         >>> db = Rekordbox6Database()
@@ -711,12 +724,6 @@ class Rekordbox6Database:
         >>> playlist.Name = "New Name"
         >>> db.autoincrement_usn(set_row_usn=True)
         >>> db.get_local_usn()
-        70502
-
-        >>> content.rb_local_usn
-        70501
-
-        >>> playlist.rb_local_usn
         70502
         """
         for i, instance, op in self.tracker.get_updates():
@@ -733,6 +740,10 @@ class Rekordbox6Database:
                 self.increment_local_usn()
         return self.get_local_usn()
 
+    def flush(self):
+        """Flushes the buffer of the SQLAlchemy session instance."""
+        self.session.flush()
+
     def commit(self, autoinc=True):
         """Commit the changes made to the database.
 
@@ -744,7 +755,7 @@ class Rekordbox6Database:
 
         See Also
         --------
-        autoincrement_usn: Auto-increments the local Rekordbox USN's.
+        autoincrement_usn : Auto-increments the local Rekordbox USN's.
         """
         if autoinc:
             self.autoincrement_usn()

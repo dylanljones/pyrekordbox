@@ -193,3 +193,37 @@ def test_increment_local_usn():
 
     with pytest.raises(ValueError):
         db.increment_local_usn(-1)
+
+
+def test_autoincrement_local_usn():
+    tid1 = 178162577
+    tid2 = 66382436
+    pid = 2602250856
+    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    old_usn = db.get_local_usn()  # store USN before changes
+    track1 = db.get_content(ID=tid1)
+    track2 = db.get_content(ID=tid2)
+    playlist = db.get_playlist(ID=pid)
+
+    # Change one field in first track (+1)
+    track1.Title = "New title 1"
+    db.flush()  # flush to ensure correct order of row USN's
+
+    # Change two fields in second track (+2)
+    track2.Title = "New title 2"
+    track2.BPM = 12900
+    db.flush()  # flush to ensure correct order of row USN's
+
+    # Change name of playlist (+1)
+    playlist.Name = "New name"  # last change doesn't have to be flushed
+
+    # Auto-increment USN
+    new_usn = db.autoincrement_usn()
+    assert new_usn == db.get_local_usn()
+
+    # Check local Rekordbox USN
+    assert new_usn == old_usn + 4
+    # Check updated row USN's
+    assert track1.rb_local_usn == old_usn + 1
+    assert track2.rb_local_usn == old_usn + 3
+    assert playlist.rb_local_usn == new_usn
