@@ -116,18 +116,6 @@ def _get_rb5_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     return conf
 
 
-def _get_masterdb_key(dp, install_dir):  # pragma: no cover
-    # Read password from app.asar, see
-    # https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
-    asar_data = read_rekordbox6_asar(install_dir)
-    match = re.search('pass: ".(.*?)"', asar_data).group(0)
-    pw = match.replace("pass: ", "").strip('"')
-    cipher = blowfish.Cipher(pw.encode())
-    dp = base64.standard_b64decode(dp)
-    dp = b"".join(cipher.decrypt_ecb(dp)).decode()
-    return dp
-
-
 def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, version=6)
 
@@ -140,7 +128,16 @@ def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
-    dp = _get_masterdb_key(opts["dp"], conf["install_dir"])
+    # Read password from app.asar, see
+    # https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
+    asar_data = read_rekordbox6_asar(conf["install_dir"])
+    match = re.search('pass: ".(.*?)"', asar_data).group(0)
+    pw = match.replace("pass: ", "").strip('"')
+
+    cipher = blowfish.Cipher(pw.encode())
+    dp = base64.standard_b64decode(opts["dp"])
+    dp = b"".join(cipher.decrypt_ecb(dp)).decode()
+
     conf.update({"db_path": db_path, "dp": dp})
     return conf
 
