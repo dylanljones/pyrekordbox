@@ -1,5 +1,17 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **improve RBv6 database update tracking and USN handling**  
+  The updates to the database are now tracked directly in the table/database objects.
+  All the logic for handling the local update sequence number was moved to a dedicated object ``RekordboxAgentRegistry``.
+- **prevent autoflush in ``autoincrement_local_usn`` in the RBv6 database object**  
+- **small improvements of the ``Rekordbox6Database``**  
+- **fix bug in ``pformat`` of RBv6 database tables**  
+
 <a name="0.1.3"></a>
 ## [0.1.3] - 2022-28-10
 

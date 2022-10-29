@@ -5,16 +5,13 @@
 # Copyright (c) 2022, Dylan Jones
 
 import os
-import re
-import base64
-import blowfish
 import logging
 from typing import Optional
 from sqlalchemy import create_engine, or_, event
 from sqlalchemy.orm import sessionmaker, Session
 from ..config import get_config
-from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
+from .registry import RekordboxAgentRegistry
 from .tables import DjmdContent
 from . import tables
 
@@ -26,26 +23,6 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 rb6_config = get_config("rekordbox6")
-
-
-def _get_masterdb_key():  # pragma: no cover
-    # See https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
-
-    # Read password key from app.asar file
-    asar_data = read_rekordbox6_asar(rb6_config["install_dir"])
-    match = re.search('pass: ".(.*?)"', asar_data).group(0)
-    password = match.replace("pass: ", "").strip('"')
-
-    # Decode database key data
-    encoded_key_data = rb6_config["dp"]  # from 'options.json'
-    decoded_key_data = base64.standard_b64decode(encoded_key_data)
-
-    # Decrypt database key
-    cipher = blowfish.Cipher(password.encode())
-    decrypted_bytes = b"".join(cipher.decrypt_ecb(decoded_key_data))
-    database_key = decrypted_bytes.decode()
-
-    return database_key
 
 
 def open_rekordbox_database(path="", unlock=True, sql_driver=None):
@@ -101,14 +78,13 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     # Open database
     if sql_driver is None:
         # Use default sqlite3 package
-        # This requires that the 'sqlite3.dll' was replaced by
-        # the 'sqlcipher.dll' (renamed to 'sqlite3.dll')
+        # This requires that the 'sqlite3.dll' was replaced by the 'sqlcipher.dll'
         sql_driver = sqlite3
     con = sql_driver.connect(path)
 
     if unlock:
         # Read and decode master.db key
-        key = _get_masterdb_key()
+        key = rb6_config["dp"]
         logger.info("Key: %s", key)
         # Unlock database
         con.execute(f"PRAGMA key='{key}'")
@@ -125,117 +101,10 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     return con
 
 
-def create_rekordbox_engine(path="", unlock=True, sql_driver=None, echo=None):
-    """Opens the Rekordbox v6 master.db SQLite3 database for the use with SQLAlchemy.
-
-    Parameters
-    ----------
-    path : str, optional
-        The path of the database file. Uses the main Rekordbox v6 master.db database
-        by default.
-    unlock : bool, optional
-        Flag if the database is encrypted and needs to be unlocked.
-    sql_driver : Callable, optional
-        The SQLite driver to used for opening the database. The standard ``sqlite3``
-        package is used as default driver.
-    echo : bool, optional
-        Prints all executed SQL statements to the console if true.
-
-    Returns
-    -------
-    engine : sqlalchemy.engine.Engine
-        The SQLAlchemy engine instance for the Rekordbox v6 database.
-    """
-    if not path:
-        path = rb6_config["db_path"]
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"File '{path}' does not exist!")
-    logger.info("Opening %s", path)
-
-    # Open database
-    if unlock:
-        key = _get_masterdb_key()
-        logger.info("Key: %s", key)
-        if sql_driver is None:
-            # Use default sqlite3 package
-            # This requires that the 'sqlite3.dll' was replaced by
-            # the 'sqlcipher.dll' (renamed to 'sqlite3.dll')
-            sql_driver = sqlite3
-        url = f"sqlite+pysqlcipher://:{key}@/{path}?"
-        engine = create_engine(url, module=sql_driver, echo=echo)
-    else:
-        engine = create_engine(f"sqlite:///{path}", echo=echo)
-
-    return engine
-
-
 def _parse_query_result(query, kwargs):
-    if "ID" in kwargs:
+    if "ID" in kwargs or "registry_id" in kwargs:
         query = query.one()
     return query
-
-
-class UpdateTracker:
-    def __init__(self, session=None):
-        self.session: Optional[Session] = None
-        self._count = 0
-        self._sequence = list()
-        self.history = list()
-        if session:
-            self.connect(session)
-
-    def connect(self, session):
-        self.session = session
-        event.listen(self.session, "before_flush", self.before_flush)
-        event.listen(self.session, "after_commit", self.clear)
-        event.listen(self.session, "after_rollback", self.clear)
-
-    def disconnect(self):
-        event.remove(self.session, "before_flush", self.before_flush)
-        event.remove(self.session, "after_commit", self.clear)
-        event.remove(self.session, "after_rollback", self.clear)
-        self.session = None
-
-    def _get_unflushed(self):
-        seq = list()
-        i = 0
-        for x in self.session.new:
-            i += 1
-            seq.append((self._count + i, x, "create"))
-        for x in self.session.dirty:
-            i += 1
-            seq.append((self._count + i, x, "update"))
-        for x in self.session.deleted:
-            i += 1
-            seq.append((self._count + i, x, "delete"))
-        return i, seq
-
-    def before_flush(self, *_):
-        count, seq = self._get_unflushed()
-        self._count += count
-        self._sequence.extend(seq)
-
-    def clear(self, *_):
-        # Reset number of rows changed on commit/rollback
-        self.history.extend(self._sequence)
-        self._count = 0
-        self._sequence.clear()
-        tables.reset_update_counts()
-
-    def get_updates(self):
-        seq = self._sequence.copy()
-        _, new = self._get_unflushed()
-        seq.extend(new)
-        seq.sort(key=lambda _x: int(_x[0]))
-        # seq.reverse()
-        return seq
-
-    def get_update_dict(self):
-        d = {"created": list(), "updated": list(), "deleted": list()}
-        for i, instance, op in self.get_updates():
-            d[op].append((i, instance))
-        return d
 
 
 class Rekordbox6Database:
@@ -278,17 +147,34 @@ class Rekordbox6Database:
     """
 
     def __init__(self, path="", unlock=True):
-        self.engine = create_rekordbox_engine(path, unlock=unlock)
+        if not path:
+            path = rb6_config["db_path"]
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"File '{path}' does not exist!")
+        # Open database
+        if unlock:
+            key = rb6_config["dp"]
+            url = f"sqlite+pysqlcipher://:{key}@/{path}?"
+            engine = create_engine(url, module=sqlite3)
+        else:
+            engine = create_engine(f"sqlite:///{path}")
+
+        self.engine = engine
         self._Session = sessionmaker(bind=self.engine)
         self.session: Optional[Session] = None
 
+        self.registry = RekordboxAgentRegistry(self)
         self._events = dict()
-        self.tracker = UpdateTracker()
 
         self._db_dir = os.path.normpath(rb6_config["db_dir"])
         self._anlz_root = os.path.join(self._db_dir, "share")
 
         self.open()
+
+    @property
+    def no_autoflush(self):
+        """Creates a no-autoflush context."""
+        return self.session.no_autoflush
 
     def open(self):
         """Open the database by instantiating a new session using the SQLAchemy engine.
@@ -303,13 +189,13 @@ class Rekordbox6Database:
         """
         if self.session is None:
             self.session = self._Session()
-            self.tracker.connect(self.session)
+            self.registry.clear_buffer()
 
     def close(self):
         """Close the currently active session."""
         for key in self._events:
             self.unregister_event(key)
-        self.tracker.disconnect()
+        self.registry.clear_buffer()
         self.session.close()
         self.session = None
 
@@ -631,6 +517,7 @@ class Rekordbox6Database:
             The table entry to delte.
         """
         self.session.delete(instance)
+        self.registry.on_delete(instance)
 
     def get_local_usn(self):
         """Returns the local sequence number (update count) of Rekordbox.
@@ -644,8 +531,7 @@ class Rekordbox6Database:
         usn : int
             The value of the local update count.
         """
-        reg = self.get_agent_registry(registry_id="localUpdateCount").one()
-        return reg.int_1
+        return self.registry.get_local_update_count()
 
     def set_local_usn(self, usn):
         """Sets the local sequence number (update count) of Rekordbox.
@@ -655,8 +541,7 @@ class Rekordbox6Database:
         usn : int or str
             The new update sequence number.
         """
-        item = self.get_agent_registry(registry_id="localUpdateCount").one()
-        item.int_1 = usn
+        self.registry.set_local_update_count(usn)
 
     def increment_local_usn(self, num=1):
         """Increments the local update sequence number (update count) of Rekordbox.
@@ -684,12 +569,7 @@ class Rekordbox6Database:
         >>> db.get_local_usn()
         70501
         """
-        if not isinstance(num, int) or num < 1:
-            raise ValueError("The USN can only be increment by a positive integer!")
-
-        new = self.get_local_usn() + num
-        self.set_local_usn(new)
-        return new
+        return self.registry.increment_local_update_count(num)
 
     def autoincrement_usn(self, set_row_usn=True):
         """Auto-increments the local USN for all uncommited changes.
@@ -699,6 +579,11 @@ class Rekordbox6Database:
         set_row_usn : bool, optional
             If True, set the ``rb_local_usn`` value of updated or added rows according
             to the uncommited update sequence.
+
+        Returns
+        -------
+        new_usn : int
+            The new local update sequence number after applying all updates.
 
         Examples
         --------
@@ -713,25 +598,12 @@ class Rekordbox6Database:
         >>> db.autoincrement_usn(set_row_usn=True)
         >>> db.get_local_usn()
         70502
-
-        >>> content.rb_local_usn
-        70501
-
-        >>> playlist.rb_local_usn
-        70502
         """
-        for i, instance, op in self.tracker.get_updates():
-            if op == "create":
-                last_usn = self.increment_local_usn()
-                if set_row_usn and hasattr(instance, "rb_local_usn"):
-                    instance.rb_local_usn = last_usn
-            elif op == "update":
-                num = tables.get_update_count(instance)
-                last_usn = self.increment_local_usn(num)
-                if set_row_usn and hasattr(instance, "rb_local_usn"):
-                    instance.rb_local_usn = last_usn
-            elif op == "delete":
-                self.increment_local_usn()
+        return self.registry.autoincrement_local_update_count(set_row_usn)
+
+    def flush(self):
+        """Flushes the buffer of the SQLAlchemy session instance."""
+        self.session.flush()
 
     def commit(self, autoinc=True):
         """Commit the changes made to the database.
@@ -744,18 +616,18 @@ class Rekordbox6Database:
 
         See Also
         --------
-        autoincrement_usn: Auto-increments the local Rekordbox USN's.
+        autoincrement_usn : Auto-increments the local Rekordbox USN's.
         """
         if autoinc:
             self.autoincrement_usn()
 
         self.session.commit()
-        self.tracker.clear()
+        self.registry.clear_buffer()
 
     def rollback(self):
         """Rolls back the uncommited changes to the database."""
         self.session.rollback()
-        self.tracker.clear()
+        self.registry.clear_buffer()
 
     # ----------------------------------------------------------------------------------
 

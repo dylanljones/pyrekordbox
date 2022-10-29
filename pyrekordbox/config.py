@@ -7,13 +7,17 @@
 """Configuration handling for pyrekordbox."""
 
 import os
+import re
 import logging
+import base64
+import blowfish
 from .utils import (
     read_pyrekordbox_configuration,
     get_pioneer_app_dir,
     get_pioneer_install_dir,
     read_rekordbox_settings,
     read_rekordbox6_options,
+    read_rekordbox6_asar,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,7 +41,6 @@ __config__ = {
         "db_dir": "",
         "app_dir": "",
         "install_dir": "",
-        "dp": "",
     },
 }
 
@@ -125,7 +128,17 @@ def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
-    conf.update({"db_path": db_path, "dp": opts["dp"]})
+    # Read password from app.asar, see
+    # https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
+    asar_data = read_rekordbox6_asar(conf["install_dir"])
+    match = re.search('pass: ".(.*?)"', asar_data).group(0)
+    pw = match.replace("pass: ", "").strip('"')
+
+    cipher = blowfish.Cipher(pw.encode())
+    dp = base64.standard_b64decode(opts["dp"])
+    dp = b"".join(cipher.decrypt_ecb(dp)).decode()
+
+    conf.update({"db_path": db_path, "dp": dp})
     return conf
 
 
@@ -224,7 +237,8 @@ def pformat_config(indent="   ", hw=14, delim=" = "):
     lines.append("Rekordbox 5:")
     lines += [f"{indent}{k + delim:<{hw}} {rb5[k]}" for k in sorted(rb5.keys())]
     lines.append("Rekordbox 6:")
-    lines += [f"{indent}{k + delim:<{hw}} {rb6[k]}" for k in sorted(rb6.keys())]
+    rb6_keys = [k for k in rb6.keys() if k not in ("dp", "p")]
+    lines += [f"{indent}{k + delim:<{hw}} {rb6[k]}" for k in sorted(rb6_keys)]
     return "\n".join(lines)
 
 

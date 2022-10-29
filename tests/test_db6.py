@@ -5,7 +5,6 @@
 # Copyright (c) 2022, Dylan Jones
 
 import os
-
 import pytest
 from pytest import mark
 from sqlalchemy.orm.query import Query
@@ -193,3 +192,36 @@ def test_increment_local_usn():
 
     with pytest.raises(ValueError):
         db.increment_local_usn(-1)
+
+
+def test_autoincrement_local_usn():
+    tid1 = 178162577
+    tid2 = 66382436
+    tid3 = 181094952
+    pid = 2602250856
+    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    old_usn = db.get_local_usn()  # store USN before changes
+    track1 = db.get_content(ID=tid1)
+    track2 = db.get_content(ID=tid2)
+    track3 = db.get_content(ID=tid3)
+    playlist = db.get_playlist(ID=pid)
+    with db.session.no_autoflush:
+        # Change one field in first track (+1)
+        track1.Title = "New title 1"
+        # Change two fields in second track (+2)
+        track2.Title = "New title 2"
+        track2.BPM = 12900
+        # Delete row from table )+1)
+        db.delete(track3)
+        # Change name of playlist (+1)
+        playlist.Name = "New name"
+
+        # Auto-increment USN
+        new_usn = db.autoincrement_usn()
+
+    # Check local Rekordbox USN and instance USN's
+    assert new_usn == old_usn + 5
+    assert track1.rb_local_usn == old_usn + 1
+    assert track2.rb_local_usn == old_usn + 3
+    # USN of deleted rows obviously don't get updated
+    assert playlist.rb_local_usn == new_usn
