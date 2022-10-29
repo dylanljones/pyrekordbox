@@ -5,15 +5,11 @@
 # Copyright (c) 2022, Dylan Jones
 
 import os
-import re
-import base64
-import blowfish
 import logging
 from typing import Optional
 from sqlalchemy import create_engine, or_, event
 from sqlalchemy.orm import sessionmaker, Session
 from ..config import get_config
-from ..utils import read_rekordbox6_asar
 from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
 from .tables import DjmdContent
@@ -27,26 +23,6 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 rb6_config = get_config("rekordbox6")
-
-
-def _get_masterdb_key():  # pragma: no cover
-    # See https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
-
-    # Read password key from app.asar file
-    asar_data = read_rekordbox6_asar(rb6_config["install_dir"])
-    match = re.search('pass: ".(.*?)"', asar_data).group(0)
-    password = match.replace("pass: ", "").strip('"')
-
-    # Decode database key data
-    encoded_key_data = rb6_config["dp"]  # from 'options.json'
-    decoded_key_data = base64.standard_b64decode(encoded_key_data)
-
-    # Decrypt database key
-    cipher = blowfish.Cipher(password.encode())
-    decrypted_bytes = b"".join(cipher.decrypt_ecb(decoded_key_data))
-    database_key = decrypted_bytes.decode()
-
-    return database_key
 
 
 def open_rekordbox_database(path="", unlock=True, sql_driver=None):
@@ -108,7 +84,7 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
 
     if unlock:
         # Read and decode master.db key
-        key = _get_masterdb_key()
+        key = rb6_config["dp"]
         logger.info("Key: %s", key)
         # Unlock database
         con.execute(f"PRAGMA key='{key}'")
@@ -177,7 +153,7 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"File '{path}' does not exist!")
         # Open database
         if unlock:
-            key = _get_masterdb_key()
+            key = rb6_config["dp"]
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
             engine = create_engine(url, module=sqlite3)
         else:

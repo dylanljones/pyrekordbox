@@ -18,7 +18,7 @@ Pioneer's Rekordbox DJ Software. It currently supports the
 - Analysis files (ANLZ)
 - My-Setting files
 
-Tested Rekordbox versions: ``5.8.3 | 6.5.3``
+Tested Rekordbox versions: ``5.8.6 | 6.5.3``
 
 > **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently! Pyrekordbox is licensed under the
