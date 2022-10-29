@@ -585,14 +585,6 @@ class Rekordbox6Database:
         new_usn : int
             The new local update sequence number after applying all updates.
 
-        Warnings
-        --------
-        The order of the rw USN's may not be the order the changes where actually made.
-        This is a result of the unordered update buffer of SQLAlchemy sessions.
-        If you want to ensure the row USN values are set in the exact order the changes
-        where made, either commit each change or flush the changes by calling
-        ``db.flush()``.
-
         Examples
         --------
         >>> db = Rekordbox6Database()
