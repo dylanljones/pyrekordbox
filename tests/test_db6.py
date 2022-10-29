@@ -215,7 +215,6 @@ def test_autoincrement_local_usn():
 
     # Auto-increment USN
     new_usn = db.autoincrement_usn()
-    assert new_usn == db.get_local_usn()
 
     # Check local Rekordbox USN
     assert new_usn == old_usn + 4
