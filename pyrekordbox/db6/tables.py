@@ -494,7 +494,7 @@ class DjmdHistory(Base, StatsFull):
 
     __tablename__ = "djmdHistory"
 
-    ID = Column(VARCHAR(255), primary_key=True)
+    ID = Column(VARCHAR(255), ForeignKey("djmdHistory.ParentID"), primary_key=True)
     Seq = Column(Integer, default=None)
     Name = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
@@ -502,6 +502,8 @@ class DjmdHistory(Base, StatsFull):
     DateCreated = Column(VARCHAR(255), default=None)
 
     Songs = relationship("DjmdSongHistory", back_populates="History")
+    Children = relationship("DjmdHistory", foreign_keys=ParentID)
+    Parent = relationship("DjmdHistory", foreign_keys=ID)
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -525,12 +527,17 @@ class DjmdHotCueBanklist(Base, StatsFull):
 
     __tablename__ = "djmdHotCueBanklist"
 
-    ID = Column(VARCHAR(255), primary_key=True)
+    ID = Column(
+        VARCHAR(255), ForeignKey("djmdHotCueBanklist.ParentID"), primary_key=True
+    )
     Seq = Column(Integer, default=None)
     Name = Column(VARCHAR(255), default=None)
     ImagePath = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
     ParentID = Column(VARCHAR(255), ForeignKey("djmdHotCueBanklist.ID"), default=None)
+
+    Children = relationship("DjmdHotCueBanklist", foreign_keys=ParentID)
+    Parent = relationship("DjmdHotCueBanklist", foreign_keys=ID)
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -627,13 +634,15 @@ class DjmdMyTag(Base, StatsFull):
 
     __tablename__ = "djmdMyTag"
 
-    ID = Column(VARCHAR(255), primary_key=True)
+    ID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ParentID"), primary_key=True)
     Seq = Column(Integer, default=None)
     Name = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
     ParentID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
 
     MyTags = relationship("DjmdSongMyTag", back_populates="MyTag")
+    Children = relationship("DjmdMyTag", foreign_keys=ParentID)
+    Parent = relationship("DjmdMyTag", foreign_keys=ID)
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -657,15 +666,17 @@ class DjmdPlaylist(Base, StatsFull):
 
     __tablename__ = "djmdPlaylist"
 
-    ID = Column(VARCHAR(255), primary_key=True)
+    ID = Column(VARCHAR(255), ForeignKey("djmdPlaylist.ParentID"), primary_key=True)
     Seq = Column(Integer, default=None)
     Name = Column(VARCHAR(255), default=None)
     ImagePath = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
-    ParentID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
+    ParentID = Column(VARCHAR(255), ForeignKey("djmdPlaylist.ID"), default=None)
     SmartList = Column(Text, default=None)
 
     Songs = relationship("DjmdSongPlaylist", back_populates="Playlist")
+    Children = relationship("DjmdPlaylist", foreign_keys=ParentID)
+    Parent = relationship("DjmdPlaylist", foreign_keys=ID)
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -689,7 +700,9 @@ class DjmdRelatedTracks(Base, StatsFull):
 
     __tablename__ = "djmdRelatedTracks"
 
-    ID = Column(VARCHAR(255), primary_key=True)
+    ID = Column(
+        VARCHAR(255), ForeignKey("djmdRelatedTracks.ParentID"), primary_key=True
+    )
     Seq = Column(Integer, default=None)
     Name = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
@@ -697,6 +710,8 @@ class DjmdRelatedTracks(Base, StatsFull):
     Criteria = Column(Text, default=None)
 
     Songs = relationship("DjmdSongRelatedTracks", back_populates="RelatedTracks")
+    Children = relationship("DjmdRelatedTracks", foreign_keys=ParentID)
+    Parent = relationship("DjmdRelatedTracks", foreign_keys=ID)
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -722,13 +737,15 @@ class DjmdSampler(Base, StatsFull):
 
     __tablename__ = "djmdSampler"
 
-    ID = Column(VARCHAR(255), primary_key=True)
+    ID = Column(VARCHAR(255), ForeignKey("djmdSampler.ID"), primary_key=True)
     Seq = Column(Integer, default=None)
     Name = Column(VARCHAR(255), default=None)
     Attribute = Column(Integer, default=None)
     ParentID = Column(VARCHAR(255), ForeignKey("djmdSampler.ID"), default=None)
 
     Songs = relationship("DjmdSongSampler", back_populates="Sampler")
+    Children = relationship("DjmdSampler", foreign_keys=ParentID)
+    Parent = relationship("DjmdSampler", foreign_keys=ID)
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
