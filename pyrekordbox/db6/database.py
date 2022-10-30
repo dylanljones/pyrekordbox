@@ -9,6 +9,7 @@ import logging
 from typing import Optional
 from sqlalchemy import create_engine, or_, event
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.exc import NoResultFound
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
@@ -18,7 +19,10 @@ from . import tables
 try:
     from pysqlcipher3 import dbapi2 as sqlite3  # noqa
 except ImportError:
-    import sqlite3
+    try:
+        from sqlcipher3 import dbapi2 as sqlite3  # noqa
+    except ImportError:
+        import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +107,10 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
 
 def _parse_query_result(query, kwargs):
     if "ID" in kwargs or "registry_id" in kwargs:
-        query = query.one()
+        try:
+            query = query.one()
+        except NoResultFound:
+            return None
     return query
 
 
