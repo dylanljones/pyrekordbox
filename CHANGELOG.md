@@ -1,10 +1,25 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+
+<a name="0.1.4"></a>
+## [0.1.4] - 2022-30-10
+
+This release improves the Rekordbox v6 database handling and fixes bugs in the 
+USN tracking.
+
+- **add ``Parent`` and ``Children`` relationships to nested RBv6 list-tables.**  
+  This enables walking thorugh the nested list structure.
+  Affected tables:
+  - ``DjmdHistory``
+  - ``DjmdHotCueBanklist``
+  - ``DjmdMyTag``
+  - ``DjmdPlaylist``
+  - ``DjmdRelatedTracks``
+  - ``DjmdSampler``
 
 ### Improvements/Bug Fixes
 
+- **fix small error in query handling and also try to import ``sqlcipher3``**  
 - **improve RBv6 database update tracking and USN handling**  
   The updates to the database are now tracked directly in the table/database objects.
   All the logic for handling the local update sequence number was moved to a dedicated object ``RekordboxAgentRegistry``.
@@ -254,7 +269,8 @@ This release contains documentation fixes.
 
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.3...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.4...HEAD
+[0.1.4]: https://github.com/dylanljones/pyrekordbox/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/dylanljones/pyrekordbox/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/dylanljones/pyrekordbox/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/dylanljones/pyrekordbox/compare/0.1.0...0.1.1
