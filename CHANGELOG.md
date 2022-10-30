@@ -1,11 +1,12 @@
 # What's New
 
-
 <a name="0.1.4"></a>
 ## [0.1.4] - 2022-30-10
 
 This release improves the Rekordbox v6 database handling and fixes bugs in the 
 USN tracking.
+
+### New Features
 
 - **add ``Parent`` and ``Children`` relationships to nested RBv6 list-tables.**  
   This enables walking thorugh the nested list structure.
