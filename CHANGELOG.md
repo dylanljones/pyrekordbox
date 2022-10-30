@@ -3,8 +3,19 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+- **add ``Parent`` and ``Children`` relationships to nested RBv6 list-tables.**  
+  This enables walking thorugh the nested list structure.
+  Affected tables:
+  - ``DjmdHistory``
+  - ``DjmdHotCueBanklist``
+  - ``DjmdMyTag``
+  - ``DjmdPlaylist``
+  - ``DjmdRelatedTracks``
+  - ``DjmdSampler``
+
 ### Improvements/Bug Fixes
 
+- **fix small error in query handling and also try to import ``sqlcipher3``**  
 - **improve RBv6 database update tracking and USN handling**  
   The updates to the database are now tracked directly in the table/database objects.
   All the logic for handling the local update sequence number was moved to a dedicated object ``RekordboxAgentRegistry``.
