@@ -233,7 +233,7 @@ class AbstractElement(abc.Mapping):
         except KeyError:
             # Convert to str just in case
             value = str(value)
-        self._element.attrib.set(key, value)
+        self._element.attrib[key] = value
 
     def __len__(self):
         """int: The number of attributes of the XML element."""
