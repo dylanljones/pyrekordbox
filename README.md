@@ -289,8 +289,8 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 
-[tests-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=tests&logo=github&style=flat
-[tests-dev-badge]: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/dev?label=tests&logo=github&style=flat
+[tests-badge]: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=master&label=tests&logo=github&style=flat
+[tests-dev-badge]: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=dev&label=tests&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [python-badge+]: https://img.shields.io/badge/python-3.7+-blue.svg
