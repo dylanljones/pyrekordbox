@@ -44,7 +44,7 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest]
         python-version: ["3.7", "3.11"]  # check oldest and latest supported version
-        other-os: [false]
+        fail-fast: false
 
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.other-os }}  # don't cancel due to OS specific failures
