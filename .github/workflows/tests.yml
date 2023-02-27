@@ -47,7 +47,7 @@ jobs:
         python-version: ["3.7", "3.11"]  # check oldest and latest supported version
 
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.other-os }}  # don't cancel due to OS specific failures
+    continue-on-error: true  # don't cancel due to OS specific failures
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
