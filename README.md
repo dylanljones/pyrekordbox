@@ -266,17 +266,11 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 
-## 🔗 Related Projects
+## 🔗 Related Projects and References
 
 - [crate-digger]: Java library for fetching and parsing rekordbox exports and track analysis files.
 - [rekordcrate]: Library for parsing Pioneer Rekordbox device exports
 - [supbox]: Get the currently playing track from Rekordbox v6 as Audio Hijack Shoutcast/Icecast metadata, display in your OBS video broadcast or export as JSON.
-
-
-
-## 🙏 Thank Yous
-
-- [phil-bergmann](https://github.com/phil-bergmann) for helping with MacOS support!
 - Deep Symmetry has an extensive analysis of Rekordbox's ANLZ and .edb export file formats
   https://djl-analysis.deepsymmetry.org/djl-analysis
 - rekordcrate reverse engineered the format of the Rekordbox MySetting files
