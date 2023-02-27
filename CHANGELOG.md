@@ -1,5 +1,15 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **fix sqlalchemy iso-format error**  
+  Using SQLAlchemy v2 results in ValueError's.
+- **don't fail on incompatible Rekordbox database**  
+  This allows the library to be used with reduced functionality, for example, RekordboxXML still works.
+
 <a name="0.1.4"></a>
 ## [0.1.4] - 2022-30-10
 
