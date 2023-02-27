@@ -41,10 +41,10 @@ jobs:
     if: ${{ needs.code-change.outputs.should_skip != 'true'}}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
         python-version: ["3.7", "3.11"]  # check oldest and latest supported version
-        fail-fast: false
 
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.other-os }}  # don't cancel due to OS specific failures
