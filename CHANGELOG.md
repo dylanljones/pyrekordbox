@@ -5,6 +5,7 @@
 
 ### Improvements/Bug Fixes
 
+- **improve error handling for incompatible RB versions ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**
 - **fix sqlalchemy iso-format error**  
   Using SQLAlchemy v2 results in ValueError's.
 - **don't fail on incompatible Rekordbox database**  
