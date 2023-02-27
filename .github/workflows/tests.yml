@@ -42,7 +42,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, macos-11]
         python-version: ["3.7", "3.11"]  # check oldest and latest supported version
         other-os: [false]
 
