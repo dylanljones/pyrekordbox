@@ -193,16 +193,16 @@ def update_config(pioneer_install_dir="", pioneer_app_dir=""):
         conf = _get_rb5_config(pioneer_install_dir, pioneer_app_dir)
         __config__["rekordbox5"].update(conf)
     except FileNotFoundError as e:
-        logging.warning(e)
+        logger.warning(e)
 
     # Update Rekordbox 6 config
     try:
         conf = _get_rb6_config(pioneer_install_dir, pioneer_app_dir)
         __config__["rekordbox6"].update(conf)
     except FileNotFoundError as e:
-        logging.warning(e)
+        logger.warning(e)
     except ValueError as e:
-        logging.warning(e)
+        logger.warning(e)
 
 
 # Fill the pyrekordbox-configuration
