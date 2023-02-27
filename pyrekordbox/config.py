@@ -128,20 +128,21 @@ def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
+    conf["db_path"] = db_path
     # Read password from app.asar, see
     # https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
     asar_data = read_rekordbox6_asar(conf["install_dir"])
     match_result = re.search('pass: ".(.*?)"', asar_data)
     if match_result is None:
-        raise ValueError("Incompatible rekordbox 6 database ignored.")
-    match = match_result.group(0)
-    pw = match.replace("pass: ", "").strip('"')
+        logging.warning("Incompatible rekordbox 6 database: Could not retrieve db-key.")
+    else:
+        match = match_result.group(0)
+        pw = match.replace("pass: ", "").strip('"')
+        cipher = blowfish.Cipher(pw.encode())
+        dp = base64.standard_b64decode(opts["dp"])
+        dp = b"".join(cipher.decrypt_ecb(dp)).decode()
+        conf["dp"] = dp
 
-    cipher = blowfish.Cipher(pw.encode())
-    dp = base64.standard_b64decode(opts["dp"])
-    dp = b"".join(cipher.decrypt_ecb(dp)).decode()
-
-    conf.update({"db_path": db_path, "dp": dp})
     return conf
 
 

@@ -88,7 +88,10 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
 
     if unlock:
         # Read and decode master.db key
-        key = rb6_config["dp"]
+        try:
+            key = rb6_config["dp"]
+        except KeyError:
+            raise ValueError("Incompatible rekordbox 6 database: No key found")
         logger.info("Key: %s", key)
         # Unlock database
         con.execute(f"PRAGMA key='{key}'")
@@ -160,7 +163,10 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"File '{path}' does not exist!")
         # Open database
         if unlock:
-            key = rb6_config["dp"]
+            try:
+                key = rb6_config["dp"]
+            except KeyError:
+                raise ValueError("Incompatible rekordbox 6 database: No key found")
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
             engine = create_engine(url, module=sqlite3)
         else:
