@@ -56,7 +56,6 @@ __all__ = [
 
 
 class _Base(object):
-
     __tablename__: str
 
     @classmethod
@@ -110,13 +109,11 @@ Base = declarative_base(cls=_Base)
 
 
 class StatsTime:
-
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
 
 
 class StatsFull:
-
     ID: Column
 
     UUID = Column(VARCHAR(255), default=None)
@@ -140,7 +137,6 @@ class StatsFull:
 
 
 class AgentRegistry(Base, StatsTime):
-
     __tablename__ = "agentRegistry"
 
     registry_id = Column(VARCHAR(255), primary_key=True)
@@ -157,7 +153,6 @@ class AgentRegistry(Base, StatsTime):
 
 
 class CloudAgentRegistry(Base, StatsFull):
-
     __tablename__ = "cloudAgentRegistry"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -172,7 +167,6 @@ class CloudAgentRegistry(Base, StatsFull):
 
 
 class ContentActiveCensor(Base, StatsFull):
-
     __tablename__ = "contentActiveCensor"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -184,7 +178,6 @@ class ContentActiveCensor(Base, StatsFull):
 
 
 class ContentCue(Base, StatsFull):
-
     __tablename__ = "contentCue"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -196,7 +189,6 @@ class ContentCue(Base, StatsFull):
 
 
 class ContentFile(Base, StatsFull):
-
     __tablename__ = "contentFile"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -219,7 +211,6 @@ class ContentFile(Base, StatsFull):
 
 
 class DjmdActiveCensor(Base, StatsFull):
-
     __tablename__ = "djmdActiveCensor"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -234,7 +225,6 @@ class DjmdActiveCensor(Base, StatsFull):
 
 
 class DjmdAlbum(Base, StatsFull):
-
     __tablename__ = "djmdAlbum"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -250,7 +240,6 @@ class DjmdAlbum(Base, StatsFull):
 
 
 class DjmdArtist(Base, StatsFull):
-
     __tablename__ = "djmdArtist"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -263,7 +252,6 @@ class DjmdArtist(Base, StatsFull):
 
 
 class DjmdCategory(Base, StatsFull):
-
     __tablename__ = "djmdCategory"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -274,7 +262,6 @@ class DjmdCategory(Base, StatsFull):
 
 
 class DjmdColor(Base, StatsFull):
-
     __tablename__ = "djmdColor"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -288,7 +275,6 @@ class DjmdColor(Base, StatsFull):
 
 
 class DjmdContent(Base, StatsFull):
-
     __tablename__ = "djmdContent"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -440,7 +426,6 @@ class DjmdContent(Base, StatsFull):
 
 
 class DjmdCue(Base, StatsFull):
-
     __tablename__ = "djmdCue"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -466,7 +451,6 @@ class DjmdCue(Base, StatsFull):
 
 
 class DjmdDevice(Base, StatsFull):
-
     __tablename__ = "djmdDevice"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -479,7 +463,6 @@ class DjmdDevice(Base, StatsFull):
 
 
 class DjmdGenre(Base, StatsFull):
-
     __tablename__ = "djmdGenre"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -491,7 +474,6 @@ class DjmdGenre(Base, StatsFull):
 
 
 class DjmdHistory(Base, StatsFull):
-
     __tablename__ = "djmdHistory"
 
     ID = Column(VARCHAR(255), ForeignKey("djmdHistory.ParentID"), primary_key=True)
@@ -511,7 +493,6 @@ class DjmdHistory(Base, StatsFull):
 
 
 class DjmdSongHistory(Base, StatsFull):
-
     __tablename__ = "djmdSongHistory"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -524,7 +505,6 @@ class DjmdSongHistory(Base, StatsFull):
 
 
 class DjmdHotCueBanklist(Base, StatsFull):
-
     __tablename__ = "djmdHotCueBanklist"
 
     ID = Column(
@@ -545,7 +525,6 @@ class DjmdHotCueBanklist(Base, StatsFull):
 
 
 class DjmdSongHotCueBanklist(Base, StatsFull):
-
     __tablename__ = "djmdSongHotCueBanklist"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -579,7 +558,6 @@ class DjmdSongHotCueBanklist(Base, StatsFull):
 
 
 class DjmdKey(Base, StatsFull):
-
     __tablename__ = "djmdKey"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -592,7 +570,6 @@ class DjmdKey(Base, StatsFull):
 
 
 class DjmdLabel(Base, StatsFull):
-
     __tablename__ = "djmdLabel"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -604,7 +581,6 @@ class DjmdLabel(Base, StatsFull):
 
 
 class DjmdMenuItems(Base, StatsFull):
-
     __tablename__ = "djmdMenuItems"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -617,7 +593,6 @@ class DjmdMenuItems(Base, StatsFull):
 
 
 class DjmdMixerParam(Base, StatsFull):
-
     __tablename__ = "djmdMixerParam"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -631,7 +606,6 @@ class DjmdMixerParam(Base, StatsFull):
 
 
 class DjmdMyTag(Base, StatsFull):
-
     __tablename__ = "djmdMyTag"
 
     ID = Column(VARCHAR(255), ForeignKey("djmdMyTag.ParentID"), primary_key=True)
@@ -650,7 +624,6 @@ class DjmdMyTag(Base, StatsFull):
 
 
 class DjmdSongMyTag(Base, StatsFull):
-
     __tablename__ = "djmdSongMyTag"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -663,7 +636,6 @@ class DjmdSongMyTag(Base, StatsFull):
 
 
 class DjmdPlaylist(Base, StatsFull):
-
     __tablename__ = "djmdPlaylist"
 
     ID = Column(VARCHAR(255), ForeignKey("djmdPlaylist.ParentID"), primary_key=True)
@@ -684,7 +656,6 @@ class DjmdPlaylist(Base, StatsFull):
 
 
 class DjmdSongPlaylist(Base, StatsFull):
-
     __tablename__ = "djmdSongPlaylist"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -697,7 +668,6 @@ class DjmdSongPlaylist(Base, StatsFull):
 
 
 class DjmdRelatedTracks(Base, StatsFull):
-
     __tablename__ = "djmdRelatedTracks"
 
     ID = Column(
@@ -719,7 +689,6 @@ class DjmdRelatedTracks(Base, StatsFull):
 
 
 class DjmdSongRelatedTracks(Base, StatsFull):
-
     __tablename__ = "djmdSongRelatedTracks"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -734,7 +703,6 @@ class DjmdSongRelatedTracks(Base, StatsFull):
 
 
 class DjmdSampler(Base, StatsFull):
-
     __tablename__ = "djmdSampler"
 
     ID = Column(VARCHAR(255), ForeignKey("djmdSampler.ID"), primary_key=True)
@@ -753,7 +721,6 @@ class DjmdSampler(Base, StatsFull):
 
 
 class DjmdSongSampler(Base, StatsFull):
-
     __tablename__ = "djmdSongSampler"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -766,7 +733,6 @@ class DjmdSongSampler(Base, StatsFull):
 
 
 class DjmdSongTagList(Base, StatsFull):
-
     __tablename__ = "djmdSongTagList"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -777,7 +743,6 @@ class DjmdSongTagList(Base, StatsFull):
 
 
 class DjmdSort(Base, StatsFull):
-
     __tablename__ = "djmdSort"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -787,7 +752,6 @@ class DjmdSort(Base, StatsFull):
 
 
 class HotCueBanklistCue(Base, StatsFull):
-
     __tablename__ = "hotCueBanklistCue"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -797,7 +761,6 @@ class HotCueBanklistCue(Base, StatsFull):
 
 
 class DjmdProperty(Base, StatsTime):
-
     __tablename__ = "djmdProperty"
 
     DBID = Column(VARCHAR(255), primary_key=True)
@@ -813,7 +776,6 @@ class DjmdProperty(Base, StatsTime):
 
 
 class ImageFile(Base, StatsFull):
-
     __tablename__ = "imageFile"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -836,7 +798,6 @@ class ImageFile(Base, StatsFull):
 
 
 class SettingFile(Base, StatsFull):
-
     __tablename__ = "settingFile"
 
     ID = Column(VARCHAR(255), primary_key=True)
@@ -851,7 +812,6 @@ class SettingFile(Base, StatsFull):
 
 
 class UuidIDMap(Base, StatsFull):
-
     __tablename__ = "uuidIDMap"
 
     ID = Column(VARCHAR(255), primary_key=True)

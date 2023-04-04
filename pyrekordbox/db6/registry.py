@@ -6,7 +6,6 @@
 
 
 class RekordboxAgentRegistry:
-
     __update_sequence__ = list()
     __update_history__ = list()
     __enabled__ = True
