@@ -1,7 +1,7 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.1.5"></a>
+## [0.1.5] - 2023-09-04
 
 This release contains bug fixes and improves error handling.
 
@@ -284,8 +284,7 @@ This release contains documentation fixes.
 ## 0.0.0 - 2022-10-04
 
 
-
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.4...HEAD
+[0.1.5]: https://github.com/dylanljones/pyrekordbox/compare/0.1.4...0.1.5
 [0.1.4]: https://github.com/dylanljones/pyrekordbox/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/dylanljones/pyrekordbox/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/dylanljones/pyrekordbox/compare/0.1.1...0.1.2
