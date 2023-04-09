@@ -156,17 +156,23 @@ class Rekordbox6Database:
     <DjmdContent(40110712   Title=NOISE)>
     """
 
-    def __init__(self, path="", unlock=True):
+    def __init__(self, path="", key="", unlock=True):
         if not path:
-            path = rb6_config["db_path"]
+            # Get path from the RB config
+            path = rb6_config.get("db_path", "")
+            if not path:
+                pdir = get_config("pioneer", "install_dir")
+                raise FileNotFoundError(f"No Rekordbox v6 directory found in '{pdir}'")
+        # make sure file exists
         if not os.path.exists(path):
             raise FileNotFoundError(f"File '{path}' does not exist!")
         # Open database
         if unlock:
-            try:
-                key = rb6_config["dp"]
-            except KeyError:
-                raise ValueError("Incompatible rekordbox 6 database: No key found")
+            if not key:
+                try:
+                    key = rb6_config["dp"]
+                except KeyError:
+                    raise ValueError("Incompatible rekordbox 6 database: No key found")
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
             engine = create_engine(url, module=sqlite3)
         else:
@@ -179,7 +185,7 @@ class Rekordbox6Database:
         self.registry = RekordboxAgentRegistry(self)
         self._events = dict()
 
-        self._db_dir = os.path.normpath(rb6_config["db_dir"])
+        self._db_dir = os.path.normpath(path)
         self._anlz_root = os.path.join(self._db_dir, "share")
 
         self.open()

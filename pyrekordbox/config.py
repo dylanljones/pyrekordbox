@@ -28,20 +28,8 @@ __config__ = {
         "app_dir": "",
         "install_dir": "",
     },
-    "rekordbox5": {
-        "version": "",
-        "db_path": "",
-        "db_dir": "",
-        "app_dir": "",
-        "install_dir": "",
-    },
-    "rekordbox6": {
-        "version": "",
-        "db_path": "",
-        "db_dir": "",
-        "app_dir": "",
-        "install_dir": "",
-    },
+    "rekordbox5": {},
+    "rekordbox6": {},
 }
 
 
@@ -194,16 +182,14 @@ def update_config(pioneer_install_dir="", pioneer_app_dir=""):
         conf = _get_rb5_config(pioneer_install_dir, pioneer_app_dir)
         __config__["rekordbox5"].update(conf)
     except FileNotFoundError as e:
-        logger.warning(e)
+        logger.info(e)
 
     # Update Rekordbox 6 config
     try:
         conf = _get_rb6_config(pioneer_install_dir, pioneer_app_dir)
         __config__["rekordbox6"].update(conf)
     except FileNotFoundError as e:
-        logger.warning(e)
-    except ValueError as e:
-        logger.warning(e)
+        logger.info(e)
 
 
 # Fill the pyrekordbox-configuration
@@ -241,10 +227,12 @@ def pformat_config(indent="   ", hw=14, delim=" = "):
     lines = ["Pioneer:"]
     lines += [f"{indent}{k + delim:<{hw}} {pioneer[k]}" for k in sorted(pioneer.keys())]
     lines.append("Rekordbox 5:")
-    lines += [f"{indent}{k + delim:<{hw}} {rb5[k]}" for k in sorted(rb5.keys())]
+    if rb5:
+        lines += [f"{indent}{k + delim:<{hw}} {rb5[k]}" for k in sorted(rb5.keys())]
     lines.append("Rekordbox 6:")
-    rb6_keys = [k for k in rb6.keys() if k not in ("dp", "p")]
-    lines += [f"{indent}{k + delim:<{hw}} {rb6[k]}" for k in sorted(rb6_keys)]
+    if rb6:
+        rb6_keys = [k for k in rb6.keys() if k not in ("dp", "p")]
+        lines += [f"{indent}{k + delim:<{hw}} {rb6[k]}" for k in sorted(rb6_keys)]
     return "\n".join(lines)
 
 
