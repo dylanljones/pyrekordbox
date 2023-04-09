@@ -3,8 +3,12 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+This release contains bug fixes and improves error handling.
+
 ### Improvements/Bug Fixes
 
+- **Improve RBv6 configuration handling**  
+  Don't warn if no Rekordbox installation was found instead raise an error if no config exists when opening the `Rekordbox6Database`.
 - **improve error handling for incompatible RB versions ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**
 - **fix sqlalchemy iso-format error**  
   Using SQLAlchemy v2 results in ValueError's.
