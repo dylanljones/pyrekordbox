@@ -12,7 +12,7 @@
 [![style: black][black-badge]][black-link]
 
 Pyrekordbox is a Python package for interacting with the library and export data of
-Pioneer's Rekordbox DJ Software. It currently supports the
+Pioneer's Rekordbox DJ Software. It currently supports
 - Rekordbox v6 master.db database
 - Rekordbox XML database
 - Analysis files (ANLZ)
@@ -20,13 +20,16 @@ Pioneer's Rekordbox DJ Software. It currently supports the
 
 Tested Rekordbox versions: ``5.8.6 | 6.5.3``
 
+Starting from version ``6.6.5``, Pioneer obfuscated the ``app.asar`` file contents, breaking the key extraction
+(see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) for more details).
+
 > **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently! Pyrekordbox is licensed under the
 [MIT license][license-link].
 
 
-|⚠️|  This project is still under heavy development and might contain bugs or have breaking API changes in the future. |
-|----|:------------------------------------------------------------------------------------------------------------------|
+|⚠️| This project is still under development and might contain bugs or have breaking API changes in the future.   |
+|----|:-------------------------------------------------------------------------------------------------------------|
 
 
 ## 🔧 Installation
@@ -241,12 +244,6 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 Pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
 
-| Master | [![Test][tests-badge]][tests-link]     | [![Codecov][codecov-badge]][codecov-link]         | [![Docs][docs-latest-badge]][documentation-latest] |
-|:-------|:---------------------------------------|:--------------------------------------------------|:---------------------------------------------------|
-| Dev    | [![Test][tests-dev-badge]][tests-link] | [![Codecov][codecov-dev-badge]][codecov-dev-link] | [![Docs][docs-dev-badge]][documentation-dev]       |
-
-
-
 
 ### To Do
 
@@ -284,7 +281,6 @@ the CI setup since it requires a working Rekordbox installation.
 
 
 [tests-badge]: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=master&label=tests&logo=github&style=flat
-[tests-dev-badge]: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=dev&label=tests&logo=github&style=flat
 [docs-badge]: https://img.shields.io/readthedocs/pyrekordbox/stable?style=flat
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
 [python-badge+]: https://img.shields.io/badge/python-3.7+-blue.svg
@@ -293,8 +289,6 @@ the CI setup since it requires a working Rekordbox installation.
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 [codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
-[codecov-dev-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/dev/graph/badge.svg?token=5Z2KVGL7N3
-[lgtm-badge]: https://img.shields.io/lgtm/grade/python/github/dylanljones/pyrekordbox?label=code%20quality&logo=lgtm&style=flat
 
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
@@ -321,10 +315,8 @@ the CI setup since it requires a working Rekordbox installation.
 [INSTALLATION]: https://github.com/dylanljones/pyrekordbox/blob/master/INSTALLATION.md
 
 [repo]: https://github.com/dylanljones/pyrekordbox
-[dlls]: https://github.com/dylanljones/pyrekordbox/tree/master/Libs
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
 [pysqlcipher3]: https://github.com/rigglemania/pysqlcipher3
-[deep-symmetry]: https://github.com/Deep-Symmetry
 [rekordcrate]: https://github.com/Holzhaus/rekordcrate
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
