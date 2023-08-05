@@ -832,7 +832,7 @@ class Rekordbox6Database:
         >>> new_name = "noise"
         >>> db.update_content_filename(cont, new_name)
         >>> cont.FolderPath
-        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/noise.wav
+        C:/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET ONESHOT/noise.wav
 
         and updates the file path in the corresponding ANLZ analysis files:
 

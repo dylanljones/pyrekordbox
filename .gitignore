@@ -1,17 +1,10 @@
 
 # -- Project gitignore -----------------------------------------------------------------
 
-master.db
-.ksy/
-dev_*.py
-decrypt_database.py
-compile_structs.bat
 .chglog/
-pysqlcipher3/
-.pysqlcipher3/
-.tmp/
-
 docs/source/generated/
+data/
+pyrekordbox/rb.cache
 
 # setuptools_scm version file
 #  Use this if the project uses pyproject.toml with setuptools_scm instead of setup.py

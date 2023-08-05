@@ -22,6 +22,9 @@ from .utils import (
 
 logger = logging.getLogger(__name__)
 
+# Cache file for pyrekordbox data
+_cache_file = os.path.join(os.path.dirname(__file__), "rb.cache")
+
 # Define empty pyrekordbox configuration
 __config__ = {
     "pioneer": {
@@ -104,6 +107,18 @@ def _get_rb5_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     return conf
 
 
+def _extract_pw(pioneer_install_dir: str):
+    asar_data = read_rekordbox6_asar(pioneer_install_dir)
+    match_result = re.search('pass: ".(.*?)"', asar_data)
+    if match_result is None:
+        logging.warning("Incompatible rekordbox 6 database: Could not retrieve db-key.")
+        pw = ""
+    else:
+        match = match_result.group(0)
+        pw = match.replace("pass: ", "").strip('"')
+    return pw
+
+
 def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, version=6)
 
@@ -112,20 +127,25 @@ def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     db_path = os.path.normpath(opts["db-path"])
     db_dir = os.path.dirname(db_path)
     assert conf["db_dir"] == db_dir
-
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
     conf["db_path"] = db_path
-    # Read password from app.asar, see
-    # https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
-    asar_data = read_rekordbox6_asar(conf["install_dir"])
-    match_result = re.search('pass: ".(.*?)"', asar_data)
-    if match_result is None:
-        logging.warning("Incompatible rekordbox 6 database: Could not retrieve db-key.")
+    if not os.path.exists(_cache_file):
+        # Read password from app.asar, see
+        # https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
+        pw = _extract_pw(conf["install_dir"])
+        if pw:
+            # Write pw to cache file
+            with open(_cache_file, "w") as fp:
+                fp.write(pw)
     else:
-        match = match_result.group(0)
-        pw = match.replace("pass: ", "").strip('"')
+        # Read pw from cache file
+        with open(_cache_file, "r") as fp:
+            pw = fp.read()
+
+    # Decrypt db
+    if pw:
         cipher = blowfish.Cipher(pw.encode())
         dp = base64.standard_b64decode(opts["dp"])
         dp = b"".join(cipher.decrypt_ecb(dp)).decode()
