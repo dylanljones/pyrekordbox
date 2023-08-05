@@ -20,7 +20,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
 
 Tested Rekordbox versions: ``5.8.6 | 6.5.3``
 
-Starting from version ``6.6.5``, Pioneer obfuscated the ``app.asar`` file contents, breaking the key extraction
+Starting from version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file contents, breaking the key extraction
 (see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) for more details).
 
 > **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
