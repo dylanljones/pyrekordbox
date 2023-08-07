@@ -21,7 +21,8 @@ Pioneer's Rekordbox DJ Software. It currently supports
 Tested Rekordbox versions: ``5.8.6 | 6.5.3``
 
 Starting from version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file contents, breaking the key extraction
-(see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) for more details).
+(see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) and the
+Rekordbox 6 database section below for more details).
 
 > **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently! Pyrekordbox is licensed under the
@@ -222,6 +223,20 @@ how Rekordbox generates the UUID/ID's. Using wrong values for new database entri
 could corrupt the library. This feature will be added after some testing.
 Changing existing entries like the title, artist or file path of a track in the database
 should work as expected.
+
+
+If you are using Rekorbox v6.6.5 or later and have no cached key from a previous
+Rekordbox version, the database can not be unlocked automatically.
+In this case you have to provide the key manually until a patch fixing this issue is released:
+````python
+from pyrekordbox import Rekordbox6Database
+
+db = Rekordbox6Database(key="<insert key here>")
+````
+
+The key can be found in some other projects, see issue
+[#77](https://github.com/dylanljones/pyrekordbox/issues/77).
+
 
 ## 💡 File formats
 
