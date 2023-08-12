@@ -158,18 +158,5 @@ Changing existing entries like the title, artist or file path of a track in the 
 should work as expected.
 
 
-If you are using Rekorbox v6.6.5 or later and have no cached key from a previous
-Rekordbox version, the database can not be unlocked automatically.
-In this case you have to provide the key manually until a patch fixing this issue is released:
-````python
-from pyrekordbox import Rekordbox6Database
-
-db = Rekordbox6Database(key="<insert key here>")
-````
-
-The key can be found in some other projects, see issue
-[#77](https://github.com/dylanljones/pyrekordbox/issues/77).
-
-
 
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/

@@ -32,7 +32,7 @@ Rekordbox 6 database section for more details).
 
 
 .. warning::
-   This project is still under heavy development and might contain bugs or
+   This project is still under development and might contain bugs or
    have breaking API changes in the future.
 
 

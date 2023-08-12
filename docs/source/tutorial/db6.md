@@ -4,6 +4,10 @@ Pyrekordbox uses [SQLALchemy](https://www.sqlalchemy.org/) as ORM-Framework to h
 Rekordbox v6 database file (``master.db``). The table declarations can be found in
 ``pyrekordbox.db6.tables``.
 
+```{seealso}
+See the {ref}`Rekordbox 6 Database Format <Rekordbox 6 Database Format>` documentation for more information.
+```
+
 Since the Rekordbox v6 database handler automatically finds the ``master.db`` database file
 (see configuration), it can be initialized without any arguments:
 ````python
@@ -25,10 +29,17 @@ for history in db.get_history().order_by(DjmdHistory.DateCreated):
     print(history)
 ````
 
-```{seealso}
-See the {ref}`Rekordbox 6 Database Format <Rekordbox 6 Database Format>` documentation for more information.
-```
-
 ```{note}
 More coming soon!
 ```
+
+### Incompatible Rekordbox versions
+
+If you are using Rekorbox v6.6.5 or later and have no cached key from a previous
+Rekordbox version, the database can not be unlocked automatically.
+In this case you have to provide the key manually until a patch fixing this issue is released:
+````python
+from pyrekordbox import Rekordbox6Database
+
+db = Rekordbox6Database(key="<insert key here>")
+````
