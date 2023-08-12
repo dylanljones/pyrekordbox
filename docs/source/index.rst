@@ -17,6 +17,12 @@ Pioneer's Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Settings files
 
+Tested Rekordbox versions: `5.8.6 | 6.5.3`
+
+Starting from version `6.6.5` Pioneer obfuscated the `app.asar` file contents, breaking the key extraction
+(see `this issue <https://github.com/dylanljones/pyrekordbox/issues/64>`_ and the
+Rekordbox 6 database section for more details).
+
 .. admonition:: Disclamer
 
    This project is not affiliated with Pioneer Corp. or its related companies
@@ -70,7 +76,7 @@ Indices and tables
 
 
 
-.. |ci-tests| image:: https://img.shields.io/github/workflow/status/dylanljones/pyrekordbox/Test/master?label=test&logo=github&style=flat
+.. |ci-tests| image:: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=master&label=tests&logo=github&style=flat
    :alt: CI: Tests
    :target: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 .. |codecov| image:: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3

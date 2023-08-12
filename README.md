@@ -110,7 +110,7 @@ and to the directory where Pioneer stores the application data  (`pioneer_app_di
 ````python
 from pyrekordbox.config import update_config
 
-update_config(pioneer_install_dir, pioneer_app_dir)
+update_config("<pioneer_install_dir>", "<pioneer_app_dir>")
 ````
 
 Alternatively the two paths can be specified in a configuration file under the section

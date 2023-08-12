@@ -43,7 +43,7 @@ and to the directory where Pioneer stores the application data  (`pioneer_app_di
 ````python
 from pyrekordbox.config import update_config
 
-update_config(pioneer_install_dir, pioneer_app_dir)
+update_config("<pioneer_install_dir>", "<pioneer_app_dir>")
 ````
 
 Alternatively the two paths can be specified in a configuration file under the section
@@ -107,7 +107,7 @@ Changing and creating the Rekordbox analysis files is planned as well, but for t
 full structure of the analysis files has to be understood.
 
 
-### Rekordbox MySettings
+### Rekordbox My-Settings
 
 Rekordbox stores the user settings in `*SETTING.DAT` files, which get exported to USB
 devices. These files are either in the `PIONEER`directory of a USB drive
@@ -116,7 +116,7 @@ The setting files store the settings found on the "DJ System" > "My Settings" pa
 the Rekordbox preferences. These include language, LCD brightness, tempo fader range,
 crossfader curve and other settings for Pioneer professional DJ equipment.
 
-Pyrekordbox supports both parsing and writing MySetting files.
+Pyrekordbox supports both parsing and writing My-Setting files.
 
 ````python
 from pyrekordbox.mysettings import read_mysetting_file
@@ -156,6 +156,20 @@ how Rekordbox generates the UUID/ID's. Using wrong values for new database entri
 could corrupt the library. This feature will be added after some testing.
 Changing existing entries like the title, artist or file path of a track in the database
 should work as expected.
+
+
+If you are using Rekorbox v6.6.5 or later and have no cached key from a previous
+Rekordbox version, the database can not be unlocked automatically.
+In this case you have to provide the key manually until a patch fixing this issue is released:
+````python
+from pyrekordbox import Rekordbox6Database
+
+db = Rekordbox6Database(key="<insert key here>")
+````
+
+The key can be found in some other projects, see issue
+[#77](https://github.com/dylanljones/pyrekordbox/issues/77).
+
 
 
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
