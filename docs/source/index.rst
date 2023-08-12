@@ -9,6 +9,14 @@ Pyrekordbox documentation
 
 |ci-tests| |codecov| |pypi-version| |pypi-python-version| |pypi-platform| |pypi-license|
 
+.. admonition:: Disclamer
+
+   This project is not affiliated with Pioneer Corp. or its related companies
+   in any way or form and has been written independently! Pyrekordbox is licensed
+   under the `MIT license <https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE>`_.
+   The maintainers of the project are not liable for any damages to your Rekordbox library.
+
+
 Pyrekordbox is a Python package for interacting with the library and export data of
 Pioneer's Rekordbox DJ Software. It currently supports
 
@@ -22,14 +30,6 @@ Tested Rekordbox versions: `5.8.6 | 6.5.3`
 Starting from version `6.6.5` Pioneer obfuscated the `app.asar` file contents, breaking the key extraction
 (see `this issue <https://github.com/dylanljones/pyrekordbox/issues/64>`_ and the
 Rekordbox 6 database section for more details).
-
-.. admonition:: Disclamer
-
-   This project is not affiliated with Pioneer Corp. or its related companies
-   in any way or form and has been written independently! Pyrekordbox is licensed
-   under the `MIT license <https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE>`_.
-   The maintainers of the project are not liable for any damages to your Rekordbox library.
-
 
 .. warning::
    This project is still under development and might contain bugs or
