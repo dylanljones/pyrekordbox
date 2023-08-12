@@ -43,3 +43,11 @@ from pyrekordbox import Rekordbox6Database
 
 db = Rekordbox6Database(key="<insert key here>")
 ````
+
+
+The key can be found in some other projects (see issue
+[#77](https://github.com/dylanljones/pyrekordbox/issues/77)), for example [here][rb6-key].
+
+
+
+[rb6-key]: https://github.com/mganss/CueGen/blob/19878e6eb3f586dee0eb3eb4f2ce3ef18309de9d/CueGen/Generator.cs#L31
