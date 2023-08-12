@@ -1,5 +1,5 @@
-Quick-Start
-===========
+# Quick-Start
+
 
 Pyrekordbox can be installed via:
 ````shell
@@ -16,7 +16,7 @@ The backup dialog can be found under "File" > "Library" > "Backup Library"
 ```
 
 
-### Configuration
+## Configuration
 
 Pyrekordbox looks for installed Rekordbox versions and sets up the configuration
 automatically. The configuration can be checked by calling:
@@ -51,7 +51,7 @@ Alternatively the two paths can be specified in a configuration file under the s
 pyrekordbox.cfg and pyrekordbox.yaml.
 
 
-### Rekordbox XML
+## Rekordbox XML
 
 The Rekordbox XML database is used for importing (and exporting) Rekordbox collections
 including track metadata and playlists. They can also be used to share playlists
@@ -83,7 +83,7 @@ pl.add_track(track.TrackID)
 pl.add_playlist("Sub Sub Playlist")
 ````
 
-### Rekordbox ANLZ files
+## Rekordbox ANLZ files
 
 Rekordbox stores analysis information of the tracks in the collection in specific files,
 which also get exported to decives used by Pioneer professional DJ equipment. The files
@@ -107,7 +107,7 @@ Changing and creating the Rekordbox analysis files is planned as well, but for t
 full structure of the analysis files has to be understood.
 
 
-### Rekordbox My-Settings
+## Rekordbox My-Settings
 
 Rekordbox stores the user settings in `*SETTING.DAT` files, which get exported to USB
 devices. These files are either in the `PIONEER`directory of a USB drive
@@ -127,7 +127,7 @@ quant = mysett.get("quantize")
 ````
 
 
-### Rekordbox 6 database
+## Rekordbox 6 database
 
 Rekordbox 6 now uses a SQLite database for storing the collection content.
 Unfortunatly, the new `master.db` SQLite database is encrypted using

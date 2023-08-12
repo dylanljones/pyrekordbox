@@ -8,14 +8,14 @@ $ pip install pyrekordbox
 
 Alternatively, it can be installed via [GitHub]:
 
-```sh
+```shell
 $ pip install git+https://github.com/dylanljones/pyrekordbox.git@VERSION
 ```
 
 where `VERSION` is a branch, tag or release. The project can also be cloned/forked
 and installed via
 
-```sh
+```shell
 $ python setup.py install
 ```
 
@@ -63,7 +63,7 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 6. **Clone [pysqlcipher3] into any directory**
 
-   ````commandline
+   ````shell
    git clone https://github.com/rigglemania/pysqlcipher3
    ````
 
@@ -108,7 +108,7 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 10. **Build using the amalgamation**
 
     ``cd`` into the ``pysqlcipher3`` directory and run
-    ````commandline
+    ````shell
     python setup.py build_amalgamation
     ````
 
@@ -116,7 +116,7 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 11. **Install ``pysqlcipher3``**
 
     In the same directory, run
-    ````commandline
+    ````shell
     python setup.py install
     ````
 
@@ -124,7 +124,7 @@ You now should have a working ``pysqlcipher3`` installation! The directory of th
 cloned ``pysqlcipher3`` repo can be deleted after installing the package.
 
 Steps 5-11 can be automated using the included ``install_pysqlcipher.py`` script:
-````commandline
+````shell
 usage: python install_pysqlcipher.py [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 
 options:
