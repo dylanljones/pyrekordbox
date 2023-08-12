@@ -11,7 +11,8 @@
 ### Documentation
 
 - **fix modified path in update filename example ([#81](https://github.com/dylanljones/pyrekordbox/issues/81))**  
-
+- **add workaround for key extraction of the RBv6 database ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**  
+- **small fixes in documentation**
 
 <a name="0.1.5"></a>
 ## [0.1.5] - 2023-09-04
