@@ -299,8 +299,6 @@ def read_rekordbox_settings(rekordbox_app_dir):
     # Get path of the settings file
     file_name = "rekordbox3.settings"
     path = os.path.join(rekordbox_app_dir, file_name)
-    # if not os.path.exists(path):
-    #    raise FileNotFoundError(f"No '{file_name}' file in '{rekordbox_app_dir}'.")
 
     # Parse the settings file
     settings = dict()
