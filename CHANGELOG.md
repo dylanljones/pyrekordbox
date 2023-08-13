@@ -8,6 +8,7 @@ and improves the documentation.
 
 ### Improvements/Bug Fixes
 
+- **raise exception with hint when opening the RB6 database if the key extraction failed**  
 - **cache pw extracted from the rekordbox `app.asar` file**  
   This speeds up the initialization of the package
 
