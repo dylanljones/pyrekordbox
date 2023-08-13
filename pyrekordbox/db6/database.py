@@ -10,6 +10,7 @@ from typing import Optional
 from sqlalchemy import create_engine, or_, event
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import NoResultFound
+from packaging import version
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
@@ -24,21 +25,40 @@ except ImportError:
     except ImportError:
         import sqlite3
 
+MAX_VERSION = version.parse("6.6.5")
+
 logger = logging.getLogger(__name__)
 
 rb6_config = get_config("rekordbox6")
 
 
-def open_rekordbox_database(path="", unlock=True, sql_driver=None):
+class IncompatibleVersionError(Exception):
+    def __init__(self, rb_version):
+        super().__init__(
+            f"Incompatible rekordbox 6 version\n"
+            f"Your are using rekordbox {rb_version} but the key extraction only works "
+            f"for versions lower than {MAX_VERSION}.\n"
+            "Please use the `key` parameter to manually provide the database key."
+        )
+
+
+def open_rekordbox_database(path="", key="", unlock=True, sql_driver=None):
     """Opens a connection to the Rekordbox v6 master.db SQLite3 database.
 
     Parameters
     ----------
     path : str, optional
-        The path of the database file. Uses the main Rekordbox v6 master.db database
-        by default.
-    unlock : bool, optional
-        Flag if the database is encrypted and needs to be unlocked.
+        The path of the Rekordbox v6 database file. By default, pyrekordbox
+        automatically finds the Rekordbox v6 master.db database file.
+        This parameter is only required for opening other databases or if the
+        configuration fails.
+    key : str, optional
+        The database key. By default, pyrekordbox automatically reads the database
+        key from the Rekordbox v6 configuration file. This parameter is only required
+        if the key extraction fails.
+    unlock: bool, optional
+        Flag if the database needs to be decrypted. Set to False if you are opening
+        an unencrypted test database.
     sql_driver : Callable, optional
         The SQLite driver to used for opening the database. The standard ``sqlite3``
         package is used as default driver.
@@ -87,12 +107,15 @@ def open_rekordbox_database(path="", unlock=True, sql_driver=None):
     con = sql_driver.connect(path)
 
     if unlock:
-        # Read and decode master.db key
-        try:
-            key = rb6_config["dp"]
-        except KeyError:
-            raise ValueError("Incompatible rekordbox 6 database: No key found")
-        logger.info("Key: %s", key)
+        if not key:
+            ver = version.parse(rb6_config["version"])
+            if ver >= MAX_VERSION:
+                raise IncompatibleVersionError(rb6_config["version"])
+            try:
+                key = rb6_config["dp"]
+            except KeyError:
+                raise ValueError("Could not unlock database: No key found")
+            logger.info("Key: %s", key)
         # Unlock database
         con.execute(f"PRAGMA key='{key}'")
 
@@ -127,6 +150,10 @@ class Rekordbox6Database:
         automatically finds the Rekordbox v6 master.db database file.
         This parameter is only required for opening other databases or if the
         configuration fails.
+    key : str, optional
+        The database key. By default, pyrekordbox automatically reads the database
+        key from the Rekordbox v6 configuration file. This parameter is only required
+        if the key extraction fails.
     unlock: bool, optional
         Flag if the database needs to be decrypted. Set to False if you are opening
         an unencrypted test database.
@@ -169,10 +196,15 @@ class Rekordbox6Database:
         # Open database
         if unlock:
             if not key:
+                ver = version.parse(rb6_config["version"])
+                if ver >= MAX_VERSION:
+                    raise IncompatibleVersionError(rb6_config["version"])
                 try:
                     key = rb6_config["dp"]
                 except KeyError:
-                    raise ValueError("Incompatible rekordbox 6 database: No key found")
+                    raise ValueError("Could not unlock database: No key found")
+                logger.info("Key: %s", key)
+            # Unlock database and create engine
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
             engine = create_engine(url, module=sqlite3)
         else:
