@@ -1,70 +1,62 @@
-XML Database Format
-===================
+# XML Database Format
 
-
-The Rekordbox XML format is well documented by Pioneer in [1]_ and [2]_.
-
+The Rekordbox XML format is well documented by Pioneer in [^footnote-1] and [^footnote-2].
 
 The first entry of the XML file should be displayed as follows:
 
-.. code-block:: xml
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+```
 
-   <?xml version="1.0" encoding="UTF-8" ?>
+```{warning}
+In order to save playlists and their information to Rekordbox, all rows from the
+second row and beyond must follow a format which rekordbox supports.
+```
 
-.. warning::
-
-   In order to save playlists and their information to Rekordbox, all rows from the
-   second row and beyond must follow a format which rekordbox supports.
-
-
-General structure
------------------
+## General structure
 
 The general structure of the Rekordbox XML file is as follows:
 
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
 
-.. code-block:: xml
+<DJ_PLAYLISTS Version="1.0.0">
+        <PRODUCT Name="rekordbox" Version="5.4.3" Company="Pioneer DJ"/>
+        <COLLECTION Entries="1234">
+                <TRACK TrackID="1" Name="NOISE" Artist="" Composer="" Album="" Grouping=""
+                           Genre="" Kind="WAV File" Size="1382226" TotalTime="5" DiscNumber="0"
+                           TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2017-09-07"
+                           BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
+                           Location="file://localhost/C:/Users/user/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/NOISE.wav"
+                           Remixer="" Tonality="" Label="" Mix=""/>
+                <TRACK TrackID="2" Name="SINEWAVE" Artist="" Composer="" Album="" Grouping=""
+                           Genre="" Kind="WAV File" Size="1515258" TotalTime="5" DiscNumber="0"
+                           TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2017-09-07"
+                           BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
+                           Location="file://localhost/C:/Users/user/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/SINEWAVE.wav"
+                           Remixer="" Tonality="" Label="" Mix="">
+                        <TEMPO Inizio="0.232" Bpm="172.00" Metro="4/4" Battito="1"/>
+                        <POSITION_MARK Name="" Type="0" Start="0.232" Num="-1"/>
+                        ...
+                </TRACK>
+                ...
+        </COLLECTION>
+        <PLAYLISTS>
+                <NODE Type="0" Name="ROOT" Count="11">
+                        <NODE Name="Favourites" Type="1" KeyType="0" Entries="56">
+                                <TRACK Key="1"/>
+                                <TRACK Key="2"/>
+                                ...
+                        </NODE>
+                </NODE>
+                ...
+        </PLAYLISTS>
+</DJ_PLAYLISTS>
+```
 
-	<?xml version="1.0" encoding="UTF-8" ?>
+## Supported Elements and Attributes
 
-	<DJ_PLAYLISTS Version="1.0.0">
-		<PRODUCT Name="rekordbox" Version="5.4.3" Company="Pioneer DJ"/>
-		<COLLECTION Entries="1234">
-			<TRACK TrackID="1" Name="NOISE" Artist="" Composer="" Album="" Grouping=""
-				   Genre="" Kind="WAV File" Size="1382226" TotalTime="5" DiscNumber="0"
-				   TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2017-09-07"
-				   BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
-				   Location="file://localhost/C:/Users/user/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/NOISE.wav"
-				   Remixer="" Tonality="" Label="" Mix=""/>
-			<TRACK TrackID="2" Name="SINEWAVE" Artist="" Composer="" Album="" Grouping=""
-				   Genre="" Kind="WAV File" Size="1515258" TotalTime="5" DiscNumber="0"
-				   TrackNumber="0" Year="0" AverageBpm="0.00" DateAdded="2017-09-07"
-				   BitRate="2116" SampleRate="44100" Comments="" PlayCount="0" Rating="0"
-				   Location="file://localhost/C:/Users/user/Music/PioneerDJ/Sampler/OSC_SAMPLER/PRESET%20ONESHOT/SINEWAVE.wav"
-				   Remixer="" Tonality="" Label="" Mix="">
-				<TEMPO Inizio="0.232" Bpm="172.00" Metro="4/4" Battito="1"/>
-				<POSITION_MARK Name="" Type="0" Start="0.232" Num="-1"/>
-				...
-			</TRACK>
-			...
-		</COLLECTION>
-		<PLAYLISTS>
-			<NODE Type="0" Name="ROOT" Count="11">
-				<NODE Name="Favourites" Type="1" KeyType="0" Entries="56">
-					<TRACK Key="1"/>
-					<TRACK Key="2"/>
-					...
-				</NODE>
-			</NODE>
-			...
-		</PLAYLISTS>
-	</DJ_PLAYLISTS>
-
-
-Supported Elements and Attributes
----------------------------------
-
-
+```{eval-rst}
 .. list-table:: Supported Rekordbox XML elements and attributes
    :widths: 1 1 1 1
    :header-rows: 1
@@ -266,9 +258,11 @@ Supported Elements and Attributes
      - sint32
      - Hot Cue: A="0", B="1", C="2"; Memory Cue: "-1"
 
+```
 
 Playlists are a bit more complex since they are nested:
 
+```{eval-rst}
 .. list-table:: Supported Rekordbox XML playlist elements and attributes
    :widths: 1 1 1 1
    :header-rows: 1
@@ -334,9 +328,11 @@ Playlists are a bit more complex since they are nested:
      - sint32
      -
 
+```
 
 Rekordbox track colors:
 
+```{eval-rst}
 .. list-table:: Rekordbox group colors
    :widths: 1 1 1
    :header-rows: 1
@@ -369,12 +365,12 @@ Rekordbox track colors:
      - 0x660099
      - 102, 0, 153
 
+```
 
-References
-----------
+## References
 
-.. [1] Rekordbox for developers.
-	https://rekordbox.com/en/support/developer/
+[^footnote-1]: Rekordbox for developers.
+    <https://rekordbox.com/en/support/developer/>
 
-.. [2] Rekordbox XML format
-	https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf
+[^footnote-2]: Rekordbox XML format
+    <https://cdn.rekordbox.com/files/20200410160904/xml_format_list.pdf>

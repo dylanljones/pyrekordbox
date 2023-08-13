@@ -1,5 +1,4 @@
-My-Setting Files Format
-======================
+# My-Setting Files Format
 
 This document explains the file format of the following Rekordbox My-Setting files:
 
@@ -8,32 +7,25 @@ This document explains the file format of the following Rekordbox My-Setting fil
 - `MYSETTING.DAT`
 - `MYSETTING2.DAT`
 
-
-My-Setting File Structure
-------------------------
+## My-Setting File Structure
 
 The My-Setting files of Rekordbox are made up of a file header, a body structure
 containing the main data and a file footer. In contrast to the analysis files the
 My-Setting files use little endian data types.
 
-The files starts with a single byte `len_strings` specifying the combined size of the
+The files start with a single byte `len_strings` specifying the combined size of the
 string data fields (should be always 96). The next 3 bytes are always zero.
 The first 4 bytes can also be interpreted as a little endian 32-bit integer.
 After that the My-Setting files contain three 32 byte long ASCII strings.
 The first 32 byte field `brand` contains the name of the brand. The value seems to
 depend on the file:
 
-+---------------------+--------------+
-| File                | Value        |
-+=====================+==============+
-| `DEVSETTING.DAT`    | `PIONEER DJ` |
-+---------------------+--------------+
-| `DJMMYSETTING.DAT`  | `PioneerDJ`  |
-+---------------------+--------------+
-| `MYSETTING.DAT`     | `PIONEER`    |
-+---------------------+--------------+
-| `MYSETTING2.DAT`    | `PIONEER`    |
-+---------------------+--------------+
+| File               | Value        |
+|--------------------|--------------|
+| `DEVSETTING.DAT`   | `PIONEER DJ` |
+| `DJMMYSETTING.DAT` | `PioneerDJ`  |
+| `MYSETTING.DAT`    | `PIONEER`    |
+| `MYSETTING2.DAT`   | `PIONEER`    |
 
 The next 32 byte long field `software` describes the name of the software. The value
 seems to always be "rekordbox". The last string in the file header is `version`,
@@ -45,27 +37,24 @@ The My-Setting files end with an 4 byte long file footer, which contain a 2 byte
 and an 2 byte unknown value, which seems to always be `0x00`. The checksum is calculated
 over the contents of the `data` field, except for `DJMSETTING.DAT` files where
 the checksum is calculated over all preceding bytes including the length fields and
-uses the CRC16 XMODEM algorithm
+uses the CRC16 XMODEM algorithm [^footnote-1].
 
-
-My-Settings File Body
---------------------
+## My-Settings File Body
 
 After the file header of the My-Settings files the main data begins. The format depends
 on the kind of file. All settings are stored as enums, starting at the value
-``0x80 = 129``. Note that even integers are not stored directly but mapped to the enum
-values, for example ``0x80`` -> 1, ``0x81`` -> 2, etc. Sometimes the enum values are
-shifted by one: ``0x81`` -> 1, ``0x82`` -> 2, etc.
+`0x80 = 129`. Note that even integers are not stored directly but mapped to the enum
+values, for example `0x80` -> 1, `0x81` -> 2, etc. Sometimes the enum values are
+shifted by one: `0x81` -> 1, `0x82` -> 2, etc.
 
-
-MySetting Body
-~~~~~~~~~~~~~~
+### MySetting Body
 
 The payload of the `MYSETTING.DAT` file is 40 bytes long and contains the main
 settings for Pioneer audio players (CDJ's).
 
+```{eval-rst}
 .. list-table:: `MYSETTING.DAT` data body
-   :widths: 10 25 120
+   :widths: 13 25 120
    :header-rows: 1
 
    * - Byte
@@ -156,15 +145,16 @@ settings for Pioneer audio players (CDJ's).
      -
      - Always ``0``
 
+```
 
-MySetting2 Body
-~~~~~~~~~~~~~~~
+### MySetting2 Body
 
 The payload of the `MYSETTING2.DAT` file is 40 bytes long and contains additional
 settings for Pioneer audio players (CDJ).
 
+```{eval-rst}
 .. list-table:: `MYSETTING2.DAT` data body
-   :widths: 10 25 120
+   :widths: 13 25 120
    :header-rows: 1
 
    * - Byte
@@ -201,15 +191,16 @@ settings for Pioneer audio players (CDJ).
      -
      - Always ``0``
 
+```
 
-DjmMySetting Body
-~~~~~~~~~~~~~~~~~
+### DjmMySetting Body
 
 The payload of the `DJMMYSETTING.DAT` file is 52 bytes long and contains the main
 settings for Pioneer mixers (DJM).
 
+```{eval-rst}
 .. list-table:: `DJMMYSETTING.DAT` data body
-   :widths: 10 25 100
+   :widths: 13 25 100
    :header-rows: 1
 
    * - Byte
@@ -261,18 +252,17 @@ settings for Pioneer mixers (DJM).
      -
      - Always ``0``
 
+```
 
-DevSetting Body
-~~~~~~~~~~~~~~~
+### DevSetting Body
 
 The `DEVSETTING.DAT` file is not yet understood well. Its payload is 32 bytes long.
 
-
-Encodings
----------
+## Encodings
 
 The auto-cue levels in the `MYSETTING.DAT` files are encoded as follows:
 
+```{eval-rst}
 .. list-table:: Auto-cue level encodings
    :widths: 25 75
    :header-rows: 1
@@ -298,9 +288,11 @@ The auto-cue levels in the `MYSETTING.DAT` files are encoded as follows:
    * - ``0x88``
      - `memory`
 
+```
 
 The languages in the `MYSETTING.DAT` files are encoded as follows:
 
+```{eval-rst}
 .. list-table:: Language encodings
    :widths: 25 75
    :header-rows: 1
@@ -345,9 +337,11 @@ The languages in the `MYSETTING.DAT` files are encoded as follows:
      - `greek`
    * - ``0x92``
      - `turkish`
+```
 
 The beat jump beat value in the `MYSETTING2.DAT` files are encoded as follows:
 
+```{eval-rst}
 .. list-table:: Beat jump beat value encodings
    :widths: 25 75
    :header-rows: 1
@@ -370,9 +364,11 @@ The beat jump beat value in the `MYSETTING2.DAT` files are encoded as follows:
      - `thirtytwo`
    * - ``0x87``
      - `sixtyfour`
+```
 
 The talk-over level in the `DJMMYSETTING.DAT` files are encoded as follows:
 
+```{eval-rst}
 .. list-table:: Talk-over level encodings
    :widths: 25 75
    :header-rows: 1
@@ -388,9 +384,9 @@ The talk-over level in the `DJMMYSETTING.DAT` files are encoded as follows:
    * - ``0x83``
      - `minus_6db`
 
+```
 
-References
-----------
+## References
 
-.. [1] Jan Holthuis. rekordcrate. Module setting
-   https://holzhaus.github.io/rekordcrate/rekordcrate/setting/struct.Setting.html
+[^footnote-1]: Jan Holthuis. rekordcrate. Module setting
+    <https://holzhaus.github.io/rekordcrate/rekordcrate/setting/struct.Setting.html>

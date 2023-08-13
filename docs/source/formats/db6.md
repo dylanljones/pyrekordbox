@@ -1,12 +1,9 @@
-Rekordbox 6 Database Format
-===========================
+# Rekordbox 6 Database Format
 
 With Rekordbox 6 Pioneer switched from using a DeviceSQL database (`.edb`) to SQLite.
-This is an `SQLite3`_ database encrypted with `SQLCipher4`_.
+This is an [SQLite3] database encrypted with [SQLCipher4].
 
-
-Encryption
-----------
+## Encryption
 
 The new SQLite database is encrypted which means it can't be used without
 the encryption key. Pioneer did this because they prefer that no one outside of
@@ -14,16 +11,15 @@ Pioneer touches it (there is a forum post by Pulse).
 Since your data is stored and used locally, we know that the key must be present
 on our machine. Knowing the key must be local somewhere, gives good hope that you
 can find it. It appears that the key is not license or machine dependent and all
-databases are encrypted with the same key [ref6]_.
+databases are encrypted with the same key [^cite_ref6].
 
-
-Database structure
-------------------
+## Database structure
 
 The new SQLite database is clearly structured and easy to parse once it is unlocked.
 Most tables in the database seem to have a few default columns used by Rekordbox
 internally. The last columns of most tables usually are
 
+```{eval-rst}
 .. list-table:: Default columns of database tables
    :widths: 25 75
    :header-rows: 1
@@ -48,38 +44,27 @@ internally. The last columns of most tables usually are
      - Creation time of the entry
    * - `updated_at`
      - Last update time of the entry
+```
 
 If a table *does not* use these default columns it is noted in the description of the
 table.
 
-
-Collection
-~~~~~~~~~~
+### Collection
 
 The main track data of the Rekordbox collection is stored in the `djmdContent` table.
 Some tags are linked to other tables in the database via the `ID` column. These include
 
-+----------+---------------+--------------+
-| Tag      |      ID       |    Table     |
-+==========+===============+==============+
-| Album    |   `AlbumID`   | `djmdAlbum`  |
-+----------+---------------+--------------+
-| Artist   |  `ArtistID`   | `djmdArtist` |
-+----------+---------------+--------------+
-| Composer | `ComposerID`  | `djmdArtist` |
-+----------+---------------+--------------+
-| Genre    |   `GenreID`   | `djmdGenre`  |
-+----------+---------------+--------------+
-| Key      |    `KeyID`    |  `djmdKey`   |
-+----------+---------------+--------------+
-| Label    |   `LabelID`   | `djmdLabel`  |
-+----------+---------------+--------------+
-| Remixer  |  `RemixerID`  | `djmdArtist` |
-+----------+---------------+--------------+
+| Tag      | ID           | Table        |
+|----------|--------------|--------------|
+| Album    | `AlbumID`    | `djmdAlbum`  |
+| Artist   | `ArtistID`   | `djmdArtist` |
+| Composer | `ComposerID` | `djmdArtist` |
+| Genre    | `GenreID`    | `djmdGenre`  |
+| Key      | `KeyID`      | `djmdKey`    |
+| Label    | `LabelID`    | `djmdLabel`  |
+| Remixer  | `RemixerID`  | `djmdArtist` |
 
-
-Playlists and Histories
-~~~~~~~~~~~~~~~~~~~~~~~
+### Playlists and Histories
 
 Playlist-like objects like Playlists and Histories are each stored in two tables,
 `djmd<NAME>` and `djmdSong<NAME>`. Regular playlists, for example, are stored in the tables
@@ -91,18 +76,16 @@ contains the tracks which are contained in all the corresponding playlists. Each
 contains a `<NAME>ID`, which links it to a playlist in the first table. The track
 is linked to the `djmdContent` table via the `ContentID`.
 
+## Tables
 
-Tables
-------
-
-djmdActiveCensor
-~~~~~~~~~~~~~~~~
+### djmdActiveCensor
 
 This table stores the Active Censor data of Rekordbox. It contains information for
 actively censoring explicit content of tracks in the Rekordbox collection.
 Active Censor items behave like two cue points, between which an effect is applied to
 the audio of a track. The table has the following columns:
 
+```{eval-rst}
 .. list-table:: djmdActiveCensor columns
    :widths: 25 75
    :header-rows: 1
@@ -124,14 +107,15 @@ the audio of a track. The table has the following columns:
    * - `ContentUUID`
      -
 
+```
 
-djmdAlbum
-~~~~~~~~~
+### djmdAlbum
 
 This table stores the Album data of Rekordbox. Since multiple tracks can be in the
 same album this data is stored in its own table. The table contains all albums found in
 the collection.
 
+```{eval-rst}
 .. list-table:: djmdAlbum columns
    :widths: 25 100
    :header-rows: 1
@@ -151,14 +135,15 @@ the collection.
    * - `SearchStr`
      - A string somehow used for searching (mostly None)
 
+```
 
-djmdArtist
-~~~~~~~~~~
+### djmdArtist
 
 This table stores the Artist data of Rekordbox. Since multiple tracks can be made by
 the same artist this data is stored in its own table. The table contains all artists
 found in the collection.
 
+```{eval-rst}
 .. list-table:: djmdArtist columns
    :widths: 25 100
    :header-rows: 1
@@ -173,12 +158,13 @@ found in the collection.
      - A string somehow used for searching (mostly None)
 
 
+```
 
-djmdCategory
-~~~~~~~~~~~~
+### djmdCategory
 
 This table stores the Category data of Rekordbox.
 
+```{eval-rst}
 .. list-table:: djmdCategory columns
    :widths: 25 100
    :header-rows: 1
@@ -196,20 +182,18 @@ This table stores the Category data of Rekordbox.
    * - `InfoOrder`
      -
 
+```
 
-djmdCloudProperty
-~~~~~~~~~~~~~~~~~
+### djmdCloudProperty
 
 This table contains no data and consists of reserved columns.
 
-
-
-djmdColor
-~~~~~~~~~
+### djmdColor
 
 This table stores the Color data of Rekordbox. The table contains all colors used by
 Rekordbox and for tagging tracks:
 
+```{eval-rst}
 .. list-table:: djmdCategory columns
    :widths: 25 100
    :header-rows: 1
@@ -225,14 +209,15 @@ Rekordbox and for tagging tracks:
    * - `Commnt`
      - The name of the color
 
+```
 
-djmdContent
-~~~~~~~~~~~
+### djmdContent
 
 This table stores the main track data of Rekordbox. The table contains most information
 about each track in the collection. Some columns are linked to other tables by the
 corresponding ID.
 
+```{eval-rst}
 .. list-table:: djmdContent columns
    :widths: 1 1 1
    :header-rows: 1
@@ -448,13 +433,13 @@ corresponding ID.
      - ?
      -
 
+```
 
-djmdCue
-~~~~~~~
+### djmdCue
 
 This table stores the cue points (memory and hotcues) of the tracks in Rekordbox.
 
-
+```{eval-rst}
 .. list-table:: djmdCue columns
    :widths: 1 1 1
    :header-rows: 1
@@ -523,12 +508,13 @@ This table stores the cue points (memory and hotcues) of the tracks in Rekordbox
      - The UUID of the track
      - Links to `UUID` in `djmdContent` table
 
+```
 
-djmdDevice
-~~~~~~~~~~
+### djmdDevice
 
 This table stores information about the device(s) where Rekordbox is installed.
 
+```{eval-rst}
 .. list-table:: djmdDevice columns
    :widths: 1 1 1
    :header-rows: 1
@@ -546,14 +532,15 @@ This table stores information about the device(s) where Rekordbox is installed.
      - The name of the device
      -
 
+```
 
-DjmdGenre
-~~~~~~~~~
+### DjmdGenre
 
 This table stores the genre data of Rekordbox. Since multiple tracks can be the same
 genre data is stored in its own table. The table contains all genres found in the
 collection.
 
+```{eval-rst}
 .. list-table:: djmdDevice columns
    :widths: 1 1 1
    :header-rows: 1
@@ -568,15 +555,16 @@ collection.
      - The name of the genre
      -
 
+```
 
-DjmdHistory
-~~~~~~~~~~~
+### DjmdHistory
 
 This table stores the history playlist data of Rekordbox. It does *not* store the
 tracks in the history playlists. These are stored in the `djmdSongHistory` table.
 The items in the table can either be a playlist folder or an actual playlist containing
 tracks.
 
+```{eval-rst}
 .. list-table:: djmdHistory columns
    :widths: 1 1 1
    :header-rows: 1
@@ -603,13 +591,14 @@ tracks.
      - The date of creation
      -
 
+```
 
-DjmdHotCueBanklist
-~~~~~~~~~~~~~~~~~~
+### DjmdHotCueBanklist
 
 This table stores the history the hot-cue bank list. It does *not* store the
 actual hot-cues. These are stored in the `djmdSongHotCueBanklist` table.
 
+```{eval-rst}
 .. list-table:: djmdHistory columns
    :widths: 1 1 1
    :header-rows: 1
@@ -636,14 +625,15 @@ actual hot-cues. These are stored in the `djmdSongHotCueBanklist` table.
      - The `ID` of the parent hot-cue bank list folder
      -
 
+```
 
-DjmdKey
-~~~~~~~
+### DjmdKey
 
 This table stores the musical key data of Rekordbox. Since multiple tracks can be
 written in the same key the data is stored in its own table. The table contains all
 keys found in the collection.
 
+```{eval-rst}
 .. list-table:: djmdKey columns
    :widths: 1 1 1
    :header-rows: 1
@@ -661,14 +651,15 @@ keys found in the collection.
      - The number of the key when sorted
      -
 
+```
 
-DjmdLabel
-~~~~~~~~~
+### DjmdLabel
 
 This table stores the label data of Rekordbox. Since multiple tracks can be
 realeased on the same key the data is stored in its own table. The table contains all
 labels found in the collection.
 
+```{eval-rst}
 .. list-table:: djmdLabel columns
    :widths: 1 1 1
    :header-rows: 1
@@ -683,12 +674,13 @@ labels found in the collection.
      - The name of the label
      -
 
+```
 
-DjmdMenuItems
-~~~~~~~~~~~~~
+### DjmdMenuItems
 
 This table stores the configurable menu items shown in the Rekordbox application.
 
+```{eval-rst}
 .. list-table:: djmdDevice columns
    :widths: 1 1 1
    :header-rows: 1
@@ -707,12 +699,13 @@ This table stores the configurable menu items shown in the Rekordbox application
      -
 
 
+```
 
-DjmdMixerParam
-~~~~~~~~~~~~~~
+### DjmdMixerParam
 
 This table stores the mixer parameters of tracks in the Rekordbox collection.
 
+```{eval-rst}
 .. list-table:: djmdMixerParam columns
    :widths: 1 1 1
    :header-rows: 1
@@ -739,15 +732,15 @@ This table stores the mixer parameters of tracks in the Rekordbox collection.
      - ?
      - Maybe some sort of limiter setting
 
+```
 
-DjmdMyTag
-~~~~~~~~~
+### DjmdMyTag
 
 This table stores the My-Tag data of Rekordbox. It does *not* store the
 tracks for which the My-Tag values are set. These are stored in the `djmdSongMyTag`
 table. The items in the table can either be a My-Tag section or an actual My-Tag value.
 
-
+```{eval-rst}
 .. list-table:: djmdMyTag columns
    :widths: 1 1 1
    :header-rows: 1
@@ -771,14 +764,15 @@ table. The items in the table can either be a My-Tag section or an actual My-Tag
      - The `ID` of the parent My-Tag section
      -
 
+```
 
-DjmdPlaylist
-~~~~~~~~~~~~
+### DjmdPlaylist
 
 This table stores the playlist data of Rekordbox. It does *not* store the tracks in the
 playlists. These are stored in the `djmdSongPlaylist` table. The items in the table can
 either be a playlist folder or an actual playlist containing tracks.
 
+```{eval-rst}
 .. list-table:: djmdPlaylist columns
    :widths: 1 1 1
    :header-rows: 1
@@ -808,18 +802,19 @@ either be a playlist folder or an actual playlist containing tracks.
      - The conditions for a smart list (if used)
      -
 
+```
 
-DjmdProperty
-~~~~~~~~~~~~
+### DjmdProperty
 
 This table stores internal properties of the Rekordbox application. Most columns of it
 are reserved.
 
-.. note::
-   This table does not use the default columns the other tables use. Therefore *all*
-   columns in the table are shown below
+```{note}
+This table does not use the default columns the other tables use. Therefore *all*
+columns in the table are shown below
+```
 
-
+```{eval-rst}
 .. list-table:: djmdProperty columns
    :widths: 1 1 1
    :header-rows: 1
@@ -861,15 +856,16 @@ are reserved.
      - Last update time of the entry
      -
 
+```
 
-DjmdRelatedTracks
-~~~~~~~~~~~~~~~~~
+### DjmdRelatedTracks
 
 This table stores the related tracks of the tracks in Rekordbox. It does *not* store
 the actual related tracks, but rather behaves like a playlist.
 The related tracks are stored in the `djmdSongRelatedTracks` table. The items in the table can
 either be a folder or an actual list containing the related tracks.
 
+```{eval-rst}
 .. list-table:: djmdRelatedTracks columns
    :widths: 1 1 1
    :header-rows: 1
@@ -896,15 +892,16 @@ either be a folder or an actual list containing the related tracks.
      - The criteria used for finding the lated tracks in the list
      -
 
+```
 
-DjmdSampler
-~~~~~~~~~~~
+### DjmdSampler
 
 This table stores the sampler items of Rekordbox. It does *not* store the actual
 samples, but rather behaves like a playlist of samples. The samples are stored in the
 `djmdSongSampler` table. The items in the table can either be a folder or an actual list
 containing the samples.
 
+```{eval-rst}
 .. list-table:: djmdSampler columns
    :widths: 1 1 1
    :header-rows: 1
@@ -928,12 +925,13 @@ containing the samples.
      - The `ID` of the parent sample list
      -
 
+```
 
-DjmdSongHistory
-~~~~~~~~~~~~~~~
+### DjmdSongHistory
 
 This table stores tracks contained in the history lists in the `djmdHistory` table.
 
+```{eval-rst}
 .. list-table:: djmdSongHistory columns
    :widths: 1 1 1
    :header-rows: 1
@@ -954,13 +952,14 @@ This table stores tracks contained in the history lists in the `djmdHistory` tab
      - The number of the track in the history list
      -
 
+```
 
-DjmdSongHotCueBanklist
-~~~~~~~~~~~~~~~~~~~~~~
+### DjmdSongHotCueBanklist
 
 This table stores the hot cue entries contained in the hot-cue bank lists in the
 `djmdHotCueBanklist` table.
 
+```{eval-rst}
 .. list-table:: djmdSongHotCueBanklist columns
    :widths: 1 1 1
    :header-rows: 1
@@ -1035,12 +1034,13 @@ This table stores the hot cue entries contained in the hot-cue bank lists in the
      - The UUID of the hot-cue bank list
      - Links to `UUID` in `djmdHotCueBanklist` table
 
+```
 
-DjmdSongMyTag
-~~~~~~~~~~~~~
+### DjmdSongMyTag
 
 This table stores the My-tag values of tracks linked to in the `djmdMyTag` table.
 
+```{eval-rst}
 .. list-table:: djmdSongMyTag columns
    :widths: 1 1 1
    :header-rows: 1
@@ -1061,12 +1061,13 @@ This table stores the My-tag values of tracks linked to in the `djmdMyTag` table
      - The number of the My-Tag for a track
      -
 
+```
 
-DjmdSongPlaylist
-~~~~~~~~~~~~~~~~
+### DjmdSongPlaylist
 
 This table stores tracks contained in the playlists in the `djmdPlaylist` table.
 
+```{eval-rst}
 .. list-table:: djmdSongPlaylist columns
    :widths: 1 1 1
    :header-rows: 1
@@ -1087,13 +1088,14 @@ This table stores tracks contained in the playlists in the `djmdPlaylist` table.
      - The number of the track in the playlist
      -
 
+```
 
-DjmdSongRelatedTracks
-~~~~~~~~~~~~~~~~~~~~~
+### DjmdSongRelatedTracks
 
 This table stores tracks contained in the related tracks lists in the `djmdRelatedTracks`
 table.
 
+```{eval-rst}
 .. list-table:: djmdSongRelatedTracks columns
    :widths: 1 1 1
    :header-rows: 1
@@ -1114,12 +1116,13 @@ table.
      - The number of the track in the related tracks list
      -
 
+```
 
-DjmdSongSampler
-~~~~~~~~~~~~~~~
+### DjmdSongSampler
 
 This table stores samples contained in the samples lists in the `djmdSampler` table.
 
+```{eval-rst}
 .. list-table:: djmdSongSampler columns
    :widths: 1 1 1
    :header-rows: 1
@@ -1140,13 +1143,13 @@ This table stores samples contained in the samples lists in the `djmdSampler` ta
      - The number of the sample in the sample list
      -
 
+```
 
-DjmdSongTagList
-~~~~~~~~~~~~~~~
+### DjmdSongTagList
 
 This table is not well understood.
 
-
+```{eval-rst}
 .. list-table:: djmdSongTagList columns
    :widths: 1 1 1
    :header-rows: 1
@@ -1164,14 +1167,14 @@ This table is not well understood.
      - The number of the entry in the tag list
      -
 
+```
 
-DjmdSort
-~~~~~~~~
+### DjmdSort
 
 This table stores information for sorting menu items contained in the `djmdMenuItems`
 table in Rekordbox.
 
-
+```{eval-rst}
 .. list-table:: djmdSort columns
    :widths: 1 1 1
    :header-rows: 1
@@ -1192,14 +1195,12 @@ table in Rekordbox.
      - Flag if the menu item is disabled or not
      -
 
+```
 
-References
-----------
+## References
 
-.. [ref6] Technical inspection of Rekordbox 6 and its new internals.  Christiaan Maks. 2020.
-   https://rekord.cloud/blog/technical-inspection-of-rekordbox-6-and-its-new-internals.
+[^cite_ref6]: Technical inspection of Rekordbox 6 and its new internals.  Christiaan Maks. 2020.
+    <https://rekord.cloud/blog/technical-inspection-of-rekordbox-6-and-its-new-internals>.
 
-
-
-.. _SQLCipher4: https://www.zetetic.net/sqlcipher
-.. _SQLite3: https://www.sqlite.org/index.html
+[sqlcipher4]: https://www.zetetic.net/sqlcipher
+[sqlite3]: https://www.sqlite.org/index.html

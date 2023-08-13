@@ -1,16 +1,13 @@
-Analysis Files Format
-=====================
+# Analysis Files Format
 
 This document explains the file format of the Rekordbox ANLZ analysis files, which come
 with the extionsions `.DAT`, `.EXT` and `.2EX`.
 
 The following information was mainly taken from the excellent reverse engineering
-work [1]_ of the people behind DeepSymmetry's `crate-digger`_.
-All figures were taken or modified from [1]_ as well.
+work [^footnote-1] of the people behind DeepSymmetry's [crate-digger].
+All figures were taken or modified from there as well.
 
-
-File Header
------------
+## File Header
 
 The file starts with the four-character code PMAI that identifies its format.
 This file format identifier is followed a four-byte value, len_header (at bytes 04-07)
@@ -18,11 +15,12 @@ that specifies the length of the file header in bytes. This is followed by anoth
 four-byte value, len_file, at bytes 08-0b that specifies the length of the whole
 file in bytes:
 
-.. figure:: /_static/images/anlz_file.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_file.svg
+:align: center
+:scale: 100
 
-   File structure.
+File structure.
+```
 
 The header seems to usually be 1c bytes long, though we do not yet know the purpose
 of the header values that come after len_file. After the header, the file
@@ -31,21 +29,19 @@ identifying the section type, followed by a header and the section content.
 This overall structure is illustrated in the above diagram, and the structure of the
 known tag types is described next.
 
-
-
-Tagged File Sections
---------------------
+## Tagged File Sections
 
 The structure of each tagged section has an “envelope” that can be understood even
 if the internal structure of the section is unknown, making it easy to navigate
 through the file looking for the section you need. This structure is very similar
 to the file itself, and is illustrated below.
 
-.. figure:: /_static/images/anlz_tag.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_tag.svg
+:align: center
+:scale: 100
 
-   Tagged section structure.
+Tagged section structure.
+```
 
 Every section begins with a four-character code, fourcc, identifying its specific
 structure and content, as described in the sections below. This is followed by a
@@ -56,35 +52,33 @@ of the start of the tag to find the start of the next tag.
 
 The order of the tags in the corresponding files is usually something like:
 
-- ``.DAT``: PPTH, PVBR, PQTZ, PWAV, PWV2, PCOB, PCOB
-- ``.EXT``: PPTH, PCOB, PCOB, PCO2, PCO2, PQT2, PWV3, PWV4, PWV5, PSSI
-- ``.2EX``: PPTH, PWV6, PWV7, PWVC
+- `.DAT`: PPTH, PVBR, PQTZ, PWAV, PWV2, PCOB, PCOB
+- `.EXT`: PPTH, PCOB, PCOB, PCO2, PCO2, PQT2, PWV3, PWV4, PWV5, PSSI
+- `.2EX`: PPTH, PWV6, PWV7, PWVC
 
-
-
-
-PQTZ: Beat Grid Tag
-~~~~~~~~~~~~~~~~~~~
+### PQTZ: Beat Grid Tag
 
 Seen in `.DAT` analysis files. This kind of section holds a list of all beats found
 within the track, recording their bar position, the time at which they occur,
 and the tempo at that point. It has the structure shown below:
 
-.. figure:: /_static/images/anlz_pqtz.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pqtz.svg
+:align: center
+:scale: 100
 
-   Beat grid tag.
+Beat grid tag.
+```
 
 `len_header` is 24, while `unknown2` seems to always be `0x00800000`.
 `len_beats` specifies the number of entries that will be present in this section.
 The beat entries each have the following structure:
 
-.. figure:: /_static/images/anlz_beat.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_beat.svg
+:align: center
+:scale: 100
 
-   Beat grid entry.
+Beat grid entry.
+```
 
 `beat_number` is a two-byte number specifies where the beat falls within its measure,
 so the value is always 1, 2, 3 or 4. Next comes a two-byte `tempo` value, which records
@@ -92,22 +86,18 @@ the track tempo at the point of the beat. The tempo is given in beats per minute
 multiplied by 100 to allow a precision of 0.01 BPM. Finally, there is a four-byte
 `time` value, which specifies the time at which this beat would occur (in milliseconds).
 
-
-
-
-
-PQT2: Extended (nxs2) Beat Grid Tag
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### PQT2: Extended (nxs2) Beat Grid Tag
 
 Seen in `.EXT` analysis files. There isn't much documentation on the structure or
 purpose of this tag, but it seems like it always contains two beat grid entries.
 It has the structure shown below:
 
-.. figure:: /_static/images/anlz_pqt2_2.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pqt2_2.svg
+:align: center
+:scale: 100
 
-   Extended beat grid tag.
+Extended beat grid tag.
+```
 
 `len_header` is 56. The first four bytes after `len_tag` are zero.
 `unknown1` seems to always be `0x01000002`. Maybe this is another hint at the following
@@ -123,20 +113,17 @@ The main entries of the Extended Beat Grid Tag are two bytes long. The format
 of the entries is not yet known, but the first byte seems to always have a value between
 0 and 3, so maybe this is an index for a beat?
 
-
-PCOB: Cue List Tag
-~~~~~~~~~~~~~~~~~~
+### PCOB: Cue List Tag
 
 Seen in `.DAT` and `.EXT` analysis files. This kind of section holds either a
 list of ordinary memory points and loops, or a list of hot cues and hot loops.
 
+```{figure} /_static/images/anlz_pcob.svg
+:align: center
+:scale: 100
 
-.. figure:: /_static/images/anlz_pcob.svg
-   :align: center
-   :scale: 100
-
-   Cue list tag.
-
+Cue list tag.
+```
 
 The value of `len_header` is 24. The `type` value determines whether this section
 holds memory points (0) or hot cues (1). The number of cue entries present in the
@@ -146,12 +133,12 @@ yet known.
 The remainder of the section, from byte 18 through `len_tag`, holds the cue entries
 themselves, with the following structure:
 
-.. figure:: /_static/images/anlz_pcpt.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pcpt.svg
+:align: center
+:scale: 100
 
-   Cue list entry.
-
+Cue list entry.
+```
 
 Each cue entry is 38 bytes long. It is structured as its own miniature tag,
 starting with the four-character code `PCPT`, and its own internal four-byte
@@ -182,24 +169,23 @@ of milliseconds (representing when the cue would occur if the track is being pla
 normal speed). If type is 2, meaning that this cue stores a loop, then `loop_time`
 stores the track time in milliseconds at which the player should loop back to time.
 
-
-PCO2: Extended (nxs2) Cue List Tag
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### PCO2: Extended (nxs2) Cue List Tag
 
 Seen in `.EXT` analysis files. This is a variation of the Cue List Tag just described
 that was introduced with the Nexus 2 players to add support for more than three hot
 cues with custom color assignments, as well as DJ-assigned comment text for each hot
 cue and memory point. It also contains the information present in the standard
-[Cue List Tag](#pcob-cue-list-tag), so you only need to read one set or the other.
+\[Cue List Tag\](#pcob-cue-list-tag), so you only need to read one set or the other.
 
 Just like the older tag, this kind of section holds either a list of ordinary memory
 points and loops, or a list of hot cues and hot loops:
 
-.. figure:: /_static/images/anlz_pco2.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pco2.svg
+:align: center
+:scale: 100
 
-   Extended cue list tag.
+Extended cue list tag.
+```
 
 The value of `len_header` is 20. The `type` value determines whether this section
 holds memory points (0) or hot cues (1). The number of cue entries present in the
@@ -209,42 +195,41 @@ is unknown.
 The remainder of the section, from byte 14 through `len_tag`, holds the cue entries
 themselves, with the following structure:
 
-.. figure:: /_static/images/anlz_pcp2.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pcp2.svg
+:align: center
+:scale: 100
 
-   Extended cue list entry.
+Extended cue list entry.
+```
 
-
-PPTH: Path Tag
-~~~~~~~~~~~~~~
+### PPTH: Path Tag
 
 Seen in all analysis files. This kind of section holds the file path of the audio file
 for which the track analysis was performed:
 
-.. figure:: /_static/images/anlz_ppth.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_ppth.svg
+:align: center
+:scale: 100
 
-   Path tag.
+Path tag.
+```
 
 `len_header` is 16. The length of the string is stored in `len_path`. The actual
 string, encoded as a UTF-16 Big endian string with a trailing `NULL` (`0x0000`)
 charakter, is stored in `path`.
 
-
-PVBR: VBR Tag
-~~~~~~~~~~~~~
+### PVBR: VBR Tag
 
 Seen in `.DAT` analysis files. This tag is believed to hold an index allowing rapid
 seeking to particular times within variable-bit-rate tracks. What is known of the
 structure is shown below:
 
-.. figure:: /_static/images/anlz_pvbr.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pvbr.svg
+:align: center
+:scale: 100
 
-   VBR tag.
+VBR tag.
+```
 
 `len_header` is 16. It appears as if `len_tag` is always 1620. The last 4 bytes of
 the header are unknown. The entries of the section are unsigned 32-bit integers.
@@ -255,29 +240,29 @@ integer values. It is believed that these values are the frame-indices of the
 times  within variable-bit-rate tracks. However, in most of the cases the entries
 of the tag are all `0`.
 
-
-PSSI: Song Structure Tag
-~~~~~~~~~~~~~~~~~~~~~~~~
+### PSSI: Song Structure Tag
 
 Seen in `.EXT` analysis files. This kind of section was originally used only in
 Rekordbox Performance Mode, but starting with Rekordbox version 6 it also gets
 exported to external media so CDJ-3000 players can use it to control lighting looks.
 
-.. note::
-   The version that Rekordbox 6 exports is garbled with an XOR mask to make it
-   more difficult to access the data. All bytes after `len_e` are XOR-masked with a
-   pattern that is generated by adding the value of `len_e` to each byte of the following
-   base pattern:
+```{note}
+The version that Rekordbox 6 exports is garbled with an XOR mask to make it
+more difficult to access the data. All bytes after `len_e` are XOR-masked with a
+pattern that is generated by adding the value of `len_e` to each byte of the following
+base pattern:
 
-   CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1
+CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1
+```
 
 The section has the folowwing strcture:
 
-.. figure:: /_static/images/anlz_pssi.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pssi.svg
+:align: center
+:scale: 100
 
-   Song structure tag.
+Song structure tag.
+```
 
 `len_header` is 32. `len_entry_bytes` identifies how many bytes each phrase entry takes up;
 so far it always has the value 24. `len_entries` (labeled `len_e`) specifies how many
@@ -309,26 +294,26 @@ listed in the table below.
 
 Each phrase entry has the structure shown below:
 
-.. figure:: /_static/images/anlz_pssi_entry.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pssi_entry.svg
+:align: center
+:scale: 100
 
-   Song structure entry.
+Song structure entry.
+```
 
-
-PWAV: Waveform Preview Tag
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+### PWAV: Waveform Preview Tag
 
 Seen in `.DAT` analysis files. This kind of section holds a fixed-width monochrome
 preview of the track waveform, displayed above the touch strip on original
 Nexus players, providing a birds-eye view of the current playback position,
 and supporting direct needle jump to specific track sections.
 
-.. figure:: /_static/images/anlz_pwav.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwav.svg
+:align: center
+:scale: 100
 
-   Waveform preview tag.
+Waveform preview tag.
+```
 
 `len_header` is 20. The purpose of `unknown` is not understood, it always seems to have
 the value `0x00100000`. The waveform preview data is 400 (decimal) bytes long.
@@ -338,30 +323,26 @@ The height of the column is represented by the five low-order bits of the byte
 represented by the three high-order bits. Segments with higher values in these three
 bits are drawn in a less saturated (whiter) shade of blue.
 
-
-PWV2: Tiny Waveform Preview Tag
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### PWV2: Tiny Waveform Preview Tag
 
 Seen in `.DAT` analysis files. This kind of section holds an even smaller fixed-width
 monochrome preview of the track waveform, which seems to be displayed on the CDJ-900.
 It is identified by the four-character code `PWV2` but otherwise has the same structure
-as the larger waveform preview tags :ref:`PWAV <PWAV: Waveform Preview Tag>`.
+as the larger waveform preview tags {ref}`PWAV <PWAV: Waveform Preview Tag>`.
 
-
-PWV3: Waveform Detail Tag
-~~~~~~~~~~~~~~~~~~~~~~~~~
+### PWV3: Waveform Detail Tag
 
 Seen in `.EXT` analysis files. This kind of section holds a variable-width and much
 larger monochrome rendition of the track waveform, which scrolls along while the
 track plays, giving a detailed glimpse of the neighborhood of the current playback
 position:
 
-.. figure:: /_static/images/anlz_pwv3.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwv3.svg
+:align: center
+:scale: 100
 
-   Waveform detail tag.
-
+Waveform detail tag.
+```
 
 `len_header` is 24. `len_entry_bytes` identifies how many bytes each waveform detail
 entry takes up; for this kind of tag it always has the value 1. `len_entries` specifies
@@ -369,23 +350,21 @@ how many entries are present in the tag. Each entry represents one half-frame of
 data, and there are 75 frames per second, so for each second of track audio there are
 150 waveform detail entries. The purpose of the header `unknown` is not known yet;
 they always seem to have the value `0x00960000`. The interpretation of each byte of the
-entriesis the same as for :ref:`PWAV <PWAV: Waveform Preview Tag>`.
+entriesis the same as for {ref}`PWAV <PWAV: Waveform Preview Tag>`.
 
-
-PWV4: Waveform Color Preview Tag
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### PWV4: Waveform Color Preview Tag
 
 Seen in `.EXT` analysis files. This kind of section holds a fixed-width color preview
 of the track waveform, displayed above the touch strip on Nexus 2 players, providing
 a birds-eye view of the current playback position, and supporting direct needle jump
 to specific track sections. It is also used in rekordbox itself.
 
-.. figure:: /_static/images/anlz_pwv4.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwv4.svg
+:align: center
+:scale: 100
 
-   Waveform color preview tag.
-
+Waveform color preview tag.
+```
 
 `len_header` is 24. `len_entry_bytes` identifies how many bytes each waveform preview
 entry takes up; for this kind of tag it always has the value 6. `len_entries` specifies
@@ -395,21 +374,19 @@ of waveform preview information.
 
 The color waveform preview entries are the most complex of the waveform tags.
 
-
-PWV5: Waveform Color Detail Tag
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### PWV5: Waveform Color Detail Tag
 
 Seen in `.EXT` analysis files. This kind of section holds a variable-width and much
 larger color rendition of the track waveform, introduced with the nexus 2 line
 (and also used in rekordbox), which scrolls along while the track plays, giving a
 detailed glimpse of the neighborhood of the current playback position.
 
-.. figure:: /_static/images/anlz_pwv5.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwv5.svg
+:align: center
+:scale: 100
 
-   Waveform color detail tag.
-
+Waveform color detail tag.
+```
 
 `len_header` is 24. `len_entry_bytes` identifies how many bytes each waveform preview
 entry takes up; for this kind of tag it always has the value 6. `len_entries` specifies
@@ -422,73 +399,65 @@ Color detail entries are much simpler than color preview entries. They consist o
 three-bit red, green, and blue components and a five-bit height component packed into
 the sixteen bits of the two entry bytes:
 
-.. figure:: /_static/images/anlz_pwv5_entry.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwv5_entry.svg
+:align: center
+:scale: 100
 
-   Waveform color detail entry bits.
+Waveform color detail entry bits.
+```
 
-
-PWV6
-~~~~
+### PWV6
 
 Seen in `.2EX` analysis files.
 
-.. figure:: /_static/images/anlz_pwv6.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwv6.svg
+:align: center
+:scale: 100
 
-   Waveform 6 tag.
-
+Waveform 6 tag.
+```
 
 `len_header` is 20. `len_entry_bytes` identifies how many bytes each waveform preview
 entry takes up; for this kind of tag it always has the value 3. `len_entries` specifies
 how many entries are present in the tag.
 
-
-PWV7
-~~~~
+### PWV7
 
 Seen in `.2EX` analysis files.
 
-.. figure:: /_static/images/anlz_pwv7.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwv7.svg
+:align: center
+:scale: 100
 
-   PWV7 tag.
-
+PWV7 tag.
+```
 
 `len_header` is 24. `len_entry_bytes` identifies how many bytes each waveform preview
 entry takes up; for this kind of tag it always has the value 6. `len_entries` specifies
 how many entries are present in the tag. The purpose of `unknown` is unknown, but
 it always has the value 9830400 or `0x00960000`.
 
-
-PWVC
-~~~~
+### PWVC
 
 Seen in `.2EX` analysis files.
 
-.. figure:: /_static/images/anlz_pwvc.svg
-   :align: center
-   :scale: 100
+```{figure} /_static/images/anlz_pwvc.svg
+:align: center
+:scale: 100
 
-   PWVC tag.
-
+PWVC tag.
+```
 
 `len_header` is 14. The remaining two bytes of the header are unknown. The enries are
 not understood either, but it seems like `len_tag` is always 20, so the
 6 byte long entry data could be parsed to three 2-byte integers. Are
 these maybe RBG values? But for what?
 
-References
-----------
+## References
 
-.. [1] Rekordbox Export Structure Analysis: Analysis Files.
-   https://djl-analysis.deepsymmetry.org/rekordbox-export-analysis/anlz.html.
+[^footnote-1]: Rekordbox Export Structure Analysis: Analysis Files.
+    <https://djl-analysis.deepsymmetry.org/rekordbox-export-analysis/anlz.html>.
 
+[^footnote-2]: <https://github.com/Deep-Symmetry/crate-digger/issues/22>
 
-.. [2] https://github.com/Deep-Symmetry/crate-digger/issues/22
-
-
-.. _crate-digger: https://github.com/Deep-Symmetry/crate-digger
+[crate-digger]: https://github.com/Deep-Symmetry/crate-digger
