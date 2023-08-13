@@ -3,6 +3,9 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+This release contains improvements of the handling of incompatible Rekordbox versions
+and improves the documentation.
+
 ### Improvements/Bug Fixes
 
 - **cache pw extracted from the rekordbox `app.asar` file**  
@@ -12,6 +15,7 @@
 
 - **fix modified path in update filename example ([#81](https://github.com/dylanljones/pyrekordbox/issues/81))**  
 - **add workaround for key extraction of the RBv6 database ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**  
+- **migrate documentation to markdown**  
 - **small fixes in documentation**
 
 <a name="0.1.5"></a>
