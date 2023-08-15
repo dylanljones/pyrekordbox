@@ -22,7 +22,7 @@ import pyrekordbox
 # -- Project information -----------------------------------------------------
 
 project = "pyrekordbox"
-copyright = "2022, Dylan Jones"
+copyright = "2022-2023, Dylan Jones"
 author = "Dylan L. Jones"
 release = pyrekordbox.__version__
 version = release

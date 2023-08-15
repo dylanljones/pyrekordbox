@@ -1,8 +1,6 @@
-# coding: utf-8
-#
-# This code is part of rekordtools.
-#
-# Copyright (c) 2022, Dylan Jones
+# -*- coding: utf-8 -*-
+# Author: Dylan Jones
+# Date:   2022-04-10
 
 from .logger import logger
 from .config import show_config, get_config

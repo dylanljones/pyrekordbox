@@ -1,8 +1,6 @@
-# coding: utf-8
-#
-# This code is part of pyrekordbox.
-#
-# Copyright (c) 2022, Dylan Jones
+# -*- coding: utf-8 -*-
+# Author: Dylan Jones
+# Date:   2022-04-10
 
 """This module contains common constants and methods used in other modules.
 
