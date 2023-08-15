@@ -122,16 +122,15 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 You now should have a working ``pysqlcipher3`` installation! The directory of the
 cloned ``pysqlcipher3`` repo can be deleted after installing the package.
 
-Steps 5-11 can be automated using the included ``install_pysqlcipher.py`` script:
+Steps 5-11 can be automated using the CLI of ``pyrekordbox``:
 ````commandline
-usage: python install_pysqlcipher.py [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
+> python3 -m pyrekordbox install-sqlcipher --help
+usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 
-options:
   -h, --help            show this help message and exit
   -t TMPDIR, --tmpdir TMPDIR
                         Path for storing temporary data (default: '.tmp')
   -l CRYPTOLIB, --cryptolib CRYPTOLIB
-                        The name of the OpenSSl crypto libary (default: 'libcrypto.lib')
   -q, --fixquote        Don't fix the quotes in the pysqlcipher3 setup.py script
   -b, --buildonly       Don't install pysqlcipher3, only build the amalgamation
 ````

@@ -1,12 +1,10 @@
-# coding: utf-8
-#
-# This code is part of pyrekordbox.
-#
-# Copyright (c) 2022, Dylan Jones
+# -*- coding: utf-8 -*-
+# Author: Dylan Jones
+# Date:   2023-08-15
 
-import os.path
-import shutil
+import os
 import sys
+import shutil
 
 
 class WorkingDir:
@@ -129,41 +127,50 @@ def install_pysqlcipher(
 def main():
     from argparse import ArgumentParser
 
-    parser = ArgumentParser()
-    parser.add_argument(
+    parser = ArgumentParser("pyrekordbox")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # Install pysqlcipher3 command (Windows only)
+    install_parser = subparsers.add_parser(
+        "install-sqlcipher",
+        help="Build sqlcipher against amalgamation and install pysqlcipher3",
+    )
+    install_parser.add_argument(
         "-t",
         "--tmpdir",
         type=str,
         default=".tmp",
         help="Path for storing temporary data (default: '.tmp')",
     )
-    parser.add_argument(
+    install_parser.add_argument(
         "-l",
         "--cryptolib",
         type=str,
         default="libcrypto.lib",
         help="The name of the OpenSSl crypto libary (default: 'libcrypto.lib')",
     )
-    parser.add_argument(
+    install_parser.add_argument(
         "-q",
         "--fixquote",
         action="store_false",
         help="Don't fix the quotes in the pysqlcipher3 setup.py script",
     )
-    parser.add_argument(
+    install_parser.add_argument(
         "-b",
         "--buildonly",
         action="store_true",
         help="Don't install pysqlcipher3, only build the amalgamation",
     )
 
+    # Parse args and handle command
     args = parser.parse_args(sys.argv[1:])
-    if sys.platform == "win32":
-        install_pysqlcipher(
-            args.tmpdir, args.cryptolib, args.fixquote, install=not args.buildonly
-        )
-    else:
-        print("Not on Windows, aborting...")
+    if args.command == "install-sqlcipher":
+        if sys.platform == "win32":
+            install_pysqlcipher(
+                args.tmpdir, args.cryptolib, args.fixquote, install=not args.buildonly
+            )
+        else:
+            print("Not on Windows, aborting...")
 
 
 if __name__ == "__main__":
