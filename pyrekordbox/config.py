@@ -23,6 +23,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 # Cache file for pyrekordbox data
+_cache_file_version = 2
 _cache_file = os.path.join(os.path.dirname(__file__), "rb.cache")
 
 # Define empty pyrekordbox configuration
@@ -119,6 +120,40 @@ def _extract_pw(pioneer_install_dir: str):
     return pw
 
 
+def write_db6_key_cache(key: str) -> None:
+    """Writes the decrypted Rekordbox6 database key to the cache file.
+
+    This method can also be used to manually cache the database key, provided
+    the user has found the key somewhere else. The key can be, for example,
+    found in some other projects that hard-coded it.
+
+    Parameters
+    ----------
+    key : str
+        The decrypted database key. To make sure the key is valid, the first
+        five characters are checked before writing the key to the cache file.
+        The key should start with '402fd'.
+
+    Examples
+    --------
+    >>> from pyrekordbox.config import write_db6_key_cache
+    >>> from pyrekordbox import Rekordbox6Database
+    >>> write_db6_key_cache("402fd...")
+    >>> db = Rekordbox6Database()  # The db can now be opened without providing the key
+    """
+    # Check if the key looks like a valid key
+    if not key.startswith("402fd"):
+        raise ValueError("The provided database key doesn't look valid!")
+    lines = list()
+    lines.append(f"version: {_cache_file_version}")
+    lines.append("dp: " + key)
+    text = "\n".join(lines)
+    with open(_cache_file, "w") as fh:
+        fh.write(text)
+    # Set the config key to make sure the key is present after calling method
+    __config__["rekordbox6"]["dp"] = key
+
+
 def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, version=6)
 
@@ -131,24 +166,40 @@ def _get_rb6_config(pioneer_prog_dir: str, pioneer_app_dir: str):
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
 
     conf["db_path"] = db_path
-    if not os.path.exists(_cache_file):
-        # Read password from app.asar, see
-        # https://www.reddit.com/r/Rekordbox/comments/qou6nm/key_to_open_masterdb_file/
-        pw = _extract_pw(conf["install_dir"])
-        if pw:
-            # Write pw to cache file
-            with open(_cache_file, "w") as fp:
-                fp.write(pw)
-    else:
-        # Read pw from cache file
-        with open(_cache_file, "r") as fp:
-            pw = fp.read()
+    cache_version = 0
+    pw, dp = "", ""
+    if os.path.exists(_cache_file):
+        # Read cache file
+        with open(_cache_file, "r") as fh:
+            text = fh.read()
+        lines = text.splitlines()
+        if lines[0].startswith("version:"):
+            cache_version = int(lines[0].split(":")[1].strip())
+        else:
+            cache_version = 1
+        if cache_version == 1:
+            # Cache file introduced in pyrekordbox 0.1.6 contains only the password
+            pw = lines[0]
+        elif cache_version == 2:
+            # Cache file introduced in pyrekordbox 0.1.7 contains version and db key
+            dp = lines[1].split(":")[1].strip()
+        else:
+            raise ValueError(f"Invalid cache version: {cache_version}")
 
-    # Decrypt db
-    if pw:
-        cipher = blowfish.Cipher(pw.encode())
-        dp = base64.standard_b64decode(opts["dp"])
-        dp = b"".join(cipher.decrypt_ecb(dp)).decode()
+    if cache_version < _cache_file_version:
+        # Update cache file
+        if not pw:
+            logger.debug("Extracting pw")
+            pw = _extract_pw(conf["install_dir"])
+        if not dp and pw:
+            cipher = blowfish.Cipher(pw.encode())
+            dp = base64.standard_b64decode(opts["dp"])
+            dp = b"".join(cipher.decrypt_ecb(dp)).decode()
+        if dp:
+            write_db6_key_cache(dp)
+
+    # Add database key to config if found
+    if dp:
         conf["dp"] = dp
 
     return conf
