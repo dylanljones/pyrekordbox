@@ -244,6 +244,13 @@ from pyrekordbox import Rekordbox6Database
 write_db6_key_cache("<insert key here>")  # call once
 db = Rekordbox6Database()
 ````
+The command line interface of ``pyrekordbox`` also
+provides a command for downloading the key from known sources and writing it to the
+cache file:
+````shell
+> python -m pyrekordbox download-key
+````
+
 
 ## 💡 File formats
 
