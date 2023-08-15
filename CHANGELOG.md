@@ -1,5 +1,17 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **add method for writing the RB6 db key cache manually ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**  
+  If the extraction of the Rekordbox database key fails (>6.6.5), the user can now write 
+  the key manually to the cache file. After updating the cache the database can be opened 
+  without providing the key each time. To make this work pyrekordbox now caches the 
+  decrypted key, not the password for decrypting the key. If an old cache file is found 
+  it is upgraded automatically.
+
 <a name="0.1.6"></a>
 ## [0.1.6] - 2023-13-08
 
