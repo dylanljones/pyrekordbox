@@ -3,18 +3,25 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+
+- **add CLI command to download and cache the RB6 db key from the web ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**  
+  Pyrekordbox tries to download the key from projects that have hard-coded the key 
+  (see issue [#77](https://github.com/dylanljones/pyrekordbox/issues/77)). If the download was successful it writes it to the cache file.
+
 ### Improvements/Bug Fixes
 
+- **move `install_sqlcipher.py` script to CLI command**  
 - **add method for writing the RB6 db key cache manually ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**  
   If the extraction of the Rekordbox database key fails (>6.6.5), the user can now write 
   the key manually to the cache file. After updating the cache the database can be opened 
-  without providing the key each time. To make this work pyrekordbox now caches the 
+  without providing the key as argument. To make this work pyrekordbox now caches the 
   decrypted key, not the password for decrypting the key. If an old cache file is found 
   it is upgraded automatically.
 
 ### Documentation
 
-- **add section for manually writing the RB6 db key cache**  
+- **add section for manually writing and downloading the RB6 db key cache**  
 
 
 <a name="0.1.6"></a>
