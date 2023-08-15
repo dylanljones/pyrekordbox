@@ -9,23 +9,21 @@ import shutil
 import urllib.request
 from pyrekordbox.config import write_db6_key_cache, _cache_file
 
-# fmt: off
 KEY_SOURCES = [
     {
         "url": r"https://raw.githubusercontent.com/mganss/CueGen/19878e6eb3f586dee0eb3eb4f2ce3ef18309de9d/CueGen/Generator.cs",  # noqa: E501
         "regex": re.compile(
             r'((.|\n)*)Config\.UseSqlCipher.*\?.*"(?P<dp>.*)".*:.*null',
-            flags=re.IGNORECASE | re.MULTILINE
-        )
+            flags=re.IGNORECASE | re.MULTILINE,
+        ),
     },
     {
         "url": r"https://raw.githubusercontent.com/dvcrn/go-rekordbox/8be6191ba198ed7abd4ad6406d177ed7b4f749b5/cmd/getencryptionkey/main.go",  # noqa: E501
         "regex": re.compile(
-            r'((.|\n)*)fmt\.Print\("(?P<dp>.*)"\)',
-            flags=re.IGNORECASE | re.MULTILINE)
-    }
+            r'((.|\n)*)fmt\.Print\("(?P<dp>.*)"\)', flags=re.IGNORECASE | re.MULTILINE
+        ),
+    },
 ]
-# fmt: on
 
 
 class WorkingDir:
@@ -110,6 +108,10 @@ def install_pysqlcipher(
     install=True,
     cleanup=True,
 ):
+    if sys.platform != "win32":
+        print("Not on Windows, aborting...")
+        return
+
     # Download pysqlcipher3 and prepare amalgamation build
     with WorkingDir(tmpdir):
         pysqlcipher_dir = clone_pysqlcipher3()
@@ -147,7 +149,7 @@ def install_pysqlcipher(
 
 def download_db6_key():
     dp = ""
-    for source in KEY_SOURCES[1:]:
+    for source in KEY_SOURCES:
         url = source["url"]
         regex = source["regex"]
         print(f"Looking for key: {url}")
@@ -215,12 +217,9 @@ def main():
     if args.command == "download-key":
         download_db6_key()
     elif args.command == "install-sqlcipher":
-        if sys.platform == "win32":
-            install_pysqlcipher(
-                args.tmpdir, args.cryptolib, args.fixquote, install=not args.buildonly
-            )
-        else:
-            print("Not on Windows, aborting...")
+        install_pysqlcipher(
+            args.tmpdir, args.cryptolib, args.fixquote, install=not args.buildonly
+        )
 
 
 if __name__ == "__main__":
