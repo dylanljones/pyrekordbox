@@ -12,6 +12,11 @@
   decrypted key, not the password for decrypting the key. If an old cache file is found 
   it is upgraded automatically.
 
+### Documentation
+
+- **add section for manually writing the RB6 db key cache**  
+
+
 <a name="0.1.6"></a>
 ## [0.1.6] - 2023-13-08
 
@@ -31,6 +36,7 @@ and improves the documentation.
 - **migrate documentation to markdown**  
 - **small fixes in documentation**
 
+
 <a name="0.1.5"></a>
 ## [0.1.5] - 2023-09-04
 
@@ -45,6 +51,7 @@ This release contains bug fixes and improves error handling.
   Using SQLAlchemy v2 results in ValueError's.
 - **don't fail on incompatible Rekordbox database**  
   This allows the library to be used with reduced functionality, for example, RekordboxXML still works.
+
 
 <a name="0.1.4"></a>
 ## [0.1.4] - 2022-30-10
@@ -73,6 +80,7 @@ USN tracking.
 - **prevent autoflush in ``autoincrement_local_usn`` in the RBv6 database object**  
 - **small improvements of the ``Rekordbox6Database``**  
 - **fix bug in ``pformat`` of RBv6 database tables**  
+
 
 <a name="0.1.3"></a>
 ## [0.1.3] - 2022-28-10
