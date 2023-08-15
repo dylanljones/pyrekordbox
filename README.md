@@ -248,7 +248,7 @@ The command line interface of ``pyrekordbox`` also
 provides a command for downloading the key from known sources and writing it to the
 cache file:
 ````shell
-> python -m pyrekordbox download-key
+python -m pyrekordbox download-key
 ````
 
 

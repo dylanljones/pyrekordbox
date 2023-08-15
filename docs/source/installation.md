@@ -124,9 +124,9 @@ You now should have a working ``pysqlcipher3`` installation! The directory of th
 cloned ``pysqlcipher3`` repo can be deleted after installing the package.
 
 Steps 5-11 can be automated using the CLI of ``pyrekordbox``:
-````shell
 ````commandline
 > python3 -m pyrekordbox install-sqlcipher --help
+
 usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 
   -h, --help            show this help message and exit
