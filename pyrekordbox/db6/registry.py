@@ -54,8 +54,8 @@ class RekordboxAgentRegistry:
     def get_int(self, key):
         return self.db.get_agent_registry(registry_id=key).int_1
 
-    def get_date(self, key, value):
-        self.db.get_agent_registry(registry_id=key).date_1 = value
+    def get_date(self, key):
+        return self.db.get_agent_registry(registry_id=key).date_1
 
     def set_string(self, key, value):
         self.db.get_agent_registry(registry_id=key).str_1 = value
