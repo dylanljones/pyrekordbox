@@ -33,7 +33,7 @@ and fixes some bugs.
 
 ### Documentation
 
-- **add section for manually writing and downloading the RB6 db key cache**  
+- **add section for downloading or manually writing the RB6 db key cache**  
 
 
 <a name="0.1.6"></a>
