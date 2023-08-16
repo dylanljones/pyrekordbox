@@ -34,6 +34,8 @@ and fixes some bugs.
 ### Documentation
 
 - **add section for downloading or manually writing the RB6 db key cache**  
+- **add basic dosctrings to the `RekordboxAgentRegistry` object**  
+- **add basic dosctrings to the Rekordbox database tables**  
 
 
 <a name="0.1.6"></a>
