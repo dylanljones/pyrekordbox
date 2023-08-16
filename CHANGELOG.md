@@ -1,7 +1,8 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+
+<a name="0.1.6"></a>
+## [0.1.7] - 2023-16-08
 
 This release attempts to add a workaround for the broken key extraction 
 and fixes some bugs.
@@ -344,7 +345,8 @@ This release contains documentation fixes.
 ## 0.0.0 - 2022-10-04
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.6...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...HEAD
+[0.1.7]: https://github.com/dylanljones/pyrekordbox/compare/0.1.6...0.1.7
 [0.1.6]: https://github.com/dylanljones/pyrekordbox/compare/0.1.5...0.1.6
 [0.1.5]: https://github.com/dylanljones/pyrekordbox/compare/0.1.4...0.1.5
 [0.1.4]: https://github.com/dylanljones/pyrekordbox/compare/0.1.3...0.1.4
