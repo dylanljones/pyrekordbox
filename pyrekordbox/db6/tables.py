@@ -227,10 +227,12 @@ class DjmdAlbum(Base, StatsFull):
 
     ID = Column(VARCHAR(255), primary_key=True)
     Name = Column(VARCHAR(255), default=None)
-    AlbumArtistID = Column(VARCHAR(255), default=None)
+    AlbumArtistID = Column(VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None)
     ImagePath = Column(VARCHAR(255), default=None)
     Compilation = Column(Integer, default=None)
     SearchStr = Column(VARCHAR(255), default=None)
+
+    AlbumArtist = relationship("DjmdArtist")
 
     def __repr__(self):
         s = f"{self.ID: <10} Name={self.Name}"
@@ -253,10 +255,12 @@ class DjmdCategory(Base, StatsFull):
     __tablename__ = "djmdCategory"
 
     ID = Column(VARCHAR(255), primary_key=True)
-    MenuItemID = Column(VARCHAR(255), default=None)
+    MenuItemID = Column(VARCHAR(255), ForeignKey("djmdMenuItems.ID"), default=None)
     Seq = Column(Integer, default=None)
     Disable = Column(Integer, default=None)
     InfoOrder = Column(Integer, default=None)
+
+    MenuItem = relationship("DjmdMenuItems", foreign_keys=[MenuItemID])
 
 
 class DjmdColor(Base, StatsFull):
@@ -446,6 +450,8 @@ class DjmdCue(Base, StatsFull):
     InPointSeekInfo = Column(VARCHAR(255), default=None)
     OutPointSeekInfo = Column(VARCHAR(255), default=None)
     ContentUUID = Column(VARCHAR(255), ForeignKey("djmdContent.UUID"), default=None)
+
+    Content = relationship("DjmdContent", foreign_keys=[ContentID])
 
 
 class DjmdDevice(Base, StatsFull):
@@ -744,9 +750,11 @@ class DjmdSort(Base, StatsFull):
     __tablename__ = "djmdSort"
 
     ID = Column(VARCHAR(255), primary_key=True)
-    MenuItemID = Column(VARCHAR(255), default=None)
+    MenuItemID = Column(VARCHAR(255), ForeignKey("djmdMenuItems.ID"), default=None)
     Seq = Column(Integer, default=None)
     Disable = Column(Integer, default=None)
+
+    MenuItem = relationship("DjmdMenuItems", foreign_keys=[MenuItemID])
 
 
 class HotCueBanklistCue(Base, StatsFull):
