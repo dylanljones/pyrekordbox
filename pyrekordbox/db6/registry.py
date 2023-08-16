@@ -29,19 +29,41 @@ class RekordboxAgentRegistry:
 
     @classmethod
     def on_update(cls, instance, key, value):
-        """Called when an instance of a database model is updated."""
+        """Called when an instance of a database model is updated.
+
+        Parameters
+        ----------
+        instance : tables.Base
+            The table entry instance.
+        key : str
+            The name of the updated column.
+        value : Any
+            The new value of the updated column.
+        """
         if cls.__enabled__:
             cls.__update_sequence__.append((instance, "update", key, value))
 
     @classmethod
     def on_create(cls, instance):
-        """Called when an instance of a database model is created."""
+        """Called when an instance of a database model is created.
+
+        Parameters
+        ----------
+        instance : tables.Base
+            The table entry instance.
+        """
         if cls.__enabled__:
             cls.__update_sequence__.append((instance, "create", "", ""))
 
     @classmethod
     def on_delete(cls, instance):
-        """Called when an instance of a database model is deleted."""
+        """Called when an instance of a database model is deleted.
+
+        Parameters
+        ----------
+        instance : tables.Base
+            The table entry instance.
+        """
         if cls.__enabled__:
             cls.__update_sequence__.append((instance, "delete", "", ""))
 
@@ -62,33 +84,130 @@ class RekordboxAgentRegistry:
         cls.__enabled__ = False
 
     def get_registries(self):
+        """Returns all agent registries.
+
+        Returns
+        -------
+        registries : list[tables.AgentRegistry]
+        """
         return self.db.get_agent_registry()
 
     def get_registry(self, key):
+        """Returns the agent registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+
+        Returns
+        -------
+        registry : tables.AgentRegistry
+        """
         return self.db.get_agent_registry(registry_id=key)
 
     def get_string(self, key):
+        """Returns the string value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+
+        Returns
+        -------
+        value : str
+        """
         return self.db.get_agent_registry(registry_id=key).str_1
 
     def get_text(self, key):
+        """Returns the text value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+
+        Returns
+        -------
+        value : str
+        """
         return self.db.get_agent_registry(registry_id=key).text_1
 
     def get_int(self, key):
+        """Returns the integer value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+
+        Returns
+        -------
+        value : int
+        """
         return self.db.get_agent_registry(registry_id=key).int_1
 
     def get_date(self, key):
+        """Returns the date value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+
+        Returns
+        -------
+        value : datetime.datetime
+        """
         return self.db.get_agent_registry(registry_id=key).date_1
 
     def set_string(self, key, value):
+        """Sets the string value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+        value : str
+            The new value.
+        """
         self.db.get_agent_registry(registry_id=key).str_1 = value
 
     def set_text(self, key, value):
+        """Sets the text value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+        value : str
+            The new value.
+        """
         self.db.get_agent_registry(registry_id=key).text_1 = value
 
     def set_int(self, key, value):
+        """Sets the integer value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+        value : int
+            The new value.
+        """
         self.db.get_agent_registry(registry_id=key).int_1 = value
 
     def set_date(self, key, value):
+        """Sets the date value of the registry with the given key.
+
+        Parameters
+        ----------
+        key : str
+            The registry identifier (`registry_id`).
+        value : datetime.datetime
+            The new value.
+        """
         self.db.get_agent_registry(registry_id=key).date_1 = value
 
     def get_local_update_count(self):
@@ -97,7 +216,13 @@ class RekordboxAgentRegistry:
         return reg.int_1
 
     def set_local_update_count(self, value):
-        """Sets the global local USN (unique sequence number)."""
+        """Sets the global local USN (unique sequence number).
+
+        Parameters
+        ----------
+        value : int
+            The new USN value.
+        """
         reg = self.db.get_agent_registry(registry_id="localUpdateCount")
         reg.int_1 = value
 
