@@ -3,6 +3,9 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+This release attempts to add a workaround for the broken key extraction 
+and fixes some bugs.
+
 ### New Features
 
 - **add CLI command to download and cache the RB6 db key from the web ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**  
@@ -11,13 +14,22 @@
 
 ### Improvements/Bug Fixes
 
-- **move `install_sqlcipher.py` script to CLI command**  
 - **add method for writing the RB6 db key cache manually ([#64](https://github.com/dylanljones/pyrekordbox/issues/64))**  
-  If the extraction of the Rekordbox database key fails (>6.6.5), the user can now write 
+  If the extraction of the Rekordbox database key fails (>=6.6.5), the user can now write 
   the key manually to the cache file. After updating the cache the database can be opened 
   without providing the key as argument. To make this work pyrekordbox now caches the 
   decrypted key, not the password for decrypting the key. If an old cache file is found 
   it is upgraded automatically.
+- **move `install_sqlcipher.py` script to CLI command**  
+  The script is now available as `pyrekordbox install-sqlcipher`.
+- **add missing relationships in the RB6 database table declarations**  
+  Affected tables and corresponding relationships:
+  - `DjmdAlbum`: `AlbumArtist`
+  - `DjmdCategory`: `MenuItem`
+  - `DjmdCue`: `Content`
+  - `DjmdSort`: `MenuItem`
+- **fix copy/paste error in date getter of the `RekordboxAgentRegistry`**  
+  The `get_date` method was actually setting the value.
 
 ### Documentation
 
