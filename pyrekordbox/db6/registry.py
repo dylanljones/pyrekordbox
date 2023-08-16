@@ -4,6 +4,22 @@
 
 
 class RekordboxAgentRegistry:
+    """Rekordbox Agent Registry handler.
+
+    The Rekordbox Agent Registry handler is responsible for tracking changes to the
+    Rekordbox database. It is used to keep track of changes to the database,
+    provide a history of changes and to update the global and individual
+    USN (unique sequence number) values of the database entries.
+
+    This object should *not* be instantiated directly. It is used by the
+    :class:`RekordboxDatabase` class to track changes to the database.
+
+    Parameters
+    ----------
+    db : RekordboxDatabase
+        The Rekordbox database instance.
+    """
+
     __update_sequence__ = list()
     __update_history__ = list()
     __enabled__ = True
@@ -13,30 +29,36 @@ class RekordboxAgentRegistry:
 
     @classmethod
     def on_update(cls, instance, key, value):
+        """Called when an instance of a database model is updated."""
         if cls.__enabled__:
             cls.__update_sequence__.append((instance, "update", key, value))
 
     @classmethod
     def on_create(cls, instance):
+        """Called when an instance of a database model is created."""
         if cls.__enabled__:
             cls.__update_sequence__.append((instance, "create", "", ""))
 
     @classmethod
     def on_delete(cls, instance):
+        """Called when an instance of a database model is deleted."""
         if cls.__enabled__:
             cls.__update_sequence__.append((instance, "delete", "", ""))
 
     @classmethod
     def clear_buffer(cls):
+        """Clears the update buffer and update history."""
         cls.__update_history__.extend(cls.__update_sequence__)
         cls.__update_sequence__.clear()
 
     @classmethod
     def enable_tracking(cls):
+        """Enables the tracking of database changes."""
         cls.__enabled__ = True
 
     @classmethod
     def disable_tracking(cls):
+        """Disables the tracking of database changes."""
         cls.__enabled__ = False
 
     def get_registries(self):
@@ -70,14 +92,28 @@ class RekordboxAgentRegistry:
         self.db.get_agent_registry(registry_id=key).date_1 = value
 
     def get_local_update_count(self):
+        """Returns the current global local USN (unique sequence number)."""
         reg = self.db.get_agent_registry(registry_id="localUpdateCount")
         return reg.int_1
 
     def set_local_update_count(self, value):
+        """Sets the global local USN (unique sequence number)."""
         reg = self.db.get_agent_registry(registry_id="localUpdateCount")
         reg.int_1 = value
 
     def increment_local_update_count(self, num=1):
+        """Increments the global local USN (unique sequence number) by the given number.
+
+        Parameters
+        ----------
+        num : int, optional
+            The number to increment the USN by. The default is 1.
+
+        Returns
+        -------
+        usn: int
+            The new global local USN.
+        """
         if not isinstance(num, int) or num < 1:
             raise ValueError("The USN can only be increment by a positive integer!")
         reg = self.db.get_agent_registry(registry_id="localUpdateCount")
@@ -85,6 +121,22 @@ class RekordboxAgentRegistry:
         return reg.int_1
 
     def autoincrement_local_update_count(self, set_row_usn=True):
+        """Auto-increments the global local USN (unique sequence number).
+
+        The number of changes in the update buffer is used to determine the
+        number to increment the USN by. After the update the buffer is cleared.
+
+        Parameters
+        ----------
+        set_row_usn : bool, optional
+            If True the local USN of each database entry is updated with the
+            corresponding value in the order the changes were made.
+
+        Returns
+        -------
+        usn: int
+            The new global local USN.
+        """
         reg = self.db.get_agent_registry(registry_id="localUpdateCount")
         usn = reg.int_1
 
