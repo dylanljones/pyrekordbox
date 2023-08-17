@@ -7,9 +7,11 @@
 ### Improvements/Bug Fixes
 
 - **fix wrong ANLZ root directory in the database handler**  
-  The user can now also specify the ANLZ root directory if a database object is opened in an unusual location by supplying the `db_dir` argument.
+  The user can now also specify the ANLZ root directory if a database object is opened 
+  in an unusual location by supplying the `db_dir` argument.
 - **fix bug when adding tempo and position marks to XML track elements**  
-  Adding new tempo of position marks was not possible due to the wrong object being past as `parent` element
+  Adding new tempo of position marks was not possible due to the wrong object being 
+  passed as `parent` element.
 
 
 <a name="0.1.6"></a>
@@ -350,10 +352,6 @@ This release contains documentation fixes.
 ### Improvements/Bug Fixes
 
 - **fix Python version**  
-
-
-<a name="0.0.0"></a>
-## 0.0.0 - 2022-04-10
 
 
 [Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...HEAD
