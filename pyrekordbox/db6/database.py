@@ -148,6 +148,12 @@ class Rekordbox6Database:
         automatically finds the Rekordbox v6 master.db database file.
         This parameter is only required for opening other databases or if the
         configuration fails.
+    db_dir: str, optional
+        The path of the Rekordbox v6 database directory. By default, pyrekordbox
+        automatically finds the Rekordbox v6 database directory. Usually this is also
+        the root directory of the analysis files. This parameter is only required for
+        finding the analysis root directory if you are opening a database, that is
+        stored somewhere else.
     key : str, optional
         The database key. By default, pyrekordbox automatically reads the database
         key from the Rekordbox v6 configuration file. This parameter is only required
@@ -181,7 +187,7 @@ class Rekordbox6Database:
     <DjmdContent(40110712   Title=NOISE)>
     """
 
-    def __init__(self, path="", key="", unlock=True):
+    def __init__(self, path="", db_dir="", key="", unlock=True):
         if not path:
             # Get path from the RB config
             path = rb6_config.get("db_path", "")
@@ -215,7 +221,12 @@ class Rekordbox6Database:
         self.registry = RekordboxAgentRegistry(self)
         self._events = dict()
 
-        self._db_dir = os.path.normpath(path)
+        if not db_dir:
+            db_dir = os.path.normpath(os.path.dirname(path))
+        if not os.path.exists(db_dir):
+            raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
+
+        self._db_dir = db_dir
         self._anlz_root = os.path.join(self._db_dir, "share")
 
         self.open()
@@ -713,7 +724,6 @@ class Rekordbox6Database:
 
         dat_path = os.path.normpath(content.AnalysisDataPath).strip("\\/")
         path = os.path.join(self._anlz_root, os.path.dirname(dat_path))
-        assert os.path.exists(path)
         return path
 
     def get_anlz_paths(self, content):

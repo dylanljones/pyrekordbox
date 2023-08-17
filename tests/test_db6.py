@@ -223,3 +223,12 @@ def test_autoincrement_local_usn():
     assert track2.rb_local_usn == old_usn + 3
     # USN of deleted rows obviously don't get updated
     assert playlist.rb_local_usn == new_usn
+
+
+def test_get_anlz_paths():
+    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    content = db.get_content().first()
+
+    anlz_dir = db.get_anlz_dir(content)
+    expected = r"share\PIONEER\USBANLZ\735\e8b81-e69b-41ad-80f8-9c0d7613b96d"
+    assert anlz_dir.endswith(expected)
