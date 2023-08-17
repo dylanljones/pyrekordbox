@@ -1,6 +1,17 @@
 # What's New
 
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **fix wrong ANLZ root directory in the database handler**  
+  The user can now also specify the ANLZ root directory if a database object is opened in an unusual location by supplying the `db_dir` argument.
+- **fix bug when adding tempo and position marks to XML track elements**  
+  Adding new tempo of position marks was not possible due to the wrong object being past as `parent` element
+
+
 <a name="0.1.6"></a>
 ## [0.1.7] - 2023-16-08
 
