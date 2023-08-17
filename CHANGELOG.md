@@ -13,7 +13,7 @@
 
 
 <a name="0.1.6"></a>
-## [0.1.7] - 2023-16-08
+## [0.1.7] - 2023-08-16
 
 This release attempts to add a workaround for the broken key extraction 
 and fixes some bugs.
@@ -51,7 +51,7 @@ and fixes some bugs.
 
 
 <a name="0.1.6"></a>
-## [0.1.6] - 2023-13-08
+## [0.1.6] - 2023-08-13
 
 This release contains improvements of the handling of incompatible Rekordbox versions
 and improves the documentation.
@@ -71,7 +71,7 @@ and improves the documentation.
 
 
 <a name="0.1.5"></a>
-## [0.1.5] - 2023-09-04
+## [0.1.5] - 2023-04-09
 
 This release contains bug fixes and improves error handling.
 
@@ -87,7 +87,7 @@ This release contains bug fixes and improves error handling.
 
 
 <a name="0.1.4"></a>
-## [0.1.4] - 2022-30-10
+## [0.1.4] - 2022-10-30
 
 This release improves the Rekordbox v6 database handling and fixes bugs in the 
 USN tracking.
@@ -116,7 +116,7 @@ USN tracking.
 
 
 <a name="0.1.3"></a>
-## [0.1.3] - 2022-28-10
+## [0.1.3] - 2022-10-28
 
 This release mainly consists of improvements on the Rekordbox v6 database
 handling.
@@ -150,7 +150,7 @@ handling.
 
 
 <a name="0.1.2"></a>
-## [0.1.2] - 2022-19-10
+## [0.1.2] - 2022-10-19
 
 This release contains documentation fixes.
 
@@ -161,7 +161,7 @@ This release contains documentation fixes.
 
 
 <a name="0.1.1"></a>
-## [0.1.1] - 2022-19-10
+## [0.1.1] - 2022-10-19
 
 ### New Features
 
@@ -186,7 +186,7 @@ This release contains documentation fixes.
 
 
 <a name="0.1.0"></a>
-## [0.1.0] - 2022-16-10
+## [0.1.0] - 2022-10-16
 
 ### New Features
 
@@ -222,7 +222,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.8"></a>
-## [0.0.8] - 2022-15-10
+## [0.0.8] - 2022-10-15
 
 ### New Features
 
@@ -245,7 +245,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.7"></a>
-## [0.0.7] - 2022-12-06
+## [0.0.7] - 2022-06-12
 
 ### New Features
 
@@ -257,7 +257,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.6"></a>
-## [0.0.6] - 2022-27-05
+## [0.0.6] - 2022-05-27
 
 ### Improvements/Bug Fixes
 
@@ -266,7 +266,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.5"></a>
-## [0.0.5] - 2022-06-05
+## [0.0.5] - 2022-05-06
 
 ### Improvements/Bug Fixes
 
@@ -280,7 +280,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.4"></a>
-## [0.0.4] - 2022-06-05
+## [0.0.4] - 2022-05-06
 
 ### New Features
 
@@ -299,7 +299,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.3"></a>
-## [0.0.3] - 2022-24-04
+## [0.0.3] - 2022-04-24
 
 ### New Features
 
@@ -323,7 +323,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.2"></a>
-## [0.0.2] - 2022-20-04
+## [0.0.2] - 2022-04-20
 
 ### New Features
 
@@ -345,7 +345,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.1"></a>
-## [0.0.1] - 2022-10-04
+## [0.0.1] - 2022-04-10
 
 ### Improvements/Bug Fixes
 
@@ -353,7 +353,7 @@ This release contains documentation fixes.
 
 
 <a name="0.0.0"></a>
-## 0.0.0 - 2022-10-04
+## 0.0.0 - 2022-04-10
 
 
 [Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...HEAD
