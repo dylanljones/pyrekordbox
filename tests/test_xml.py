@@ -505,6 +505,47 @@ def test_update_track_count():
     assert xml.num_tracks == 0
 
 
+def test_add_tempo():
+    xml = RekordboxXml()
+    track = xml.add_track("C:/path/to/file1.wav")
+    assert len(track.tempos) == 0
+
+    inizio = 0.0
+    bpm = 100.0
+    metro = "4/4"
+    battito = 1
+    track.add_tempo(inizio, bpm, metro, battito)
+
+    assert len(track.tempos) == 1
+    tempo = track.tempos[0]
+    assert tempo.Inizio == inizio
+    assert tempo.Bpm == bpm
+    assert tempo.Metro == metro
+    assert tempo.Battito == battito
+
+
+def test_add_position_mark():
+    xml = RekordboxXml()
+    track = xml.add_track("C:/path/to/file1.wav")
+    assert len(track.marks) == 0
+
+    name = "cue point"
+    mark_type = "cue"
+    start = 0.0
+    end = None
+    num = -1
+    track.add_mark(name, mark_type, start, end, num)
+
+    assert len(track.marks) == 1
+
+    mark = track.marks[0]
+    assert mark.Name == name
+    assert mark.Type == mark_type
+    assert mark.Start == start
+    assert mark.End == end
+    assert mark.Num == num
+
+
 def test_get_playlist():
     xml = RekordboxXml(XML5)
 

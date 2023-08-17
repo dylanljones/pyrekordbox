@@ -279,7 +279,7 @@ class AbstractElement(abc.Mapping):
 # -- Collection elements ---------------------------------------------------------------
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,PyUnresolvedReferences
 class Tempo(AbstractElement):
     """Tempo element representing the beat grid of a track.
 
@@ -325,7 +325,7 @@ class Tempo(AbstractElement):
         return f"<{self.__class__.__name__}({args})>"
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,PyUnresolvedReferences
 class PositionMark(AbstractElement):
     """Position element for storing position markers like cue points of a track.
 
@@ -391,7 +391,7 @@ class PositionMark(AbstractElement):
         return f"<{self.__class__.__name__}({args})>"
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,PyUnresolvedReferences
 class Track(AbstractElement):
     """Track element for storing the metadata of a track.
 
@@ -458,7 +458,6 @@ class Track(AbstractElement):
         The `Tempo` elements of the track.
     marks : list
         The `PositionMark` elements of the track.
-
 
     Raises
     ------
@@ -560,7 +559,9 @@ class Track(AbstractElement):
         --------
         Tempo: Beat grid XML element handler
         """
-        return Tempo(self, Inizio, Bpm, Metro, Battito)
+        tempo = Tempo(self._element, Inizio, Bpm, Metro, Battito)
+        self.tempos.append(tempo)
+        return tempo
 
     def add_mark(self, Name="", Type="cue", Start=0.0, End=None, Num=-1):
         """Adds a new ``PositionMark`` XML element to the track element.
@@ -574,7 +575,7 @@ class Track(AbstractElement):
             'loop'.
         Start : float
             Start position of the position mark in seconds.
-        End : float, optionl
+        End : float or None, optionl
             End position of the position mark in seconds.
         Num : int, optional
             Charakter for identification of the position mark (for hot cues). For memory
@@ -589,7 +590,9 @@ class Track(AbstractElement):
         --------
         PositionMark: Position mark XML element handler
         """
-        return PositionMark(self, Name, Type, Start, End, Num)
+        mark = PositionMark(self._element, Name, Type, Start, End, Num)
+        self.marks.append(mark)
+        return mark
 
     def __repr__(self):
         return f"<{self.__class__.__name__}(Location={self.Location})>"
@@ -901,7 +904,7 @@ class Node:
 # -- Main XML object -------------------------------------------------------------------
 
 
-# noinspection PyPep8Naming
+# noinspection PyPep8Naming,PyUnresolvedReferences
 class RekordboxXml:
     """Rekordbox XML database object.
 
