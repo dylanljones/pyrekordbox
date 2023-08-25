@@ -12,7 +12,7 @@
 [![style: black][black-badge]][black-link]
 
 Pyrekordbox is a Python package for interacting with the library and export data of
-Pioneer's Rekordbox DJ Software. It currently supports
+Pioneers Rekordbox DJ Software. It currently supports
 - Rekordbox v6 master.db database
 - Rekordbox XML database
 - Analysis files (ANLZ)
@@ -23,10 +23,6 @@ Tested Rekordbox versions: ``5.8.6 | 6.5.3``
 Starting from version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file contents, breaking the key extraction
 (see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) and the
 Rekordbox 6 database section below for more details).
-
-> **Note**: This project is **not** affiliated with Pioneer Corp. or its related companies
-in any way and has been written independently! Pyrekordbox is licensed under the
-[MIT license][license-link].
 
 
 |⚠️| This project is still under development and might contain bugs or have breaking API changes in the future.   |
