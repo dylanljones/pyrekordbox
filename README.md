@@ -230,22 +230,13 @@ from pyrekordbox import Rekordbox6Database
 db = Rekordbox6Database(key="<insert key here>")
 ````
 
-The key can be found in some other projects, see issue
-[#77](https://github.com/dylanljones/pyrekordbox/issues/77). Alternatively you can update the cache file of the Rekordbox database key
-manually. Once the key is cached the database can be opened without providing the key:
-````python
-from pyrekordbox.config import write_db6_key_cache
-from pyrekordbox import Rekordbox6Database
-
-write_db6_key_cache("<insert key here>")  # call once
-db = Rekordbox6Database()
-````
-The command line interface of ``pyrekordbox`` also
-provides a command for downloading the key from known sources and writing it to the
-cache file:
+The command line interface of ``pyrekordbox`` provides a command for downloading
+the key from known sources and writing it to the cache file:
 ````shell
 python -m pyrekordbox download-key
 ````
+
+Once the key is cached the database can be opened without providing the key.
 
 
 ## 💡 File formats
