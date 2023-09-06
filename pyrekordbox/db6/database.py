@@ -227,7 +227,7 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
 
         self._db_dir = db_dir
-        self._anlz_root = os.path.join(self._db_dir, "share")
+        self._share_dir = os.path.join(self._db_dir, "share")
 
         self.open()
 
@@ -235,6 +235,14 @@ class Rekordbox6Database:
     def no_autoflush(self):
         """Creates a no-autoflush context."""
         return self.session.no_autoflush
+
+    @property
+    def db_directory(self):
+        return self._db_dir
+
+    @property
+    def share_directory(self):
+        return self._share_dir
 
     def open(self):
         """Open the database by instantiating a new session using the SQLAchemy engine.
@@ -723,7 +731,7 @@ class Rekordbox6Database:
             content = self.get_content(ID=content)
 
         dat_path = os.path.normpath(content.AnalysisDataPath).strip("\\/")
-        path = os.path.join(self._anlz_root, os.path.dirname(dat_path))
+        path = os.path.join(self._share_dir, os.path.dirname(dat_path))
         return path
 
     def get_anlz_paths(self, content):
