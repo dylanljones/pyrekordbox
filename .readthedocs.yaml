@@ -4,9 +4,12 @@ formats:
   - htmlzip
 
 build:
-    os: ubuntu-22.04
-    tools:
-      python: "3.9"
+  os: ubuntu-22.04
+  tools:
+    python: "3.11"
+
+sphinx:
+  builder: html
 
 python:
   install:
