@@ -1,5 +1,5 @@
 Sphinx==7.1.2
-sphinx_toggleprompt==0.4.0
+# sphinx_toggleprompt
 sphinx_copybutton==0.5.2
 numpydoc==1.5.0
 furo==2023.8.19
