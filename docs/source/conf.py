@@ -12,7 +12,6 @@
 #
 import os
 import sys
-import math
 
 sys.path.insert(0, os.path.abspath("../.."))
 
@@ -32,7 +31,7 @@ for sp in "abcfr":
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "4.0"
+needs_sphinx = "4.4"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -152,6 +151,7 @@ intersphinx_mapping = {
     "numpy": (r"https://docs.scipy.org/doc/numpy/", None),
     "np": (r"https://docs.scipy.org/doc/numpy/", None),
     "matplotlib": (r"https://matplotlib.org/", None),
+    "<name>": ("https://docs.python.org/3/", None),
 }
 
 
