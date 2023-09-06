@@ -7,6 +7,7 @@
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, DateTime
 from sqlalchemy import Text, ForeignKey, Float
 from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.inspection import inspect
 from .registry import RekordboxAgentRegistry
 
 __all__ = [
@@ -72,19 +73,21 @@ class _Base(object):
 
     @classmethod
     def columns(cls):
-        exc = "registry", "metadata"
-        keys = filter(
-            lambda x: not (x.startswith("_") or x in exc or callable(getattr(cls, x))),
-            dir(cls),
-        )
-        return list(keys)
+        """Returns a list of all column names without the relationships."""
+        return [column.name for column in inspect(cls).c]
+
+    @classmethod
+    def relationships(cls):
+        """Returns a list of all relationship names."""
+        return [column.key for column in inspect(cls).relationships]
 
     def __iter__(self):
-        exc = "registry", "metadata"
-        return filter(
-            lambda x: not (x.startswith("_") or x in exc or callable(getattr(self, x))),
-            dir(self),
-        )
+        """Iterates over all columns and relationship names."""
+        insp = inspect(self.__class__)
+        for column in insp.c:
+            yield column.name
+        for column in insp.relationships:
+            yield column.key
 
     def __len__(self):
         return sum(1 for _ in self.__iter__())
@@ -97,6 +100,18 @@ class _Base(object):
         if not key.startswith("_"):
             RekordboxAgentRegistry.on_update(self, key, value)
         super().__setattr__(key, value)
+
+    def keys(self):
+        """Returns a list of all column names including the relationships."""
+        return list(self.__iter__())
+
+    def values(self):
+        """Returns a list of all column values including the relationships."""
+        return [self.__getitem__(key) for key in self.keys()]
+
+    def items(self):
+        for key in self.__iter__():
+            yield key, self.__getitem__(key)
 
     def pformat(self, indent="   "):
         lines = [f"{self.__tablename__}"]
