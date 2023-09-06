@@ -11,6 +11,10 @@
 [![license: MIT][license-badge]][license-link]
 [![style: black][black-badge]][black-link]
 
+> **Disclaimer**: This project is **not** affiliated with Pioneer Corp. or its related companies
+in any way and has been written independently! Pyrekordbox is licensed under the
+[MIT license][license-link]. The maintainers of the project are not liable for any damages to your Rekordbox library.
+
 Pyrekordbox is a Python package for interacting with the library and export data of
 Pioneers Rekordbox DJ Software. It currently supports
 - Rekordbox v6 master.db database
