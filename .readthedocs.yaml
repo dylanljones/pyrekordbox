@@ -1,9 +1,10 @@
 version: 2
 
+formats:
+  - htmlzip
+  - pdf
+
 build:
-    image: latest
-    apt_packages:
-      - graphviz
     os: ubuntu-22.04
     tools:
       python: "3.8"
@@ -16,7 +17,3 @@ python:
       path: .
       extra_requirements:
         - d
-
-formats:
-  - htmlzip
-  - pdf
