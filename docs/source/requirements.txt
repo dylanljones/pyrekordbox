@@ -1,4 +1,4 @@
-sphinx>=4.5.0
+sphinx<7.2.0
 sphinx_toggleprompt
 sphinx_copybutton>=0.5.0
 numpydoc
