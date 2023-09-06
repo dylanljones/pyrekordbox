@@ -6,7 +6,12 @@
 
 ### Improvements/Bug Fixes
 
-- **fix wrong ANLZ root directory in the database handler**  
+- **add getters for the `db_directory` and `share_directory` to the RBv6 database handler**  
+  This makes it easier to access the additional data of Rekordbox (ANLZ or artwork files).
+- **improve `columns` method of RBv6 tables**  
+  The `columns` method now returns the *actual* columns of the table (without relationships). 
+  To get a list of the column names with the relationships, use the `keys` method.
+- **fix wrong ANLZ root directory in the RBv6 database handler**  
   The user can now also specify the ANLZ root directory if a database object is opened 
   in an unusual location by supplying the `db_dir` argument.
 - **fix bug when adding tempo and position marks to XML track elements**  
@@ -346,14 +351,6 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-<a name="0.0.1"></a>
-## [0.0.1] - 2022-04-10
-
-### Improvements/Bug Fixes
-
-- **fix Python version**  
-
-
 [Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...HEAD
 [0.1.7]: https://github.com/dylanljones/pyrekordbox/compare/0.1.6...0.1.7
 [0.1.6]: https://github.com/dylanljones/pyrekordbox/compare/0.1.5...0.1.6
@@ -370,4 +367,3 @@ This release contains documentation fixes.
 [0.0.4]: https://github.com/dylanljones/pyrekordbox/compare/0.0.3...0.0.4
 [0.0.3]: https://github.com/dylanljones/pyrekordbox/compare/0.0.2...0.0.3
 [0.0.2]: https://github.com/dylanljones/pyrekordbox/compare/0.0.1...0.0.2
-[0.0.1]: https://github.com/dylanljones/pyrekordbox/compare/0.0.0...0.0.1
