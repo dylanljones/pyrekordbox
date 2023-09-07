@@ -886,8 +886,8 @@ class Rekordbox6Database:
 
         >>> files = self.read_anlz_files(cont.ID)
         >>> file = list(files.values())[0]
-        >>> file.get("path")
-        C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/noise.wav
+        >>> cont.FolderPath == file.get("path")
+        True
 
         """
         if isinstance(content, (int, str)):
