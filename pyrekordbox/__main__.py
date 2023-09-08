@@ -7,6 +7,7 @@ import re
 import sys
 import shutil
 import urllib.request
+from pathlib import Path
 from pyrekordbox.config import write_db6_key_cache, _cache_file
 
 KEY_SOURCES = [
@@ -28,13 +29,12 @@ KEY_SOURCES = [
 
 class WorkingDir:
     def __init__(self, path):
-        self._prev = os.getcwd()
-        self.path = path
+        self._prev = Path.cwd()
+        self.path = Path(path)
 
     def __enter__(self):
         if self.path != self._prev:
-            if not os.path.exists(self.path):
-                os.makedirs(self.path)
+            self.path.mkdir(parents=True, exist_ok=True)
             os.chdir(self.path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -42,24 +42,24 @@ class WorkingDir:
             os.chdir(self._prev)
 
 
-def clone_repo(https_url):
-    path = os.path.join(os.getcwd(), https_url.split("/")[-1])
-    if not os.path.exists(path):
+def clone_repo(https_url: str) -> Path:
+    path = Path.cwd() / https_url.split("/")[-1]
+    if not path.exists():
         os.system(f"git clone {https_url}")
-        assert os.path.exists(path)
+        assert path.exists()
     return path
 
 
-def clone_pysqlcipher3():
+def clone_pysqlcipher3() -> Path:
     return clone_repo(r"https://github.com/rigglemania/pysqlcipher3")
 
 
-def clone_sqlcipher_amalgamation():
+def clone_sqlcipher_amalgamation() -> Path:
     return clone_repo(r"https://github.com/geekbrother/sqlcipher-amalgamation")
 
 
 def patch_pysqlcipher_setup(pysqlcipher_dir, cryptolib="libcrypto.lib", fix_quote=True):
-    path = os.path.join(pysqlcipher_dir, "setup.py")
+    path = Path(pysqlcipher_dir, "setup.py")
 
     with open(path, "r") as fh:
         text = fh.read()
@@ -78,25 +78,23 @@ def patch_pysqlcipher_setup(pysqlcipher_dir, cryptolib="libcrypto.lib", fix_quot
         fh.write(text)
 
 
-def prepare_pysqlcipher(pysqlcipher_dir, amalgamation_src):
-    cpath = os.path.join(amalgamation_src, "sqlite3.c")
-    hpath = os.path.join(amalgamation_src, "sqlite3.h")
-    epath = os.path.join(amalgamation_src, "sqlite3ext.h")
+def prepare_pysqlcipher(pysqlcipher_dir: Path, amalgamation_src: Path):
+    cpath = amalgamation_src / "sqlite3.c"
+    hpath = amalgamation_src / "sqlite3.h"
+    epath = amalgamation_src / "sqlite3ext.h"
 
     # Create amalagamation directory
-    root = os.path.join(pysqlcipher_dir, "amalgamation")
-    if not os.path.exists(root):
-        os.makedirs(root)
-    shutil.copy2(cpath, os.path.join(root, "sqlite3.c"))
-    shutil.copy2(hpath, os.path.join(root, "sqlite3.h"))
+    root = pysqlcipher_dir / "amalgamation"
+    root.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(cpath, root / "sqlite3.c")
+    shutil.copy2(hpath, root / "sqlite3.h")
 
     # Create sqlcipher directory
-    root = os.path.join(pysqlcipher_dir, "src", "python3", "sqlcipher")
-    if not os.path.exists(root):
-        os.makedirs(root)
-    shutil.copy2(cpath, os.path.join(root, "sqlite3.c"))
-    shutil.copy2(hpath, os.path.join(root, "sqlite3.h"))
-    shutil.copy2(epath, os.path.join(root, "sqlite3ext.h"))
+    root = pysqlcipher_dir / "src" / "python3" / "sqlcipher"
+    root.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(cpath, root / "sqlite3.c")
+    shutil.copy2(hpath, root / "sqlite3.h")
+    shutil.copy2(epath, root / "sqlite3ext.h")
 
 
 def install_pysqlcipher(
@@ -116,7 +114,7 @@ def install_pysqlcipher(
     with WorkingDir(tmpdir):
         pysqlcipher_dir = clone_pysqlcipher3()
         amalgamation_dir = clone_sqlcipher_amalgamation()
-        amalgamation_src = os.path.join(amalgamation_dir, "src")
+        amalgamation_src = amalgamation_dir / "src"
 
         prepare_pysqlcipher(pysqlcipher_dir, amalgamation_src)
         patch_pysqlcipher_setup(pysqlcipher_dir, crypto_lib, fix_quote)

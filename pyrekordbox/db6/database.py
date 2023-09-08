@@ -40,12 +40,12 @@ class IncompatibleVersionError(Exception):
         )
 
 
-def open_rekordbox_database(path="", key="", unlock=True, sql_driver=None):
+def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
     """Opens a connection to the Rekordbox v6 master.db SQLite3 database.
 
     Parameters
     ----------
-    path : str, optional
+    path : str or Path, optional
         The path of the Rekordbox v6 database file. By default, pyrekordbox
         automatically finds the Rekordbox v6 master.db database file.
         This parameter is only required for opening other databases or if the
@@ -143,7 +143,7 @@ class Rekordbox6Database:
 
     Parameters
     ----------
-    path : str, optional
+    path : str or Path, optional
         The path of the Rekordbox v6 database file. By default, pyrekordbox
         automatically finds the Rekordbox v6 master.db database file.
         This parameter is only required for opening other databases or if the
@@ -187,7 +187,7 @@ class Rekordbox6Database:
     <DjmdContent(40110712   Title=NOISE)>
     """
 
-    def __init__(self, path="", db_dir="", key="", unlock=True):
+    def __init__(self, path=None, db_dir="", key="", unlock=True):
         if not path:
             # Get path from the RB config
             path = rb6_config.get("db_path", "")

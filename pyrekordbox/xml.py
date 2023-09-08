@@ -71,7 +71,7 @@ def encode_path(path):
 
     Parameters
     ----------
-    path : str
+    path : str or Path
         The file path to encode.
 
     Returns
@@ -86,7 +86,7 @@ def encode_path(path):
     file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3
 
     """
-    url_path = urllib.parse.quote(path, safe=":/\\")
+    url_path = urllib.parse.quote(str(path), safe=":/\\")
     url = URL_PREFIX + url_path.replace("\\", "/")
     return url
 
@@ -926,7 +926,7 @@ class RekordboxXml:
     --------
     Open Rekordbox XML file
 
-    >>> file = RekordboxXml(os.path.join(".testdata", "rekordbox 6", "database.xml"))
+    >>> file = RekordboxXml(Path(".testdata", "rekordbox 6", "database.xml"))
 
     Create new XML file
 
@@ -939,7 +939,7 @@ class RekordboxXml:
     PLST_TAG = "PLAYLISTS"
     COLL_TAG = "COLLECTION"
 
-    def __init__(self, path="", name=None, version=None, company=None):
+    def __init__(self, path=None, name=None, version=None, company=None):
         self._root = None
         self._product = None
         self._collection = None
@@ -947,7 +947,7 @@ class RekordboxXml:
         self._root_node = None
 
         self._last_id = 0
-        if path:
+        if path is not None:
             self._parse(path)
         else:
             self._init(name, version, company)
@@ -983,8 +983,14 @@ class RekordboxXml:
         return self._root_node
 
     def _parse(self, path):
-        """Parse an existing XML file."""
-        tree = xml.parse(path)
+        """Parse an existing XML file.
+
+        Parameters
+        ----------
+        path : str or Path
+            The path to the XML file to parse.
+        """
+        tree = xml.parse(str(path))
         self._root = tree.getroot()
         self._product = self._root.find(self.PRDT_TAG)
         self._collection = self._root.find(self.COLL_TAG)
@@ -1121,7 +1127,7 @@ class RekordboxXml:
 
         Parameters
         ----------
-        location : str
+        location : str or Path
             The file path of the track.
         kwargs :
             Keyword arguments which are used to fill the track attributes. If no
