@@ -14,9 +14,19 @@
 - **fix wrong ANLZ root directory in the RBv6 database handler**  
   The user can now also specify the ANLZ root directory if a database object is opened 
   in an unusual location by supplying the `db_dir` argument.
+- **cache XML track list to speed up checking for duplicates**  
+  The TrackID and Location of each track element is cached to prevent checking each XML 
+  element when adding new tracks. In addition, the track count is now 
+  incremented/decremented when adding/removing tracks. This makes it much faster to 
+  add or remove elements in the XML track collection.
 - **fix bug when adding tempo and position marks to XML track elements**  
   Adding new tempo of position marks was not possible due to the wrong object being 
   passed as `parent` element.
+
+### Documentation
+
+- **remove sphinx_toggleprompt (incompatible with sphinx>=7)**  
+- **Use RTD's new build process and config**
 
 
 <a name="0.1.6"></a>
