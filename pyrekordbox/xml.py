@@ -1145,7 +1145,7 @@ class RekordboxXml:
 
     def _remove_cache(self, track):
         """Remove the TrackID and Location from the cache."""
-        self._locations.remove(track.Location)
+        self._locations.remove(os.path.normpath(track.Location))
         self._ids.remove(track.TrackID)
 
     def _update_cache(self):
@@ -1153,7 +1153,7 @@ class RekordboxXml:
         self._locations.clear()
         self._ids.clear()
         for track in self.get_tracks():
-            self._add_tracklist(track)
+            self._add_cache(track)
 
     def add_track(self, location, **kwargs):
         """Add a new track element to the Rekordbox XML collection.
@@ -1187,10 +1187,11 @@ class RekordboxXml:
 
         # Check that Location and TrackID are unique
         track_id = kwargs["TrackID"]
-        if location in self._locations:
+        if os.path.normpath(location) in self._locations:
             raise XmlDuplicateError("Location", location)
-        if track_id == self._ids:
+        if track_id in self._ids:
             raise XmlDuplicateError("TrackID", track_id)
+
         # Create track and add it to the collection
         track = Track(self._collection, location, **kwargs)
         self._last_id = int(track["TrackID"])

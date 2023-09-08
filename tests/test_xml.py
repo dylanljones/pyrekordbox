@@ -5,7 +5,7 @@
 import os
 import pytest
 from pyrekordbox import RekordboxXml
-from pyrekordbox.xml import Tempo, PositionMark
+from pyrekordbox.xml import Tempo, PositionMark, XmlDuplicateError
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
 XML5 = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
@@ -482,12 +482,12 @@ def test_add_track():
     assert track4.TrackID == 11
 
     # Location exists
-    with pytest.raises(ValueError):
+    with pytest.raises(XmlDuplicateError):
         xml.add_track("C:/path/to/file1.wav")
 
     # TrackID exists
-    with pytest.raises(ValueError):
-        xml.add_track("C:/path/to/file_new.wav", TrackID=track1)
+    with pytest.raises(XmlDuplicateError):
+        xml.add_track("C:/path/to/file_new.wav", TrackID=track1.TrackID)
 
 
 def test_update_track_count():
