@@ -2,20 +2,21 @@
 # Author: Dylan Jones
 # Date:   2023-02-01
 
-import os
 import re
+from pathlib import Path
+from typing import Union
 from . import structs
 from .file import AnlzFile
 
 RE_ANLZ = re.compile("ANLZ[0-9]{4}.(DAT|EXT|2EX)")
 
 
-def is_anlz_file(path: str) -> bool:
+def is_anlz_file(path: Union[str, Path]) -> bool:
     """Checks if the name of a file matches the ANLZ file name pattern.
 
     Parameters
     ----------
-    path : str
+    path : str or Path
         The file path to check
 
     Returns
@@ -34,21 +35,23 @@ def is_anlz_file(path: str) -> bool:
     >>> is_anlz_file("ANLZ.DAT")
     False
     """
-    fname = os.path.split(path)[1]
-    return bool(RE_ANLZ.match(fname))
+    path = Path(path)
+    if not path.exists() or not path.is_file():
+        return False
+    return bool(RE_ANLZ.match(path.name))
 
 
-def get_anlz_paths(root):
+def get_anlz_paths(root: Union[str, Path]) -> dict:
     """Returns the paths of all existing ANLZ files in a directory.
 
     Parameters
     ----------
-    root : str
+    root : str or Path
         The path of the directory containing ANLZ files.
 
     Returns
     -------
-    anlz_paths : dict[str, str]
+    anlz_paths : dict[str, Path]
         The file paths stored as dictionary with the type of ANLZ file as keys
         ("DAT", "EXT", "EX2")
 
@@ -59,19 +62,18 @@ def get_anlz_paths(root):
     directory/ANLZ0000.DAT
     """
     paths = {"DAT": None, "EXT": None, "2EX": None}
-    for fname in os.listdir(root):
-        if RE_ANLZ.match(fname):
-            ext = os.path.splitext(fname)[1][1:]
-            paths[ext] = os.path.join(root, fname)
+    for path in Path(root).iterdir():
+        if RE_ANLZ.match(path.name):
+            paths[path.suffix[1:].upper()] = path
     return paths
 
 
-def walk_anlz_dirs(root_dir):
+def walk_anlz_dirs(root_dir: Union[str, Path]):
     """Finds all ANLZ directory paths recursively.
 
     Parameters
     ----------
-    root_dir : str
+    root_dir : str or Path
         The path of the root directory.
 
     Yields
@@ -79,18 +81,18 @@ def walk_anlz_dirs(root_dir):
     anlz_dir : str
         The path of a directory containing ANLZ files
     """
-    for root, _, names in os.walk(os.path.normpath(root_dir)):
-        for fname in names:
-            if is_anlz_file(fname):
-                yield root
+    for path in Path(root_dir).rglob("*"):
+        if path.is_dir():
+            if any(is_anlz_file(f) for f in path.iterdir()):
+                yield path
 
 
-def walk_anlz_paths(root_dir):
+def walk_anlz_paths(root_dir: Union[str, Path]):
     """Finds all ANLZ directory paths and the containing file paths recursively.
 
     Parameters
     ----------
-    root_dir : str
+    root_dir : str or Path
         The path of the root directory.
 
     Yields
@@ -100,25 +102,19 @@ def walk_anlz_paths(root_dir):
     anlz_files : Sequence of str
         The file paths of the ANLZ files in `anlz_dir`.
     """
-    print(root_dir)
-    assert os.path.exists(root_dir)
-    for root, _, names in os.walk(os.path.normpath(root_dir)):
-        files = dict()
-        print(root)
-        for fname in names:
-            if is_anlz_file(fname):
-                ext = os.path.splitext(fname)[1]
-                files[ext[1:].upper()] = os.path.join(root, fname)
-        if files:
-            yield root, files
+    root_dir = Path(root_dir)
+    assert root_dir.exists()
+    for anlz_dir in walk_anlz_dirs(root_dir):
+        files = {k: path for k, path in get_anlz_paths(anlz_dir).items() if path}
+        yield anlz_dir, files
 
 
-def read_anlz_files(root: str = "") -> dict:
+def read_anlz_files(root: Union[str, Path] = "") -> dict:
     """Open all ANLZ files in the given root directory.
 
     Parameters
     ----------
-    root : str, optional
+    root : str or Path, optional
         The root directory of the ANLZ files to open.
 
     Returns

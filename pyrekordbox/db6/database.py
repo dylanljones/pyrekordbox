@@ -2,8 +2,8 @@
 # Author: Dylan Jones
 # Date:   2023-08-13
 
-import os
 import logging
+from pathlib import Path
 from typing import Optional
 from sqlalchemy import create_engine, or_, event
 from sqlalchemy.orm import sessionmaker, Session
@@ -92,8 +92,8 @@ def open_rekordbox_database(path="", key="", unlock=True, sql_driver=None):
     """
     if not path:
         path = rb6_config["db_path"]
-
-    if not os.path.exists(path):
+    path = Path(path)
+    if not path.exists():
         raise FileNotFoundError(f"File '{path}' does not exist!")
     logger.info("Opening %s", path)
 
@@ -102,7 +102,7 @@ def open_rekordbox_database(path="", key="", unlock=True, sql_driver=None):
         # Use default sqlite3 package
         # This requires that the 'sqlite3.dll' was replaced by the 'sqlcipher.dll'
         sql_driver = sqlite3
-    con = sql_driver.connect(path)
+    con = sql_driver.connect(str(path))
 
     if unlock:
         if not key:
@@ -194,8 +194,9 @@ class Rekordbox6Database:
             if not path:
                 pdir = get_config("pioneer", "install_dir")
                 raise FileNotFoundError(f"No Rekordbox v6 directory found in '{pdir}'")
+        path = Path(path)
         # make sure file exists
-        if not os.path.exists(path):
+        if not path.exists():
             raise FileNotFoundError(f"File '{path}' does not exist!")
         # Open database
         if unlock:
@@ -222,12 +223,13 @@ class Rekordbox6Database:
         self._events = dict()
 
         if not db_dir:
-            db_dir = os.path.normpath(os.path.dirname(path))
-        if not os.path.exists(db_dir):
+            db_dir = path.parent
+        db_dir = Path(db_dir)
+        if not db_dir.exists():
             raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
 
         self._db_dir = db_dir
-        self._share_dir = os.path.join(self._db_dir, "share")
+        self._share_dir = db_dir / "share"
 
         self.open()
 
@@ -709,7 +711,7 @@ class Rekordbox6Database:
         """
         paths = list()
         for item in self.get_setting_file():
-            paths.append(os.path.join(self._db_dir, item.Path.lstrip("/\\")))
+            paths.append(self._db_dir / item.Path.lstrip("/\\"))
         return paths
 
     def get_anlz_dir(self, content):
@@ -724,14 +726,14 @@ class Rekordbox6Database:
 
         Returns
         -------
-        anlz_dir : str
+        anlz_dir : Path
             The path of the directory containing the analysis files for the content.
         """
         if isinstance(content, (int, str)):
             content = self.get_content(ID=content)
 
-        dat_path = os.path.normpath(content.AnalysisDataPath).strip("\\/")
-        path = os.path.join(self._share_dir, os.path.dirname(dat_path))
+        dat_path = Path(content.AnalysisDataPath.strip("\\/"))
+        path = self._share_dir / dat_path.parent
         return path
 
     def get_anlz_paths(self, content):
@@ -746,7 +748,7 @@ class Rekordbox6Database:
 
         Returns
         -------
-        anlz_paths : dict[str, str]
+        anlz_paths : dict[str, Path]
             The analysis file paths for the content as dictionary. The keys of the
             dictionary are the file types ("DAT", "EXT" or "EX2").
         """
@@ -783,7 +785,7 @@ class Rekordbox6Database:
         content : DjmdContent or int or str
             The ``DjmdContent`` element to change. If an integer is passed the database
             is queried for the content.
-        path : str
+        path : str or Path
             The new file path of the database entry.
         save : bool, optional
             If True, the changes made are written to disc.
@@ -821,10 +823,11 @@ class Rekordbox6Database:
             content = self.get_content(ID=content)
         cid = content.ID
 
+        path = Path(path)
         # Check and format path (the database and ANLZ files use "/" as path delimiter)
         if check_path:
-            assert os.path.exists(path)
-        path = path.replace("\\", "/")
+            assert path.exists()
+        path = str(path).replace("\\", "/")
         old_path = content.FolderPath
         logger.info("Replacing '%s' with '%s' of content [%s]", old_path, path, cid)
 
@@ -893,9 +896,8 @@ class Rekordbox6Database:
         if isinstance(content, (int, str)):
             content = self.get_content(ID=content)
 
-        old_path = os.path.normpath(content.FolderPath)
-        name = os.path.splitext(name)[0]
-        ext = os.path.splitext(old_path)[1]
-        new_path = os.path.join(os.path.dirname(old_path), name + ext)
-
+        old_path = Path(content.FolderPath)
+        ext = old_path.suffix
+        new_path = old_path.parent / name
+        new_path = new_path.with_suffix(ext)
         self.update_content_path(content, new_path, save, check_path)

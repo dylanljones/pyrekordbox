@@ -2,8 +2,8 @@
 # Author: Dylan Jones
 # Date:   2023-02-01
 
-import os
 import re
+from pathlib import Path
 from . import structs
 from .file import (
     FILES,
@@ -19,15 +19,14 @@ RE_MYSETTING = re.compile(".*SETTING[0-9]?.DAT$")
 
 def get_mysetting_paths(root, deep=False):
     files = list()
-    for root, _, names in os.walk(root):
-        for fname in names:
-            if RE_MYSETTING.match(fname):
-                files.append(os.path.join(root, fname))
-        if not deep:
-            break
+    root = Path(root)
+    iteator = root.rglob("*") if deep else root.iterdir()
+    for path in iteator:
+        if path.is_file() and RE_MYSETTING.match(path.name):
+            files.append(path)
     return files
 
 
 def read_mysetting_file(path) -> SettingsFile:
-    obj = FILES[os.path.split(path)[1]]
+    obj = FILES[str(Path(path).name)]
     return obj.parse_file(path)

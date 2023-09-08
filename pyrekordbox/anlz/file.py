@@ -2,9 +2,10 @@
 # Author: Dylan Jones
 # Date:   2023-02-01
 
-import os
 import logging
 from collections import abc
+from pathlib import Path
+from typing import Union
 from .tags import TAGS
 from . import structs
 
@@ -58,12 +59,12 @@ class AnlzFile(abc.Mapping):
         return self
 
     @classmethod
-    def parse_file(cls, path: str):
+    def parse_file(cls, path: Union[str, Path]):
         """Reads and parses a Rekordbox analysis binary file.
 
         Parameters
         ----------
-        path : str
+        path : str or Path
             The path of a Rekordbox analysis file which is used to read
             the file contents before parsing the binary data.
 
@@ -76,11 +77,12 @@ class AnlzFile(abc.Mapping):
         --------
         AnlzFile.parse: Parses the data of a Rekordbox analysis file.
         """
-        ext = os.path.splitext(path)[1]
+        path = Path(path)
+        ext = path.suffix.upper()
         if ext not in (".DAT", ".EXT", ".2EX"):
             raise ValueError(f"File type '{ext}' not supported!")
 
-        logger.debug(f"Reading file {os.path.split(path)[1]}")
+        logger.debug(f"Reading file {path.name}")
         with open(path, "rb") as fh:
             data = fh.read()
 
