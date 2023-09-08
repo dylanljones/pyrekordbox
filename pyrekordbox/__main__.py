@@ -110,6 +110,7 @@ def install_pysqlcipher(
         print("Not on Windows, aborting...")
         return
 
+    tmpdir = Path(tmpdir)
     # Download pysqlcipher3 and prepare amalgamation build
     with WorkingDir(tmpdir):
         pysqlcipher_dir = clone_pysqlcipher3()
@@ -138,7 +139,7 @@ def install_pysqlcipher(
         try:
             print()
             print("Cleaning up")
-            shutil.rmtree(tmpdir)
+            tmpdir.unlink(missing_ok=True)
         except PermissionError as e:
             print()
             print(e)
