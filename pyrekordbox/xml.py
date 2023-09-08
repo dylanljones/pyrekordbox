@@ -16,7 +16,6 @@ import bidict
 logger = logging.getLogger(__name__)
 
 URL_PREFIX = "file://localhost/"
-
 POSMARK_TYPE_MAPPING = bidict.bidict(
     {
         "0": "cue",
@@ -26,14 +25,24 @@ POSMARK_TYPE_MAPPING = bidict.bidict(
         "4": "loop",
     }
 )
-
-
 RATING_MAPPING = bidict.bidict(
     {"0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5}
 )
-
-
 NODE_KEYTYPE_MAPPING = bidict.bidict({"0": "TrackID", "1": "Location"})
+
+
+class XmlDuplicateError(Exception):
+    """Raised when a track already exists in the XML database."""
+
+    def __init__(self, key_type, key):
+        super().__init__(f"XML database already contains a track with {key_type}={key}")
+
+
+class XmlAttributeKeyError(Exception):
+    def __init__(self, cls, key, attributes):
+        super().__init__(
+            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
+        )
 
 
 def pretty_xml(element, indent=None, encoding="utf-8"):
@@ -114,13 +123,6 @@ def decode_path(url):
     path = urllib.parse.unquote(url)
     path = path.replace(URL_PREFIX, "")
     return os.path.normpath(path)
-
-
-class XmlAttributeKeyError(Exception):
-    def __init__(self, cls, key, attributes):
-        super().__init__(
-            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
-        )
 
 
 class AbstractElement(abc.Mapping):
@@ -862,7 +864,6 @@ class Node:
 
     def get_track(self, key):
         """Returns the formatted key of the track."""
-        # Todo: Is this neccessary?
         el = self._element.find(f'{Track.TAG}[@Key="{key}"]')
         val = el.attrib["Key"]
         if self.key_type == "TrackID":
@@ -947,6 +948,10 @@ class RekordboxXml:
         self._root_node = None
 
         self._last_id = 0
+        # Used for fast duplicate check
+        self._locations = set()
+        self._ids = set()
+
         if path is not None:
             self._parse(path)
         else:
@@ -996,6 +1001,7 @@ class RekordboxXml:
         self._collection = self._root.find(self.COLL_TAG)
         self._playlists = self._root.find(self.PLST_TAG)
         self._root_node = Node(element=self._playlists.find(Node.TAG))
+        self._update_cache()
 
     def _init(self, name=None, version=None, company=None, frmt_version=None):
         """Initialize a new XML file."""
@@ -1122,6 +1128,33 @@ class RekordboxXml:
         num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
         self._collection.attrib["Entries"] = str(num_tracks)
 
+    def _increment_track_count(self):
+        """Increment the track count element."""
+        old = int(self._collection.attrib["Entries"])
+        self._collection.attrib["Entries"] = str(old + 1)
+
+    def _decrement_track_count(self):
+        """Decrement the track count element."""
+        old = int(self._collection.attrib["Entries"])
+        self._collection.attrib["Entries"] = str(old - 1)
+
+    def _add_cache(self, track):
+        """Add the TrackID and Location to the cache."""
+        self._locations.add(track.Location)
+        self._ids.add(track.TrackID)
+
+    def _remove_cache(self, track):
+        """Remove the TrackID and Location from the cache."""
+        self._locations.remove(track.Location)
+        self._ids.remove(track.TrackID)
+
+    def _update_cache(self):
+        """Update the cache with the current tracks in the collection."""
+        self._locations.clear()
+        self._ids.clear()
+        for track in self.get_tracks():
+            self._add_tracklist(track)
+
     def add_track(self, location, **kwargs):
         """Add a new track element to the Rekordbox XML collection.
 
@@ -1154,20 +1187,15 @@ class RekordboxXml:
 
         # Check that Location and TrackID are unique
         track_id = kwargs["TrackID"]
-
-        for other in self.get_tracks():
-            if track_id == other.TrackID:
-                raise ValueError(
-                    f"XML database already contains a track with TrackID={track_id}!"
-                )
-            elif os.path.normpath(location) == other.Location:
-                raise ValueError(
-                    f"XML database already contains a track with Location={location}!"
-                )
+        if location in self._locations:
+            raise XmlDuplicateError("Location", location)
+        if track_id == self._ids:
+            raise XmlDuplicateError("TrackID", track_id)
         # Create track and add it to the collection
         track = Track(self._collection, location, **kwargs)
         self._last_id = int(track["TrackID"])
-        self._update_track_count()
+        self._increment_track_count()
+        self._add_cache(track)
         return track
 
     def remove_track(self, track):
@@ -1186,7 +1214,8 @@ class RekordboxXml:
 
         """
         self._collection.remove(track._element)  # noqa
-        self._update_track_count()
+        self._decrement_track_count()
+        self._remove_cache(track)
 
     def add_playlist_folder(self, name):
         """Add a new top-level playlist folder to the XML collection.
@@ -1258,6 +1287,14 @@ class RekordboxXml:
         s : str
             The contents of the XML file
         """
+        # Check track count is valid
+        num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
+        n = int(self._collection.attrib["Entries"])
+        if n != num_tracks:
+            raise ValueError(
+                f"Track count {num_tracks} does not match number of elements {n}"
+            )
+        # Generate XML string
         return pretty_xml(self._root, indent, encoding="utf-8")
 
     def save(self, path="", indent=None):
@@ -1265,7 +1302,7 @@ class RekordboxXml:
 
         Parameters
         ----------
-        path : str, optional
+        path : str or Path, optional
             The path for saving the XML file. The default is the original file.
         indent : str, optional
             The indentation used for formatting the XML element.
