@@ -1187,7 +1187,7 @@ class RekordboxXml:
 
         # Check that Location and TrackID are unique
         track_id = kwargs["TrackID"]
-        if location in self._locations:
+        if os.path.normpath(location) in self._locations:
             raise XmlDuplicateError("Location", location)
         if track_id in self._ids:
             raise XmlDuplicateError("TrackID", track_id)
