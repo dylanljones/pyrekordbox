@@ -6,7 +6,7 @@ name: Tests
 # Controls when the action will run.
 on:
   push:
-    branches: [master, dev]
+    branches: ["*"]
   pull_request:
     types: [opened]
   workflow_dispatch:
