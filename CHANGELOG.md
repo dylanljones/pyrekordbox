@@ -4,6 +4,11 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+
+- **add methods for converting RBv6 tables to a dictionary**  
+  This can be used to save the database contents to an open file format, for example JSON.
+
 ### Improvements/Bug Fixes
 
 - **add getters for the `db_directory` and `share_directory` to the RBv6 database handler**  
@@ -22,9 +27,11 @@
 - **fix bug when adding tempo and position marks to XML track elements**  
   Adding new tempo of position marks was not possible due to the wrong object being 
   passed as `parent` element.
+- **warn when opening the database and Rekordbox is running**  
 
 ### Documentation
 
+- **bump furo version to fix RDT issue**  
 - **remove sphinx_toggleprompt (incompatible with sphinx>=7)**  
 - **Use RTD's new build process and config**
 
