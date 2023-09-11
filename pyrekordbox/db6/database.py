@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, or_, event
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import NoResultFound
 from packaging import version
+from ..utils import get_rekordbox_pid
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
@@ -188,6 +189,10 @@ class Rekordbox6Database:
     """
 
     def __init__(self, path=None, db_dir="", key="", unlock=True):
+        pid = get_rekordbox_pid()
+        if pid:
+            logger.warning("Rekordbox is running!")
+
         if not path:
             # Get path from the RB config
             path = rb6_config.get("db_path", "")
