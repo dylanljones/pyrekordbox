@@ -3,6 +3,7 @@
 # Date:   2023-08-13
 
 import logging
+import datetime
 from pathlib import Path
 from typing import Optional
 from sqlalchemy import create_engine, or_, event
@@ -906,3 +907,30 @@ class Rekordbox6Database:
         new_path = old_path.parent / name
         new_path = new_path.with_suffix(ext)
         self.update_content_path(content, new_path, save, check_path)
+
+    def to_dict(self, verbose=False):
+        data = dict()
+        for table_name in tables.__all__:
+            if table_name.startswith("Stats") or table_name == "Base":
+                continue
+            if verbose:
+                print(f"Converting table: {table_name}")
+            table = getattr(tables, table_name)
+            columns = table.columns()
+            table_data = list()
+            for row in self.query(table).all():
+                table_data.append({column: row[column] for column in columns})
+            data[table_name] = table_data
+        return data
+
+    def to_json(self, file, indent=4, sort_keys=True, verbose=False):
+        import json
+
+        def json_serial(obj):
+            if isinstance(obj, (datetime.datetime, datetime.date)):
+                return obj.isoformat()
+            raise TypeError(f"Type {type(obj)} not serializable")
+
+        data = self.to_dict(verbose=verbose)
+        with open(file, "w") as fp:
+            json.dump(data, fp, indent=indent, sort_keys=sort_keys, default=json_serial)

@@ -113,6 +113,10 @@ class _Base(object):
         for key in self.__iter__():
             yield key, self.__getitem__(key)
 
+    def to_dict(self):
+        """Returns a dictionary of all column names and values."""
+        return {key: self.__getitem__(key) for key in self.columns()}
+
     def pformat(self, indent="   "):
         lines = [f"{self.__tablename__}"]
         columns = self.columns()
