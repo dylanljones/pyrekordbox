@@ -909,6 +909,19 @@ class Rekordbox6Database:
         self.update_content_path(content, new_path, save, check_path)
 
     def to_dict(self, verbose=False):
+        """Convert the database to a dictionary.
+
+        Parameters
+        ----------
+        verbose: bool, optional
+            If True, print the name of the table that is currently converted.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the database tables as keys and the table data as
+            a list of dicts.
+        """
         data = dict()
         for table_name in tables.__all__:
             if table_name.startswith("Stats") or table_name == "Base":
@@ -924,6 +937,7 @@ class Rekordbox6Database:
         return data
 
     def to_json(self, file, indent=4, sort_keys=True, verbose=False):
+        """Convert the database to a JSON file."""
         import json
 
         def json_serial(obj):
