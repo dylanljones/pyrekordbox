@@ -118,82 +118,6 @@ Alternatively the two paths can be specified in a configuration file under the s
 pyrekordbox.cfg and pyrekordbox.yaml.
 
 
-### Rekordbox XML
-
-The Rekordbox XML database is used for importing (and exporting) Rekordbox collections
-including track metadata and playlists. They can also be used to share playlists
-between two databases.
-
-Pyrekordbox can read and write Rekordbox XML databases.
-
-````python
-from pyrekordbox.xml import RekordboxXml
-
-xml = RekordboxXml("database.xml")
-
-track = xml.get_track(0)    # Get track by index (or TrackID)
-track_id = track.TrackID    # Access via attribute
-name = track["Name"]        # or dictionary syntax
-
-path = "/path/to/file.mp3"
-track = xml.add_track(path) # Add new track
-track["Name"] = "Title"     # Add attributes to new track
-track["TrackID"] = 10       # Types are handled automatically
-
-# Get playlist (folder) by path
-pl = xml.get_playlist("Folder", "Sub Playlist")
-keys = pl.get_tracks()  # Get keys of tracks in playlist
-ktype = pl.key_type     # Key can either be TrackID or Location
-
-# Add tracks and sub-playlists (folders)
-pl.add_track(track.TrackID)
-pl.add_playlist("Sub Sub Playlist")
-````
-
-### Rekordbox ANLZ files
-
-Rekordbox stores analysis information of the tracks in the collection in specific files,
-which also get exported to decives used by Pioneer professional DJ equipment. The files
-have names like `ANLZ0000` and come with the extensions `.DAT`, `.EXT` or `.2EX`.
-They include waveforms, beat grids (information about the precise time at which
-each beat occurs), time indices to allow efficient seeking to specific positions
-inside variable bit-rate audio streams, and lists of memory cues and loop points.
-
-Pyrekordbox can parse all three analysis files, although not all the information of
-the tracks can be extracted yet.
-
-````python
-from pyrekordbox.anlz import AnlzFile
-
-anlz = AnlzFile.parse_file("ANLZ0000.DAT")
-beat_grid = anlz.get("beat_grid")
-path_tags = anlz.getall_tags("path")
-````
-
-Changing and creating the Rekordbox analysis files is planned as well, but for that the
-full structure of the analysis files has to be understood.
-
-
-### Rekordbox My-Settings
-
-Rekordbox stores the user settings in `*SETTING.DAT` files, which get exported to USB
-devices. These files are either in the `PIONEER`directory of a USB drive
-(device exports), but are also present for on local installations of Rekordbox 6.
-The setting files store the settings found on the "DJ System" > "My Settings" page of
-the Rekordbox preferences. These include language, LCD brightness, tempo fader range,
-crossfader curve and other settings for Pioneer professional DJ equipment.
-
-Pyrekordbox supports both parsing and writing My-Setting files.
-
-````python
-from pyrekordbox.mysettings import read_mysetting_file
-
-mysett = read_mysetting_file("MYSETTINGS.DAT")
-sync = mysett.get("sync")
-quant = mysett.get("quantize")
-````
-
-
 ### Rekordbox 6 database
 
 Rekordbox 6 now uses a SQLite database for storing the collection content.
@@ -243,6 +167,91 @@ python -m pyrekordbox download-key
 Once the key is cached the database can be opened without providing the key.
 
 
+### Rekordbox XML
+
+The Rekordbox XML database is used for importing (and exporting) Rekordbox collections
+including track metadata and playlists. They can also be used to share playlists
+between two databases.
+
+Pyrekordbox can read and write Rekordbox XML databases.
+
+````python
+from pyrekordbox.xml import RekordboxXml
+
+xml = RekordboxXml("database.xml")
+
+track = xml.get_track(0)    # Get track by index (or TrackID)
+track_id = track.TrackID    # Access via attribute
+name = track["Name"]        # or dictionary syntax
+
+path = "/path/to/file.mp3"
+track = xml.add_track(path) # Add new track
+track["Name"] = "Title"     # Add attributes to new track
+track["TrackID"] = 10       # Types are handled automatically
+
+# Get playlist (folder) by path
+pl = xml.get_playlist("Folder", "Sub Playlist")
+keys = pl.get_tracks()  # Get keys of tracks in playlist
+ktype = pl.key_type     # Key can either be TrackID or Location
+
+# Add tracks and sub-playlists (folders)
+pl.add_track(track.TrackID)
+pl.add_playlist("Sub Sub Playlist")
+````
+
+
+### Rekordbox ANLZ files
+
+Rekordbox stores analysis information of the tracks in the collection in specific files,
+which also get exported to decives used by Pioneer professional DJ equipment. The files
+have names like `ANLZ0000` and come with the extensions `.DAT`, `.EXT` or `.2EX`.
+They include waveforms, beat grids (information about the precise time at which
+each beat occurs), time indices to allow efficient seeking to specific positions
+inside variable bit-rate audio streams, and lists of memory cues and loop points.
+
+Pyrekordbox can parse all three analysis files, although not all the information of
+the tracks can be extracted yet.
+
+````python
+from pyrekordbox.anlz import AnlzFile
+
+anlz = AnlzFile.parse_file("ANLZ0000.DAT")
+beat_grid = anlz.get("beat_grid")
+path_tags = anlz.getall_tags("path")
+````
+
+Changing and creating the Rekordbox analysis files is planned as well, but for that the
+full structure of the analysis files has to be understood.
+
+Unsupported ANLZ tags:
+  - PCOB
+  - PCO2
+  - PSSI
+  - PWV6
+  - PWV7
+  - PWVC
+
+
+### Rekordbox My-Settings
+
+Rekordbox stores the user settings in `*SETTING.DAT` files, which get exported to USB
+devices. These files are either in the `PIONEER`directory of a USB drive
+(device exports), but are also present for on local installations of Rekordbox 6.
+The setting files store the settings found on the "DJ System" > "My Settings" page of
+the Rekordbox preferences. These include language, LCD brightness, tempo fader range,
+crossfader curve and other settings for Pioneer professional DJ equipment.
+
+Pyrekordbox supports both parsing and writing My-Setting files.
+
+````python
+from pyrekordbox.mysettings import read_mysetting_file
+
+mysett = read_mysetting_file("MYSETTINGS.DAT")
+sync = mysett.get("sync")
+quant = mysett.get("quantize")
+````
+
+
 ## 💡 File formats
 
 A summary of the Rekordbox file formats can be found in the [documentation]:
@@ -263,24 +272,6 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 
 Pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
-
-
-### To Do
-
-- [ ] Improve unit testing.
-- [ ] Adding new entries to the Rekordbox 6 `master.db` database
-- [ ] Complete ANLZ file support. This included the following tags:
-  - PCOB
-  - PCO2
-  - PSSI
-  - PWV6
-  - PWV7
-  - PWVC
-- [ ] Planned: Add RekordboxAgent client
-- [ ] Planned: Add USB export database support (`.pdb`).
-- [x] Improve Rekordbox 6 `master.db` database parsing.
-- [x] Add MySettings support.
-
 
 
 ## 🔗 Related Projects and References
