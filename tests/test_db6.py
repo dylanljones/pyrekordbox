@@ -5,6 +5,7 @@
 import os
 import pytest
 from pytest import mark
+import tempfile
 from sqlalchemy.orm.query import Query
 from pyrekordbox import Rekordbox6Database, open_rekordbox_database
 from pyrekordbox.db6 import tables
@@ -236,4 +237,10 @@ def test_get_anlz_paths():
 
 def test_to_json():
     # Check if saving to json works
-    DB.to_json("tmp.json")
+
+    tmp = tempfile.NamedTemporaryFile(delete=False)
+    try:
+        DB.to_json(tmp.name)
+    finally:
+        tmp.close()
+        os.remove(tmp.name)
