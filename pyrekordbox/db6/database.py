@@ -306,8 +306,6 @@ class Rekordbox6Database:
         fn = self._events[identifier]
         event.remove(self.session, identifier, fn)
 
-    # -- Table queries -----------------------------------------------------------------
-
     def query(self, *entities, **kwargs):
         """Creates a new SQL query for the given entities.
 
@@ -336,6 +334,140 @@ class Rekordbox6Database:
         >>> query = db.query(DjmdContent.Title)
         """
         return self.session.query(*entities, **kwargs)
+
+    def add(self, instance):
+        """Add an element to the Rekordbox database.
+
+        Parameters
+        ----------
+        instance : tables.Base
+            The table entry to add.
+        """
+        self.session.add(instance)
+        self.registry.on_create(instance)
+
+    def delete(self, instance):
+        """Delete an element from the Rekordbox database.
+
+        Parameters
+        ----------
+        instance : tables.Base
+            The table entry to delte.
+        """
+        self.session.delete(instance)
+        self.registry.on_delete(instance)
+
+    def get_local_usn(self):
+        """Returns the local sequence number (update count) of Rekordbox.
+
+        Any changes made to the `Djmd...` tables increments the local update count of
+        Rekordbox. The ``usn`` entry of the changed row is set to the corresponding
+        update count.
+
+        Returns
+        -------
+        usn : int
+            The value of the local update count.
+        """
+        return self.registry.get_local_update_count()
+
+    def set_local_usn(self, usn):
+        """Sets the local sequence number (update count) of Rekordbox.
+
+        Parameters
+        ----------
+        usn : int or str
+            The new update sequence number.
+        """
+        self.registry.set_local_update_count(usn)
+
+    def increment_local_usn(self, num=1):
+        """Increments the local update sequence number (update count) of Rekordbox.
+
+        Parameters
+        ----------
+        num : int, optional
+            The number of times to increment the update counter. By default, the counter
+            is incremented by 1.
+
+        Returns
+        -------
+        usn : int
+            The value of the incremented local update count.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+
+        >>> db.increment_local_usn()
+        70501
+
+        >>> db.get_local_usn()
+        70501
+        """
+        return self.registry.increment_local_update_count(num)
+
+    def autoincrement_usn(self, set_row_usn=True):
+        """Auto-increments the local USN for all uncommited changes.
+
+        Parameters
+        ----------
+        set_row_usn : bool, optional
+            If True, set the ``rb_local_usn`` value of updated or added rows according
+            to the uncommited update sequence.
+
+        Returns
+        -------
+        new_usn : int
+            The new local update sequence number after applying all updates.
+
+        Examples
+        --------
+        >>> db = Rekordbox6Database()
+        >>> db.get_local_usn()
+        70500
+
+        >>> content = db.get_content().first()
+        >>> playlist = db.get_playlist().first()
+        >>> content.Title = "New Title"
+        >>> playlist.Name = "New Name"
+        >>> db.autoincrement_usn(set_row_usn=True)
+        >>> db.get_local_usn()
+        70502
+        """
+        return self.registry.autoincrement_local_update_count(set_row_usn)
+
+    def flush(self):
+        """Flushes the buffer of the SQLAlchemy session instance."""
+        self.session.flush()
+
+    def commit(self, autoinc=True):
+        """Commit the changes made to the database.
+
+        Parameters
+        ----------
+        autoinc : bool, optional
+            If True, auto-increment the local and row USN's before commiting the
+            changes made to the database.
+
+        See Also
+        --------
+        autoincrement_usn : Auto-increments the local Rekordbox USN's.
+        """
+        if autoinc:
+            self.registry.autoincrement_local_update_count(set_row_usn=True)
+
+        self.session.commit()
+        self.registry.clear_buffer()
+
+    def rollback(self):
+        """Rolls back the uncommited changes to the database."""
+        self.session.rollback()
+        self.registry.clear_buffer()
+
+    # -- Table queries -----------------------------------------------------------------
 
     def get_active_censor(self, **kwargs):
         """Creates a filtered query for the ``DjmdActiveCensor`` table."""
@@ -581,129 +713,6 @@ class Rekordbox6Database:
         """Creates a filtered query for the ``UuidIDMap`` table."""
         query = self.query(tables.UuidIDMap).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
-
-    # -- Database updates --------------------------------------------------------------
-
-    def delete(self, instance):
-        """Delete an element from the Rekordbox database.
-
-        Parameters
-        ----------
-        instance : tables.Base
-            The table entry to delte.
-        """
-        self.session.delete(instance)
-        self.registry.on_delete(instance)
-
-    def get_local_usn(self):
-        """Returns the local sequence number (update count) of Rekordbox.
-
-        Any changes made to the `Djmd...` tables increments the local update count of
-        Rekordbox. The ``usn`` entry of the changed row is set to the corresponding
-        update count.
-
-        Returns
-        -------
-        usn : int
-            The value of the local update count.
-        """
-        return self.registry.get_local_update_count()
-
-    def set_local_usn(self, usn):
-        """Sets the local sequence number (update count) of Rekordbox.
-
-        Parameters
-        ----------
-        usn : int or str
-            The new update sequence number.
-        """
-        self.registry.set_local_update_count(usn)
-
-    def increment_local_usn(self, num=1):
-        """Increments the local update sequence number (update count) of Rekordbox.
-
-        Parameters
-        ----------
-        num : int, optional
-            The number of times to increment the update counter. By default, the counter
-            is incremented by 1.
-
-        Returns
-        -------
-        usn : int
-            The value of the incremented local update count.
-
-        Examples
-        --------
-        >>> db = Rekordbox6Database()
-        >>> db.get_local_usn()
-        70500
-
-        >>> db.increment_local_usn()
-        70501
-
-        >>> db.get_local_usn()
-        70501
-        """
-        return self.registry.increment_local_update_count(num)
-
-    def autoincrement_usn(self, set_row_usn=True):
-        """Auto-increments the local USN for all uncommited changes.
-
-        Parameters
-        ----------
-        set_row_usn : bool, optional
-            If True, set the ``rb_local_usn`` value of updated or added rows according
-            to the uncommited update sequence.
-
-        Returns
-        -------
-        new_usn : int
-            The new local update sequence number after applying all updates.
-
-        Examples
-        --------
-        >>> db = Rekordbox6Database()
-        >>> db.get_local_usn()
-        70500
-
-        >>> content = db.get_content().first()
-        >>> playlist = db.get_playlist().first()
-        >>> content.Title = "New Title"
-        >>> playlist.Name = "New Name"
-        >>> db.autoincrement_usn(set_row_usn=True)
-        >>> db.get_local_usn()
-        70502
-        """
-        return self.registry.autoincrement_local_update_count(set_row_usn)
-
-    def flush(self):
-        """Flushes the buffer of the SQLAlchemy session instance."""
-        self.session.flush()
-
-    def commit(self, autoinc=True):
-        """Commit the changes made to the database.
-
-        Parameters
-        ----------
-        autoinc : bool, optional
-            If True, auto-increment the local and row USN's before commiting the
-            changes made to the database.
-
-        See Also
-        --------
-        autoincrement_usn : Auto-increments the local Rekordbox USN's.
-        """
-        if autoinc:
-            self.autoincrement_usn()
-
-        self.session.commit()
-        self.registry.clear_buffer()
-
-    def rollback(self):
-        """Rolls back the uncommited changes to the database."""
-        self.session.rollback()
-        self.registry.clear_buffer()
 
     # ----------------------------------------------------------------------------------
 
