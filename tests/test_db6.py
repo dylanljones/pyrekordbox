@@ -232,3 +232,8 @@ def test_get_anlz_paths():
     anlz_dir = str(db.get_anlz_dir(content)).replace("\\", "/")
     expected = r"share/PIONEER/USBANLZ/735/e8b81-e69b-41ad-80f8-9c0d7613b96d"
     assert anlz_dir.endswith(expected)
+
+
+def test_to_json():
+    # Check if saving to json works
+    DB.to_json("tmp.json")
