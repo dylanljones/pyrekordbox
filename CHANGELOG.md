@@ -1,6 +1,19 @@
 # What's New
 
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### New Features
+
+- **add or remove tracks in RBv6 playlists**  
+  It is now possible to add songs with arbitrary track number to playlists in the 
+  Rekordbox v6 database handler. Any song can also be removed from playlists. 
+  The track numbers of the other songs in the playlist get updated accordingly.
+  To make sure all changes are compatible with Rekordbox, a new handler for 
+  the `masterPlaylists6.xml` auxiliary file was added.
+
+
 <a name="0.1.8"></a>
 ## [0.1.8] - 2023-09-15
 
