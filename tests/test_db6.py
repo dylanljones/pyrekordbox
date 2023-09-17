@@ -5,13 +5,17 @@
 import os
 import pytest
 from pytest import mark
+from pathlib import Path
+import shutil
 import tempfile
 from sqlalchemy.orm.query import Query
 from pyrekordbox import Rekordbox6Database, open_rekordbox_database
 from pyrekordbox.db6 import tables
 
-TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
-UNLOCKED = os.path.join(TEST_ROOT, "rekordbox 6", "master_unlocked.db")
+TEST_ROOT = Path(__file__).parent.parent / ".testdata"
+UNLOCKED = TEST_ROOT / "rekordbox 6" / "master_unlocked.db"
+# create copy of database to test changes
+UNLOCKED_COPY = TEST_ROOT / "rekordbox 6" / "master_unlocked_copy.db"
 
 DB = Rekordbox6Database(UNLOCKED, unlock=False)
 
@@ -224,6 +228,119 @@ def test_autoincrement_local_usn():
     assert track2.rb_local_usn == old_usn + 3
     # USN of deleted rows obviously don't get updated
     assert playlist.rb_local_usn == new_usn
+
+
+def test_add_song_to_playlist():
+    shutil.copy(UNLOCKED, UNLOCKED_COPY)
+    db = Rekordbox6Database(UNLOCKED_COPY, unlock=False)
+
+    cid1 = 178162577
+    cid2 = 66382436
+    pid = 2602250856
+
+    # test adding song to playlist
+    song = db.add_to_playlist(pid, cid1)
+    db.commit()
+
+    pl = db.get_playlist(ID=pid)
+    assert len(pl.Songs) == 1
+    assert pl.Songs[0].ContentID == str(cid1)
+    assert song.TrackNo == 1
+
+    # Get xml item
+    plxml = db.playlist_xml.get(pid)
+    ts = plxml["Timestamp"]
+    assert int(pl.updated_at.timestamp() * 1000) == int(ts.timestamp() * 1000)
+
+    # test raising error when adding song to playlist with wrong TrackNo
+    with pytest.raises(ValueError):
+        db.add_to_playlist(pid, cid2, track_no=0)
+    with pytest.raises(ValueError):
+        db.add_to_playlist(pid, cid2, track_no=3)
+
+    db.close()
+
+
+def test_add_song_to_playlist_trackno_end():
+    shutil.copy(UNLOCKED, UNLOCKED_COPY)
+    db = Rekordbox6Database(UNLOCKED_COPY, unlock=False)
+
+    cid1 = 178162577
+    cid2 = 66382436
+    cid3 = 181094952
+    pid = 2602250856
+    song1 = db.add_to_playlist(pid, cid1)
+    song2 = db.add_to_playlist(pid, cid2)
+    song3 = db.add_to_playlist(pid, cid3)
+    assert song1.TrackNo == 1
+    assert song2.TrackNo == 2
+    assert song3.TrackNo == 3
+
+    db.commit()
+    db.close()
+
+
+def test_add_song_to_playlist_trackno_middle():
+    shutil.copy(UNLOCKED, UNLOCKED_COPY)
+    db = Rekordbox6Database(UNLOCKED_COPY, unlock=False)
+
+    cid1 = 178162577
+    cid2 = 66382436
+    cid3 = 181094952
+    pid = 2602250856
+
+    song1 = db.add_to_playlist(pid, cid1)
+    song2 = db.add_to_playlist(pid, cid2)
+    assert song1.TrackNo == 1
+    assert song2.TrackNo == 2
+    db.commit()
+
+    # Insert song in the middle
+    song3 = db.add_to_playlist(pid, cid3, track_no=2)
+    assert song3.TrackNo == 2
+    db.commit()
+
+    pl = db.get_playlist(ID=pid)
+    songs = sorted(pl.Songs, key=lambda x: int(x.TrackNo))
+    assert len(songs) == 3
+    assert songs[0].ContentID == str(cid1)
+    assert songs[0].TrackNo == 1
+    assert songs[1].ContentID == str(cid3)
+    assert songs[1].TrackNo == 2
+    assert songs[2].ContentID == str(cid2)
+    assert songs[2].TrackNo == 3
+
+    db.close()
+
+
+def test_remove_song_from_playlist():
+    shutil.copy(UNLOCKED, UNLOCKED_COPY)
+    db = Rekordbox6Database(UNLOCKED_COPY, unlock=False)
+
+    cid1 = 178162577
+    cid2 = 66382436
+    cid3 = 181094952
+    pid = 2602250856
+    # Add songs to playlist
+    db.add_to_playlist(pid, cid1, track_no=1)
+    song2 = db.add_to_playlist(pid, cid2, track_no=2)
+    db.add_to_playlist(pid, cid3, track_no=3)
+    sid2 = song2.ID
+    db.commit()
+
+    # test removing song from playlist
+    db.remove_from_playlist(pid, sid2)
+    db.commit()
+
+    pl = db.get_playlist(ID=pid)
+    songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+    assert len(songs) == 2
+    assert songs[0].ContentID == str(cid1)
+    assert songs[0].TrackNo == 1
+    assert songs[1].ContentID == str(cid3)
+    assert songs[1].TrackNo == 2
+
+    db.close()
 
 
 def test_get_anlz_paths():

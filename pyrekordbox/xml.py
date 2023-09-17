@@ -61,6 +61,17 @@ def pretty_xml(element, indent=None, encoding="utf-8"):
     -------
     xml_string : str
         The formatted string of the XML element.
+
+    Notes
+    -----
+    This method is needed for Python 3.8 and below. Starting with Python 3.9 the XML
+    module has a built-in pretty-print function:
+
+    >>> tree = xml.ElementTree(root)
+    >>> xml.indent(tree, space="\t", level=0)
+    >>> tree.write(path, encoding="utf-8", xml_declaration=True)
+
+    This method will be used as soon support for Python 3.8 and below is dropped.
     """
     # Build pretty xml-string
     if indent is None:

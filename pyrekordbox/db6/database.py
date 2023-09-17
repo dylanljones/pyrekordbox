@@ -4,6 +4,7 @@
 
 import logging
 import datetime
+from uuid import uuid4
 from pathlib import Path
 from typing import Optional
 from sqlalchemy import create_engine, or_, event
@@ -14,6 +15,7 @@ from ..utils import get_rekordbox_pid
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
+from .aux_files import MasterPlaylistXml
 from .tables import DjmdContent
 from . import tables
 
@@ -221,18 +223,23 @@ class Rekordbox6Database:
         else:
             engine = create_engine(f"sqlite:///{path}")
 
+        if not db_dir:
+            db_dir = path.parent
+        db_dir = Path(db_dir)
+        if not db_dir.exists():
+            raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
+
         self.engine = engine
         self._Session = sessionmaker(bind=self.engine)
         self.session: Optional[Session] = None
 
         self.registry = RekordboxAgentRegistry(self)
         self._events = dict()
-
-        if not db_dir:
-            db_dir = path.parent
-        db_dir = Path(db_dir)
-        if not db_dir.exists():
-            raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
+        try:
+            self.playlist_xml = MasterPlaylistXml(db_dir=db_dir)
+        except FileNotFoundError:
+            logger.warning(f"No masterPlaylists6.xml found in {db_dir}")
+            self.playlist_xml = None
 
         self._db_dir = db_dir
         self._share_dir = db_dir / "share"
@@ -461,6 +468,8 @@ class Rekordbox6Database:
 
         self.session.commit()
         self.registry.clear_buffer()
+        if self.playlist_xml is not None and self.playlist_xml.modified:
+            self.playlist_xml.save()
 
     def rollback(self):
         """Rolls back the uncommited changes to the database."""
@@ -713,6 +722,145 @@ class Rekordbox6Database:
         """Creates a filtered query for the ``UuidIDMap`` table."""
         query = self.query(tables.UuidIDMap).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
+
+    # -- Database updates --------------------------------------------------------------
+
+    def generate_unused_id(self, table, is_28_bit: bool = True) -> int:
+        import secrets
+
+        max_tries = 1000000
+        for _ in range(max_tries):
+            # Generate random ID
+            buf = secrets.token_bytes(4)
+            id_ = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3] >> 0
+            if is_28_bit:
+                id_ = id_ >> 4
+            if id_ < 100:
+                continue
+            # Check if ID is already used
+            query = self.query(table.ID).filter(table.ID == id_)
+            used = self.query(query.exists()).scalar()
+            if not used:
+                return id_
+
+        raise ValueError("Could not generate unused ID")
+
+    def add_to_playlist(self, playlist, content, track_no=None):
+        """Adds a track to a playlist.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist to add the track to.
+        content : DjmdContent or int or str
+            The content to add to the playlist.
+        track_no : int, optional
+            The track number to add the content to. If not specified, the track
+            will be added to the end of the playlist.
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        if isinstance(content, (int, str)):
+            content = self.get_content(ID=content)
+        # Check playlist attribute (can't be folder or smart playlist)
+        if playlist.Attribute != 0:
+            raise ValueError("Playlist must be a normal playlist")
+
+        uuid = str(uuid4())
+        id_ = str(uuid4())
+        now = datetime.datetime.now()
+        nsongs = (
+            self.query(tables.DjmdSongPlaylist)
+            .filter_by(PlaylistID=playlist.ID)
+            .count()
+        )
+        if track_no is not None:
+            insert_at_end = False
+            track_no = int(track_no)
+            if track_no < 1:
+                raise ValueError("Track number must be greater than 0")
+            if track_no > nsongs + 1:
+                raise ValueError(
+                    f"Track number too high, parent contains {nsongs} items"
+                )
+        else:
+            insert_at_end = True
+            track_no = nsongs + 1
+
+        cid = content.ID
+        pid = playlist.ID
+
+        logger.info("Adding content with ID=%s to playlist with ID=%s:", cid, pid)
+        logger.debug("Content ID:  %s", cid)
+        logger.debug("Playlist ID: %s", pid)
+        logger.debug("ID:          %s", id_)
+        logger.debug("UUID:        %s", uuid)
+        logger.debug("TrackNo:     %s", track_no)
+
+        if not insert_at_end:
+            # Update track numbers higher than the removed track
+            query = self.query(tables.DjmdSongPlaylist).filter(
+                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                tables.DjmdSongPlaylist.TrackNo >= track_no,
+            )
+            for song in query:
+                song.TrackNo += 1
+                song.updated_at = now
+        # Add song to playlist
+        song = tables.DjmdSongPlaylist(
+            ID=id_,
+            PlaylistID=str(pid),
+            ContentID=str(cid),
+            TrackNo=track_no,
+            UUID=uuid,
+            created_at=now,
+            updated_at=now,
+        )
+        self.add(song)
+
+        # Set update time
+        playlist.updated_at = now
+        if self.playlist_xml is not None:
+            self.playlist_xml.update(pid, updated_at=now)
+
+        return song
+
+    def remove_from_playlist(self, playlist, song):
+        """Removes a track from a playlist.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist to remove the track from.
+        song : DjmdSongPlaylist or int or str
+            The song to remove from the playlist.
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        if isinstance(song, (int, str)):
+            song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
+        logger.info(
+            "Removing song with ID=%s from playlist with ID=%s", song.ID, playlist.ID
+        )
+        now = datetime.datetime.now()
+
+        # Remove track from playlist
+        track_no = song.TrackNo
+        self.delete(song)
+
+        # Update track numbers higher than the removed track
+        query = self.query(tables.DjmdSongPlaylist).filter(
+            tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+            tables.DjmdSongPlaylist.TrackNo > track_no,
+        )
+        for song in query:
+            song.TrackNo -= 1
+            song.updated_at = now
+
+        # Set update time
+        playlist.updated_at = now
+        if self.playlist_xml is not None:
+            self.playlist_xml.update(playlist.ID, updated_at=now)
 
     # ----------------------------------------------------------------------------------
 

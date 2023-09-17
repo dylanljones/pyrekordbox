@@ -793,14 +793,14 @@ either be a playlist folder or an actual playlist containing tracks.
      - The path to the image file of the playlist
      -
    * - `Attribute`
-     - The attributes of the playlist
-     -
+     - The type of playlist
+     - 0: playlist, 1: folder, 4: smart playlist
    * - `ParentID`
      - The `ID` of the parent playlist folder
      -
    * - `SmartList`
      - The conditions for a smart list (if used)
-     -
+     - Saved as a XML string
 
 ```
 
