@@ -6,12 +6,21 @@
 
 ### New Features
 
+- **create or delete playlists/playlist folders in the RBv6 db**  
+  It is now possible to create playlists or playlist folders with arbitrary seq number 
+  using the Rekordbox v6 database handler. Any playlist or playlist folder can also be 
+  deleted. All corresponding songs or sub-playlists will also be deleted.
 - **add or remove tracks in RBv6 playlists**  
   It is now possible to add songs with arbitrary track number to playlists in the 
   Rekordbox v6 database handler. Any song can also be removed from playlists. 
   The track numbers of the other songs in the playlist get updated accordingly.
   To make sure all changes are compatible with Rekordbox, a new handler for 
   the `masterPlaylists6.xml` auxiliary file was added.
+
+### Improvements/Bug Fixes
+
+- **improve `Parent` relationship in nested tables.**  
+  The `Parent` relationship in nested tables (like playlists) are now declared via `backref`. This fixes a bug when deleting rows.
 
 
 <a name="0.1.8"></a>
