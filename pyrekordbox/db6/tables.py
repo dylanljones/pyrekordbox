@@ -6,7 +6,7 @@
 
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, DateTime
 from sqlalchemy import Text, ForeignKey, Float
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, backref
 from sqlalchemy.inspection import inspect
 from .registry import RekordboxAgentRegistry
 
@@ -806,7 +806,7 @@ class DjmdHistory(Base, StatsFull):
 
     __tablename__ = "djmdHistory"
 
-    ID = Column(VARCHAR(255), ForeignKey("djmdHistory.ParentID"), primary_key=True)
+    ID = Column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry (:class:`DjmdHistory`)."""
     Seq = Column(Integer, default=None)
     """The sequence of the history playlist (for ordering)."""
@@ -821,10 +821,14 @@ class DjmdHistory(Base, StatsFull):
 
     Songs = relationship("DjmdSongHistory", back_populates="History")
     """The songs in the history playlist (links to :class:`DjmdSongHistory`)."""
-    Children = relationship("DjmdHistory", foreign_keys=ParentID)
-    """The children of the history playlist (links to :class:`DjmdHistory`)."""
-    Parent = relationship("DjmdHistory", foreign_keys=ID)
-    """The parent of the history playlist (links to :class:`DjmdHistory`)."""
+    Children = relationship(
+        "DjmdHistory",
+        foreign_keys=ParentID,
+        backref=backref("Parent", remote_side=[ID]),
+    )
+    """The children of the history playlist (links to :class:`DjmdHistory`).
+    Backrefs to the parent history playlist via :attr:`Parent`.
+    """
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -866,9 +870,7 @@ class DjmdHotCueBanklist(Base, StatsFull):
 
     __tablename__ = "djmdHotCueBanklist"
 
-    ID = Column(
-        VARCHAR(255), ForeignKey("djmdHotCueBanklist.ParentID"), primary_key=True
-    )
+    ID = Column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry (:class:`DjmdHotCueBanklist`)"""
     Seq = Column(Integer, default=None)
     """The sequence of the hot-cue banklist (for ordering)."""
@@ -881,10 +883,14 @@ class DjmdHotCueBanklist(Base, StatsFull):
     ParentID = Column(VARCHAR(255), ForeignKey("djmdHotCueBanklist.ID"), default=None)
     """The ID of the parent hot-cue banklist (:class:`DjmdHotCueBanklist`)."""
 
-    Children = relationship("DjmdHotCueBanklist", foreign_keys=ParentID)
-    """The children of the hot-cue banklist (links to :class:`DjmdHotCueBanklist`)."""
-    Parent = relationship("DjmdHotCueBanklist", foreign_keys=ID)
-    """The parent of the hot-cue banklist (links to :class:`DjmdHotCueBanklist`)."""
+    Children = relationship(
+        "DjmdHotCueBanklist",
+        foreign_keys=ParentID,
+        backref=backref("Parent", remote_side=[ID]),
+    )
+    """The children of the hot-cue banklist (links to :class:`DjmdHotCueBanklist`).
+    Backrefs to the parent hot-cue banklist via :attr:`Parent`.
+    """
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -1053,10 +1059,12 @@ class DjmdMyTag(Base, StatsFull):
 
     MyTags = relationship("DjmdSongMyTag", back_populates="MyTag")
     """The My-Tag items (links to :class:`DjmdSongMyTag`)."""
-    Children = relationship("DjmdMyTag", foreign_keys=ParentID)
-    """The child lists of the My-Tag list (links to :class:`DjmdMyTag`)."""
-    Parent = relationship("DjmdMyTag", foreign_keys=ID)
-    """The parent list of the My-Tag list (links to :class:`DjmdMyTag`)."""
+    Children = relationship(
+        "DjmdMyTag", foreign_keys=ParentID, backref=backref("Parent", remote_side=[ID])
+    )
+    """The child lists of the My-Tag list (links to :class:`DjmdMyTag`).
+    Backrefs to the parent list via :attr:`Parent`.
+    """
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -1098,7 +1106,7 @@ class DjmdPlaylist(Base, StatsFull):
 
     __tablename__ = "djmdPlaylist"
 
-    ID = Column(VARCHAR(255), ForeignKey("djmdPlaylist.ParentID"), primary_key=True)
+    ID = Column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
     Seq = Column(Integer, default=None)
     """The sequence of the playlist (for ordering)."""
@@ -1115,10 +1123,14 @@ class DjmdPlaylist(Base, StatsFull):
 
     Songs = relationship("DjmdSongPlaylist", back_populates="Playlist")
     """The contents of the playlist (links to :class:`DjmdSongPlaylist`)."""
-    Children = relationship("DjmdPlaylist", foreign_keys=ParentID)
-    """The child playlists of the playlist (links to :class:`DjmdPlaylist`)."""
-    Parent = relationship("DjmdPlaylist", foreign_keys=ID)
-    """The parent playlist of the playlist (links to :class:`DjmdPlaylist`)."""
+    Children = relationship(
+        "DjmdPlaylist",
+        foreign_keys=ParentID,
+        backref=backref("Parent", remote_side=[ID]),
+    )
+    """The child playlists of the playlist (links to :class:`DjmdPlaylist`).
+    Backrefs to the parent playlist via :attr:`Parent`.
+    """
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -1160,9 +1172,7 @@ class DjmdRelatedTracks(Base, StatsFull):
 
     __tablename__ = "djmdRelatedTracks"
 
-    ID = Column(
-        VARCHAR(255), ForeignKey("djmdRelatedTracks.ParentID"), primary_key=True
-    )
+    ID = Column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
     Seq = Column(Integer, default=None)
     """The sequence of the related tracks list (for ordering)."""
@@ -1178,12 +1188,15 @@ class DjmdRelatedTracks(Base, StatsFull):
     Songs = relationship("DjmdSongRelatedTracks", back_populates="RelatedTracks")
     """The contents of the related tracks list
     (links to :class:`DjmdSongRelatedTracks`)."""
-    Children = relationship("DjmdRelatedTracks", foreign_keys=ParentID)
+    Children = relationship(
+        "DjmdRelatedTracks",
+        foreign_keys=ParentID,
+        backref=backref("Parent", remote_side=[ID]),
+    )
     """The child related tracks lists of the related tracks list
-    (links to :class:`DjmdSongRelatedTracks`)."""
-    Parent = relationship("DjmdRelatedTracks", foreign_keys=ID)
-    """The parent related tracks list of the related tracks list
-    (links to :class:`DjmdSongRelatedTracks`)."""
+    (links to :class:`DjmdSongRelatedTracks`).
+    Backrefs to the parent related tracks list via :attr:`Parent`.
+    """
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
@@ -1228,7 +1241,7 @@ class DjmdSampler(Base, StatsFull):
 
     __tablename__ = "djmdSampler"
 
-    ID = Column(VARCHAR(255), ForeignKey("djmdSampler.ID"), primary_key=True)
+    ID = Column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
     Seq = Column(Integer, default=None)
     """The sequence of the sampler list (for ordering)."""
@@ -1241,10 +1254,14 @@ class DjmdSampler(Base, StatsFull):
 
     Songs = relationship("DjmdSongSampler", back_populates="Sampler")
     """The contents of the sampler list (links to :class:`DjmdSongSampler`)."""
-    Children = relationship("DjmdSampler", foreign_keys=ParentID)
-    """The child sampler lists of the sampler list (links to :class:`DjmdSampler`)."""
-    Parent = relationship("DjmdSampler", foreign_keys=ID)
-    """The parent sampler list of the sampler list (links to :class:`DjmdSampler`)."""
+    Children = relationship(
+        "DjmdSampler",
+        foreign_keys=ParentID,
+        backref=backref("Parent", remote_side=[ID]),
+    )
+    """The child sampler lists of the sampler list (links to :class:`DjmdSampler`).
+    Backrefs to the parent sampler list via :attr:`Parent`.
+    """
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
