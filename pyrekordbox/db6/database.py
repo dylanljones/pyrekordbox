@@ -807,7 +807,7 @@ class Rekordbox6Database:
                 song.TrackNo += 1
                 song.updated_at = now
         # Add song to playlist
-        song = tables.DjmdSongPlaylist(
+        song = tables.DjmdSongPlaylist.create(
             ID=id_,
             PlaylistID=str(pid),
             ContentID=str(cid),
@@ -861,6 +861,206 @@ class Rekordbox6Database:
         playlist.updated_at = now
         if self.playlist_xml is not None:
             self.playlist_xml.update(playlist.ID, updated_at=now)
+
+    def _create_playlist(
+        self, name, seq, image_path, parent, smart_list=None, attribute=None
+    ):
+        """Creates a new playlist object."""
+        table = tables.DjmdPlaylist
+        id_ = str(self.generate_unused_id(table, is_28_bit=True))
+        uuid = str(uuid4())
+        now = datetime.datetime.now()
+
+        if parent is None:
+            # If no parent is given, use root playlist
+            parent_id = "root"
+        elif isinstance(parent, tables.DjmdPlaylist):
+            # Check if parent is a folder
+            parent_id = parent.ID
+            if parent.Attribute != 1:
+                raise ValueError("Parent is not a folder")
+        else:
+            # Check if parent exists and is a folder
+            parent_id = parent
+            query = self.query(table.ID).filter(
+                table.ID == parent_id, table.Attribute == 1
+            )
+            if not self.query(query.exists()).scalar():
+                raise ValueError("Parent does not exist or is not a folder")
+
+        n = self.get_playlist(ParentID=parent_id).count()
+        logger.debug("Parent playlist with ID=%s contains %s items", parent_id, n)
+
+        if seq is None:
+            # New playlist is last in parents
+            seq = n + 1
+            insert_at_end = True
+        else:
+            # Check if sequence number is valid
+            insert_at_end = False
+            if seq > n + 1:
+                raise ValueError(f"Sequence number too high, parent contains {n} items")
+
+        logger.debug("ID:          %s", id_)
+        logger.debug("UUID:        %s", uuid)
+        logger.debug("Name:        %s", name)
+        logger.debug("Parent ID:   %s", parent_id)
+        logger.debug("Seq:         %s", seq)
+        logger.debug("Attribute:   %s", attribute)
+        logger.debug("Smart List:  %s", smart_list)
+        logger.debug("Image Path:  %s", image_path)
+
+        # Update seq numbers higher than the new seq number
+        if not insert_at_end:
+            query = self.query(tables.DjmdPlaylist).filter(
+                tables.DjmdPlaylist.ParentID == parent_id,
+                tables.DjmdPlaylist.Seq >= seq,
+            )
+            for pl in query:
+                pl.Seq += 1
+                pl.updated_at = now
+
+        # Add new playlist to database
+        playlist = table.create(
+            ID=id_,
+            Seq=seq,
+            Name=name,
+            ImagePath=image_path,
+            Attribute=attribute,
+            ParentID=parent_id,
+            SmartList=smart_list,
+            UUID=uuid,
+            created_at=now,
+            updated_at=now,
+        )
+        self.add(playlist)
+
+        # Set update time of parent playlist
+        if parent_id != "root":
+            parent = self.get_playlist(ID=parent_id)
+            parent.updated_at = now
+            if self.playlist_xml is not None:
+                self.playlist_xml.update(parent_id, updated_at=now)
+
+        # Update masterPlaylists6.xml
+        if self.playlist_xml is not None:
+            self.playlist_xml.add(
+                id_, parent_id, attribute, now, lib_type=0, check_type=0
+            )
+
+        return playlist
+
+    def create_playlist(self, name, parent=None, seq=None, image_path=None):
+        """Creates a new playlist in the database.
+
+        Parameters
+        ----------
+        name : str
+            The name of the new playlist.
+        parent : DjmdPlaylist or int or str, optional
+            The parent playlist of the new playlist. If not given, the playlist will be
+            added to the root playlist.
+        seq : int, optional
+            The sequence number of the new playlist. If not given, the playlist will be
+            added at the end of the parent playlist.
+        image_path : str, optional
+            The path to the image file of the new playlist.
+
+        Returns
+        -------
+        playlist : DjmdPlaylist
+        """
+        logger.info("Creating playlist %s", name)
+        return self._create_playlist(name, seq, image_path, parent, attribute=0)
+
+    def create_playlist_folder(self, name, parent=None, seq=None, image_path=None):
+        """Creates a new playlist folder in the database.
+
+        Parameters
+        ----------
+        name : str
+            The name of the new playlist folder.
+        parent : DjmdPlaylist or int or str, optional
+            The parent playlist of the new folder. If not given, the playlist will be
+            added to the root playlist.
+        seq : int, optional
+            The sequence number of the new folder. If not given, the playlist will be
+            added at the end of the parent playlist.
+        image_path : str, optional
+            The path to the image file of the new playlist.
+
+        Returns
+        -------
+        playlist_folder : DjmdPlaylist
+        """
+        logger.info("Creating playlist folder %s", name)
+        return self._create_playlist(name, seq, image_path, parent, attribute=1)
+
+    def delete_playlist(self, playlist):
+        """Deletes a playlist or playlist folder from the database.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist or playlist folder to delete.
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+
+        if playlist.Attribute == 1:
+            logger.info(
+                "Deleting playlist folder '%s' with ID=%s", playlist.Name, playlist.ID
+            )
+        else:
+            logger.info("Deleting playlist '%s' with ID=%s", playlist.Name, playlist.ID)
+
+        now = datetime.datetime.now()
+        seq = playlist.Seq
+        parent_id = playlist.ParentID
+
+        # Update seq numbers higher than the deleted seq number
+        query = self.query(tables.DjmdPlaylist).filter(
+            tables.DjmdPlaylist.ParentID == parent_id,
+            tables.DjmdPlaylist.Seq > seq,
+        )
+        for pl in query:
+            pl.Seq -= 1
+            pl.updated_at = now
+            if self.playlist_xml is not None:
+                self.playlist_xml.update(pl.ID, updated_at=now)
+
+        # Update parent playlist update time
+        if parent_id != "root":
+            parent = self.get_playlist(ID=parent_id)
+            parent.updated_at = now
+            if self.playlist_xml is not None:
+                self.playlist_xml.update(parent_id, updated_at=now)
+
+        # Get all child playlist IDs
+        children = [playlist]
+        child_ids = list()
+        while len(children):
+            new_children = list()
+            for child in children:
+                child_ids.append(child.ID)
+                new_children.extend(list(child.Children))
+            children = new_children
+
+        # Remove playlist from masterPlaylists6.xml
+        if self.playlist_xml is not None:
+            for pid in child_ids:
+                self.playlist_xml.remove(pid)
+
+        # Remove playlist from database
+        self.delete(playlist)
+
+        # Check masterPlaylist6.xml
+        if self.playlist_xml is not None:
+            for plxml in self.playlist_xml.get_playlists():
+                if plxml["Lib_Type"] != 0:
+                    continue
+                pid = int(plxml["Id"], 16)
+                assert self.query(tables.DjmdPlaylist).filter_by(ID=pid).count() == 1
 
     # ----------------------------------------------------------------------------------
 

@@ -129,6 +129,8 @@ class MasterPlaylistXml:
             "Lib_Type": str(lib_type),
             "CheckType": str(check_type),
         }
+        if self.playlists.find(f'.//NODE[@Id="{hex_id}"]') is not None:
+            raise ValueError(f"Playlist with ID {playlist_id} ({hex_id}) exists.")
         element = xml.SubElement(self.playlists, "NODE", attrib=attrib)
         self._changed = True
         return element

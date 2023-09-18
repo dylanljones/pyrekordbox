@@ -1121,12 +1121,15 @@ class DjmdPlaylist(Base, StatsFull):
     SmartList = Column(Text, default=None)
     """The smart list settings of the playlist."""
 
-    Songs = relationship("DjmdSongPlaylist", back_populates="Playlist")
+    Songs = relationship(
+        "DjmdSongPlaylist", back_populates="Playlist", cascade="all, delete"
+    )
     """The contents of the playlist (links to :class:`DjmdSongPlaylist`)."""
     Children = relationship(
         "DjmdPlaylist",
         foreign_keys=ParentID,
         backref=backref("Parent", remote_side=[ID]),
+        cascade="all, delete",
     )
     """The child playlists of the playlist (links to :class:`DjmdPlaylist`).
     Backrefs to the parent playlist via :attr:`Parent`.
