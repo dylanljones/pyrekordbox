@@ -4,6 +4,7 @@
 
 import logging
 import datetime
+import secrets
 from uuid import uuid4
 from pathlib import Path
 from typing import Optional
@@ -726,8 +727,7 @@ class Rekordbox6Database:
     # -- Database updates --------------------------------------------------------------
 
     def generate_unused_id(self, table, is_28_bit: bool = True) -> int:
-        import secrets
-
+        """Generates an unused ID for the given table."""
         max_tries = 1000000
         for _ in range(max_tries):
             # Generate random ID
@@ -748,15 +748,44 @@ class Rekordbox6Database:
     def add_to_playlist(self, playlist, content, track_no=None):
         """Adds a track to a playlist.
 
+        Creates a new :class:`DjmdSongPlaylist` object corresponding to the given
+        content and adds it to the playlist.
+
         Parameters
         ----------
         playlist : DjmdPlaylist or int or str
-            The playlist to add the track to.
+            The playlist to add the track to. Can either be a :class:`DjmdPlaylist`
+            object or a playlist ID.
         content : DjmdContent or int or str
-            The content to add to the playlist.
+            The content to add to the playlist. Can either be a :class:`DjmdContent`
+            object or a content ID.
         track_no : int, optional
             The track number to add the content to. If not specified, the track
             will be added to the end of the playlist.
+
+        Returns
+        -------
+        song: DjmdSongPlaylist
+            The song playlist object that was created from the content.
+
+        Raises
+        ------
+        ValueError : If the playlist is a folder or smart playlist.
+        ValueError : If the track number is less than 1 or to large.
+
+        Examples
+        --------
+        Add a track to the end of a playlist:
+        >>> db = Rekordbox6Database()
+        >>> cid = 12345  # Content ID
+        >>> pid = 56789  # Playlist ID
+        >>> db.add_to_playlist(pid, cid)
+        <DjmdSongPlaylist(c803dfde-2236-4659-b3d7-e57221663375)>
+
+        Add a track to the beginning of a playlist:
+        >>> new_song = db.add_to_playlist(pid, cid, track_no=1)
+        >>> new_song.TrackNo
+        1
         """
         if isinstance(playlist, (int, str)):
             playlist = self.get_playlist(ID=playlist)
@@ -831,9 +860,20 @@ class Rekordbox6Database:
         Parameters
         ----------
         playlist : DjmdPlaylist or int or str
-            The playlist to remove the track from.
+            The playlist to remove the track from. Can either be a :class:`DjmdPlaylist`
+            object or a playlist ID.
         song : DjmdSongPlaylist or int or str
-            The song to remove from the playlist.
+            The song to remove from the playlist. Can either be a
+            :class:`DjmdSongPlaylist` object or a song ID.
+
+        Examples
+        --------
+        Remove a track from a playlist:
+        >>> db = Rekordbox6Database()
+        >>> pid = 56789
+        >>> pl = db.get_playlist(ID=pid)
+        >>> song = pl.Songs[0]
+        >>> db.remove_from_playlist(pl, song)
         """
         if isinstance(playlist, (int, str)):
             playlist = self.get_playlist(ID=playlist)
@@ -898,7 +938,9 @@ class Rekordbox6Database:
         else:
             # Check if sequence number is valid
             insert_at_end = False
-            if seq > n + 1:
+            if seq < 1:
+                raise ValueError("Sequence number must be greater than 0")
+            elif seq > n + 1:
                 raise ValueError(f"Sequence number too high, parent contains {n} items")
 
         logger.debug("ID:          %s", id_)
@@ -959,7 +1001,8 @@ class Rekordbox6Database:
             The name of the new playlist.
         parent : DjmdPlaylist or int or str, optional
             The parent playlist of the new playlist. If not given, the playlist will be
-            added to the root playlist.
+            added to the root playlist. Can either be a :class:`DjmdPlaylist` object or
+            a playlist ID.
         seq : int, optional
             The sequence number of the new playlist. If not given, the playlist will be
             added at the end of the parent playlist.
@@ -969,6 +1012,27 @@ class Rekordbox6Database:
         Returns
         -------
         playlist : DjmdPlaylist
+            The newly created playlist.
+
+        Raises
+        ------
+        ValueError : If the parent playlist is not a folder.
+        ValueError : If the sequence number is less than 1 or to large.
+
+        Examples
+        --------
+        Create a new playlist in the root playlist:
+
+        >>> db = Rekordbox6Database()
+        >>> pl = db.create_playlist("My Playlist")
+        >>> pl.ParentID
+        'root'
+
+        Create a new playlist in a folder:
+        >>> folder = db.get_playlist(Name="My Folder").one()
+        >>> pl = db.create_playlist("My Playlist", parent=folder)
+        >>> pl.ParentID
+        '123456'
         """
         logger.info("Creating playlist %s", name)
         return self._create_playlist(name, seq, image_path, parent, attribute=0)
@@ -982,7 +1046,8 @@ class Rekordbox6Database:
             The name of the new playlist folder.
         parent : DjmdPlaylist or int or str, optional
             The parent playlist of the new folder. If not given, the playlist will be
-            added to the root playlist.
+            added to the root playlist. Can either be a :class:`DjmdPlaylist` object or
+            a playlist ID.
         seq : int, optional
             The sequence number of the new folder. If not given, the playlist will be
             added at the end of the parent playlist.
@@ -992,6 +1057,21 @@ class Rekordbox6Database:
         Returns
         -------
         playlist_folder : DjmdPlaylist
+            The newly created playlist folder.
+
+        Examples
+        --------
+        Create a new playlist folder in the root playlist:
+
+        >>> db = Rekordbox6Database()
+        >>> folder1 = db.create_playlist_folder("My Playlist Folder")
+        >>> folder1.ParentID
+        'root'
+
+        Create a new playlist folder in the other folder:
+        >>> folder2 = db.create_playlist("My Playlist Folder2", parent=folder1)
+        >>> folder2.ParentID
+        '123456'
         """
         logger.info("Creating playlist folder %s", name)
         return self._create_playlist(name, seq, image_path, parent, attribute=1)
@@ -1002,7 +1082,20 @@ class Rekordbox6Database:
         Parameters
         ----------
         playlist : DjmdPlaylist or int or str
-            The playlist or playlist folder to delete.
+            The playlist or playlist folder to delete. Can either be a
+            :class:`DjmdPlaylist` object or a playlist ID.
+
+        Examples
+        --------
+        Delete a playlist:
+
+        >>> db = Rekordbox6Database()
+        >>> pl = db.get_playlist(Name="My Playlist").one()
+        >>> db.delete_playlist(pl)
+
+        Delete a playlist folder:
+        >>> folder = db.get_playlist(Name="My Folder").one()
+        >>> db.delete_playlist(folder)
         """
         if isinstance(playlist, (int, str)):
             playlist = self.get_playlist(ID=playlist)
