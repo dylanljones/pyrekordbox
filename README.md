@@ -126,7 +126,7 @@ for song in playlist.Songs:
     content = song.Content
     print(content.Title, content.Artist.Name)
 ````
-Fields in the Rekorbox database that are stored without linking to other tables
+Fields in the Rekordbox database that are stored without linking to other tables
 can be changed via the corresponding property of the object:
 ````python
 content = db.get_content()[0]
@@ -136,7 +136,7 @@ Some fields are stored as references to other tables, for example the artist of 
 Check the [documentation][db6-doc] of the corresponding object for more information.
 So far only a few tables support adding or deleting entries:
 - ``DjmdPlaylist``: Playlists/Playlist Folders
-- ``DjmdPlaylistSong``: Songs in a playlist
+- ``DjmdSongPlaylist``: Songs in a playlist
 
 Starting from Rekordbox version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file
 contents, breaking the key extraction (see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) for more details).
@@ -150,8 +150,6 @@ python -m pyrekordbox download-key
 Once the key is cached the database can be opened without providing the key.
 The key can also be provided manually:
 ````python
-from pyrekordbox import Rekordbox6Database
-
 db = Rekordbox6Database(key="<insert key here>")
 ````
 
