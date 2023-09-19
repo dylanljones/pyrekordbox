@@ -776,6 +776,7 @@ class Rekordbox6Database:
         Examples
         --------
         Add a track to the end of a playlist:
+
         >>> db = Rekordbox6Database()
         >>> cid = 12345  # Content ID
         >>> pid = 56789  # Playlist ID
@@ -783,6 +784,7 @@ class Rekordbox6Database:
         <DjmdSongPlaylist(c803dfde-2236-4659-b3d7-e57221663375)>
 
         Add a track to the beginning of a playlist:
+
         >>> new_song = db.add_to_playlist(pid, cid, track_no=1)
         >>> new_song.TrackNo
         1
@@ -869,6 +871,7 @@ class Rekordbox6Database:
         Examples
         --------
         Remove a track from a playlist:
+
         >>> db = Rekordbox6Database()
         >>> pid = 56789
         >>> pl = db.get_playlist(ID=pid)
@@ -1029,6 +1032,7 @@ class Rekordbox6Database:
         'root'
 
         Create a new playlist in a folder:
+
         >>> folder = db.get_playlist(Name="My Folder").one()
         >>> pl = db.create_playlist("My Playlist", parent=folder)
         >>> pl.ParentID
@@ -1069,6 +1073,7 @@ class Rekordbox6Database:
         'root'
 
         Create a new playlist folder in the other folder:
+
         >>> folder2 = db.create_playlist("My Playlist Folder2", parent=folder1)
         >>> folder2.ParentID
         '123456'
@@ -1094,6 +1099,7 @@ class Rekordbox6Database:
         >>> db.delete_playlist(pl)
 
         Delete a playlist folder:
+
         >>> folder = db.get_playlist(Name="My Folder").one()
         >>> db.delete_playlist(folder)
         """
