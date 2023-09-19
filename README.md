@@ -24,10 +24,6 @@ Pioneers Rekordbox DJ Software. It currently supports
 
 Tested Rekordbox versions: ``5.8.6 | 6.5.3``
 
-Starting from version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file contents, breaking the key extraction
-(see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) and the
-Rekordbox 6 database section below for more details).
-
 
 |⚠️| This project is still under development and might contain bugs or have breaking API changes in the future.   |
 |----|:-------------------------------------------------------------------------------------------------------------|
@@ -92,18 +88,6 @@ from pyrekordbox import show_config
 
 show_config()
 ````
-
-which, for example, will print
-````
-Pioneer:
-   app_dir =      C:\Users\user\AppData\Roaming\Pioneer
-   install_dir =  C:\Program Files\Pioneer
-Rekordbox 5:
-   app_dir =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox
-   install_dir =  C:\Program Files\Pioneer\rekordbox 5.8.6
-   ...
-````
-
 If for some reason the configuration fails the values can be updated by providing the
 paths to the directory where Pioneer applications are installed (`pioneer_install_dir`)
 and to the directory where Pioneer stores the application data  (`pioneer_app_dir`)
@@ -142,29 +126,34 @@ for song in playlist.Songs:
     content = song.Content
     print(content.Title, content.Artist.Name)
 ````
-Adding new rows to the tables of the database is not supported since it is not yet known
-how Rekordbox generates the UUID/ID's. Using wrong values for new database entries
-could corrupt the library. This feature will be added after some testing.
-Changing existing entries like the title, artist or file path of a track in the database
-should work as expected.
-
-
-If you are using Rekorbox v6.6.5 or later and have no cached key from a previous
-Rekordbox version, the database can not be unlocked automatically.
-In this case you have to provide the key manually until a patch fixing this issue is released:
+Fields in the Rekorbox database that are stored without linking to other tables
+can be changed via the corresponding property of the object:
 ````python
-from pyrekordbox import Rekordbox6Database
-
-db = Rekordbox6Database(key="<insert key here>")
+content = db.get_content()[0]
+content.Title = "New Title"
 ````
+Some fields are stored as references to other tables, for example the artist of a track.
+Check the [documentation][db6-doc] of the corresponding object for more information.
+So far only a few tables support adding or deleting entries:
+- ``DjmdPlaylist``: Playlists/Playlist Folders
+- ``DjmdPlaylistSong``: Songs in a playlist
 
+Starting from Rekordbox version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file
+contents, breaking the key extraction (see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) for more details).
+If you are using a later version of Rekorbox and have no cached key from a previous
+version, the database can not be unlocked automatically.
 The command line interface of ``pyrekordbox`` provides a command for downloading
 the key from known sources and writing it to the cache file:
 ````shell
 python -m pyrekordbox download-key
 ````
-
 Once the key is cached the database can be opened without providing the key.
+The key can also be provided manually:
+````python
+from pyrekordbox import Rekordbox6Database
+
+db = Rekordbox6Database(key="<insert key here>")
+````
 
 
 ### Rekordbox XML
