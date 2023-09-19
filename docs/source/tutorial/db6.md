@@ -16,18 +16,127 @@ from pyrekordbox import Rekordbox6Database
 db = Rekordbox6Database()
 ````
 
-The class has simple getters for executing queries on all the tables, for example:
+## Querying the database
 
+A query can be executed on any table by calling the ``query()`` method. The result is
+a SQLAlchemy query object, which can be used to filter and sort the results.
+````python
+query = db.query(DjmdContent)
+results = query.filter(DjmdContent.Title == "My Song").all()
+````
+
+To simplify querying the database, the ``Rekordbox6Database`` class provides simple
+getters for executing queries on all the tables. The parameters of the getters are
+passed to the ``query.filter_by()`` method. If the query is filtered by a *unique* key
+(e.g. ``ID``), the query will be executed using the ``query.one()`` method, returning the
+table instance directly:
+````python
+# Return specific entry in DjmDContent table
+content = db.get_content(ID=0)
+````
+
+In all other cases the query is returned, allowing to further filter and sort the results:
 ````python
 from pyrekordbox.db6 import DjmdHistory
-
-# Query specific entry in DjmDContent table
-content = db.get_content(ID=0)
 
 # Query and sort entries in DjmdHistory table
 for history in db.get_history().order_by(DjmdHistory.DateCreated):
     print(history)
 ````
+
+This allows the user to make use of the full power of SQLAlchemy queries.
+
+### Relationshsips
+
+Some values of table entries are linked to other tables and can not be updated
+directly. For example, the ``DjmdContent`` table contains a ``ArtistID`` column, which
+links to the ``DjmdArtist`` table. The table declarations provide relationships to
+access the linked values. The artist of a song can be accessed as follows:
+````python
+content = db.get_content(ID=0)
+artist = content.Artist
+````
+
+
+## Updating the database
+
+Many values in the Rekordbox database can be updated by simply changing the corresponding
+attribute of the table instance and calling the ``db.commit()`` method:
+````python
+content = db.get_content().first()
+content.Title = "New title"
+db.commit()
+````
+
+However, some values of table entries are linked to other tables and can not be updated
+directly. For example, the ``DjmdContent`` table contains a ``ArtistID`` column, which
+links to the ``DjmdArtist`` table. A full list of linked tables can be found in the
+{ref}`Rekordbox 6 Database Format <Rekordbox 6 Database Format>` documentation.
+Also, many values depend on other values on the table and have to be updated accordingly
+to ensure consistency of the database, for example the ``TrackNo`` of songs in playlists.
+
+To simplify updating the database, the ``Rekordbox6Database`` class provides a set of
+high level methods for updating the database. These methods take care of updating all
+linked values and metadata.
+
+### Playlists
+
+A new playlist can be created by calling the ``db.create_playlist()`` method:
+````python
+playlist = db.create_playlist("My Playlist")
+````
+By default, the playlist is inserted as last element of the parent playlist folder.
+Alternatively, the sequence number of the new playlist can be specified:
+````python
+playlist = db.create_playlist("My Playlist", seq=2)
+````
+To add the playlist to a specific playlist folder, the ``parent`` parameter can be used
+to pass a playlist folder instance or ID:
+````python
+folder = db.get_playlist(Name="My Folder").one()  # Query for unique playlist folder
+playlist = db.create_playlist("My Playlist", parent=folder)
+````
+
+Playlist folders can also be created. It accepts the same parameters as the
+``db.create_playlist()`` method:
+````python
+folder = db.create_playlist_folder("My Folder")
+````
+
+Playlists and playlist folders can also be deleted:
+````python
+playlist = db.get_playlist(Name="My Playlist").one()
+db.delete_playlist(playlist)
+
+folder = db.get_playlist(Name="My Folder").one()
+db.delete_playlist(folder)
+````
+
+```{note}
+When deleting a playlist or playlist folder, all children are deleted as well.
+Deleting a playlist removes all songs from the playlist before deleting it. Similarly,
+deleting a playlist folder removes all playlists and playlist folders in the folder,
+including all songs in the sub-playlists.
+```
+
+Adding tracks to a playlist is done by calling the ``db.add_to_playlist()`` method.
+It accepts a ```DjmdContent``` instance or corresponding ID and creates a new entry in
+the ``DjmdSongPlaylist`` table, which stores the contents of playlists:
+````python
+content = db.get_content(ID=0)
+playlist = db.get_playlist(Name="My Playlist").one()
+song = db.add_to_playlist(playlist, content)
+````
+
+To delete a song from a playlist, the ``DjmdSongPlaylist`` instance or ID has to be passed,
+since a track can be contained in a plalyist more than once:
+````python
+playlist = db.get_playlist(Name="My Playlist").one()
+song = playlist.Songs[0]
+
+db.remove_from_playlist(playlist, song)
+````
+
 
 ```{note}
 More coming soon!
