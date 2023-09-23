@@ -1,3 +1,4 @@
+(db6-format)=
 # Rekordbox 6 Database Format
 
 With Rekordbox 6 Pioneer switched from using a DeviceSQL database (`.edb`) to SQLite.
@@ -534,7 +535,7 @@ This table stores information about the device(s) where Rekordbox is installed.
 
 ```
 
-### DjmdGenre
+### djmdGenre
 
 This table stores the genre data of Rekordbox. Since multiple tracks can be the same
 genre data is stored in its own table. The table contains all genres found in the
@@ -557,7 +558,7 @@ collection.
 
 ```
 
-### DjmdHistory
+### djmdHistory
 
 This table stores the history playlist data of Rekordbox. It does *not* store the
 tracks in the history playlists. These are stored in the `djmdSongHistory` table.
@@ -593,7 +594,7 @@ tracks.
 
 ```
 
-### DjmdHotCueBanklist
+### djmdHotCueBanklist
 
 This table stores the history the hot-cue bank list. It does *not* store the
 actual hot-cues. These are stored in the `djmdSongHotCueBanklist` table.
@@ -627,7 +628,7 @@ actual hot-cues. These are stored in the `djmdSongHotCueBanklist` table.
 
 ```
 
-### DjmdKey
+### djmdKey
 
 This table stores the musical key data of Rekordbox. Since multiple tracks can be
 written in the same key the data is stored in its own table. The table contains all
@@ -653,7 +654,7 @@ keys found in the collection.
 
 ```
 
-### DjmdLabel
+### djmdLabel
 
 This table stores the label data of Rekordbox. Since multiple tracks can be
 realeased on the same key the data is stored in its own table. The table contains all
@@ -676,7 +677,7 @@ labels found in the collection.
 
 ```
 
-### DjmdMenuItems
+### djmdMenuItems
 
 This table stores the configurable menu items shown in the Rekordbox application.
 
@@ -701,7 +702,7 @@ This table stores the configurable menu items shown in the Rekordbox application
 
 ```
 
-### DjmdMixerParam
+### djmdMixerParam
 
 This table stores the mixer parameters of tracks in the Rekordbox collection.
 
@@ -734,7 +735,7 @@ This table stores the mixer parameters of tracks in the Rekordbox collection.
 
 ```
 
-### DjmdMyTag
+### djmdMyTag
 
 This table stores the My-Tag data of Rekordbox. It does *not* store the
 tracks for which the My-Tag values are set. These are stored in the `djmdSongMyTag`
@@ -766,7 +767,7 @@ table. The items in the table can either be a My-Tag section or an actual My-Tag
 
 ```
 
-### DjmdPlaylist
+### djmdPlaylist
 
 This table stores the playlist data of Rekordbox. It does *not* store the tracks in the
 playlists. These are stored in the `djmdSongPlaylist` table. The items in the table can
@@ -804,7 +805,7 @@ either be a playlist folder or an actual playlist containing tracks.
 
 ```
 
-### DjmdProperty
+### djmdProperty
 
 This table stores internal properties of the Rekordbox application. Most columns of it
 are reserved.
@@ -858,7 +859,7 @@ columns in the table are shown below
 
 ```
 
-### DjmdRelatedTracks
+### djmdRelatedTracks
 
 This table stores the related tracks of the tracks in Rekordbox. It does *not* store
 the actual related tracks, but rather behaves like a playlist.
@@ -894,7 +895,7 @@ either be a folder or an actual list containing the related tracks.
 
 ```
 
-### DjmdSampler
+### djmdSampler
 
 This table stores the sampler items of Rekordbox. It does *not* store the actual
 samples, but rather behaves like a playlist of samples. The samples are stored in the
@@ -927,7 +928,7 @@ containing the samples.
 
 ```
 
-### DjmdSongHistory
+### djmdSongHistory
 
 This table stores tracks contained in the history lists in the `djmdHistory` table.
 
@@ -954,7 +955,7 @@ This table stores tracks contained in the history lists in the `djmdHistory` tab
 
 ```
 
-### DjmdSongHotCueBanklist
+### djmdSongHotCueBanklist
 
 This table stores the hot cue entries contained in the hot-cue bank lists in the
 `djmdHotCueBanklist` table.
@@ -1036,7 +1037,7 @@ This table stores the hot cue entries contained in the hot-cue bank lists in the
 
 ```
 
-### DjmdSongMyTag
+### djmdSongMyTag
 
 This table stores the My-tag values of tracks linked to in the `djmdMyTag` table.
 
@@ -1063,7 +1064,7 @@ This table stores the My-tag values of tracks linked to in the `djmdMyTag` table
 
 ```
 
-### DjmdSongPlaylist
+### djmdSongPlaylist
 
 This table stores tracks contained in the playlists in the `djmdPlaylist` table.
 
@@ -1090,7 +1091,7 @@ This table stores tracks contained in the playlists in the `djmdPlaylist` table.
 
 ```
 
-### DjmdSongRelatedTracks
+### djmdSongRelatedTracks
 
 This table stores tracks contained in the related tracks lists in the `djmdRelatedTracks`
 table.
@@ -1118,7 +1119,7 @@ table.
 
 ```
 
-### DjmdSongSampler
+### djmdSongSampler
 
 This table stores samples contained in the samples lists in the `djmdSampler` table.
 
@@ -1145,7 +1146,7 @@ This table stores samples contained in the samples lists in the `djmdSampler` ta
 
 ```
 
-### DjmdSongTagList
+### djmdSongTagList
 
 This table is not well understood.
 
@@ -1169,7 +1170,7 @@ This table is not well understood.
 
 ```
 
-### DjmdSort
+### djmdSort
 
 This table stores information for sorting menu items contained in the `djmdMenuItems`
 table in Rekordbox.
