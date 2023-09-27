@@ -464,6 +464,11 @@ class Rekordbox6Database:
         --------
         autoincrement_usn : Auto-increments the local Rekordbox USN's.
         """
+        pid = get_rekordbox_pid()
+        if pid:
+            raise RuntimeError(
+                "Rekordbox is running. Please close Rekordbox before commiting changes."
+            )
         if autoinc:
             self.registry.autoincrement_local_update_count(set_row_usn=True)
         self.session.commit()
