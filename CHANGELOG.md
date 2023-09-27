@@ -16,9 +16,14 @@
   The track numbers of the other songs in the playlist get updated accordingly.
   To make sure all changes are compatible with Rekordbox, a new handler for 
   the `masterPlaylists6.xml` auxiliary file was added.
+- **move songs in playlists and playlists/playlists folders in the RBv6 db**  
+  The track number of songs in playlists can now be updated. The track numbers of the 
+  other songs are updated accordingly. Playlists or playlist folders can also be 
+  rearranged or moved to a new parent folder.
 
 ### Improvements/Bug Fixes
 
+- **prevent commits to the RBv6 db if Rekordbox is running**
 - **improve `Parent` relationship in nested tables.**  
   The `Parent` relationship in nested tables (like playlists) are now declared via `backref`. This fixes a bug when deleting rows.
 
