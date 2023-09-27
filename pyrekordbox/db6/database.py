@@ -466,7 +466,6 @@ class Rekordbox6Database:
         """
         if autoinc:
             self.registry.autoincrement_local_update_count(set_row_usn=True)
-
         self.session.commit()
         self.registry.clear_buffer()
         if self.playlist_xml is not None and self.playlist_xml.modified:
@@ -905,6 +904,98 @@ class Rekordbox6Database:
         if self.playlist_xml is not None:
             self.playlist_xml.update(playlist.ID, updated_at=now)
 
+    def move_song_in_playlist(self, playlist, song, new_track_no):
+        """Sets a new track number of a song.
+
+        Also updates the track numbers of the other songs in the playlist.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist the track is in. Can either be a :class:`DjmdPlaylist`
+            object or a playlist ID.
+        song : DjmdSongPlaylist or int or str
+            The song to move inside the playlist. Can either be a
+            :class:`DjmdSongPlaylist` object or a song ID.
+        new_track_no : int
+            The new track number of the song. Must be greater than 0 and less than
+            the number of songs in the playlist.
+
+        Examples
+        --------
+        Take a playlist containing a few tracks:
+
+        >>> db = Rekordbox6Database()
+        >>> pid = 56789
+        >>> pl = db.get_playlist(ID=pid)
+        >>> songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+        >>> [s.Content.Title for s in songs]  # noqa
+        ['Demo Track 1', 'Demo Track 2', 'HORN', 'NOISE']
+
+        Move a track forward in a playlist:
+
+        >>> song = songs[2]
+        >>> db.move_song_in_playlist(pl, song, new_track_no=1)
+        >>> [s.Content.Title for s in sorted(pl.Songs, key=lambda x: x.TrackNo)]  # noqa
+        ['HORN', 'Demo Track 1', 'Demo Track 2', 'NOISE']
+
+        Move a track backward in a playlist:
+
+        >>> song = songs[1]
+        >>> db.move_song_in_playlist(pl, song, new_track_no=4)
+        >>> [s.Content.Title for s in sorted(pl.Songs, key=lambda x: x.TrackNo)]  # noqa
+        ['Demo Track 1', 'HORN', 'NOISE', 'Demo Track 2']
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        if isinstance(song, (int, str)):
+            song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
+        nsongs = (
+            self.query(tables.DjmdSongPlaylist)
+            .filter_by(PlaylistID=playlist.ID)
+            .count()
+        )
+        if new_track_no < 1:
+            raise ValueError("Track number must be greater than 0")
+        if new_track_no > nsongs + 1:
+            raise ValueError(f"Track number too high, parent contains {nsongs} items")
+        logger.info(
+            "Moving song with ID=%s in playlist with ID=%s to %s",
+            song.ID,
+            playlist.ID,
+            new_track_no,
+        )
+        now = datetime.datetime.now()
+        old_track_no = song.TrackNo
+        if new_track_no > old_track_no:
+            query = self.query(tables.DjmdSongPlaylist).filter(
+                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                old_track_no < tables.DjmdSongPlaylist.TrackNo,
+                tables.DjmdSongPlaylist.TrackNo <= new_track_no,
+            )
+            for other_song in query:
+                other_song.TrackNo -= 1
+                other_song.updated_at = now
+        elif new_track_no < old_track_no:
+            query = self.query(tables.DjmdSongPlaylist).filter(
+                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                new_track_no <= tables.DjmdSongPlaylist.TrackNo,
+                tables.DjmdSongPlaylist.TrackNo < old_track_no,
+            )
+            for other_song in query:
+                other_song.TrackNo += 1
+                other_song.updated_at = now
+        else:
+            return
+
+        song.TrackNo = new_track_no
+        song.updated_at = now
+
+        # Set playlist update time
+        playlist.updated_at = now
+        if self.playlist_xml is not None:
+            self.playlist_xml.update(playlist.ID, updated_at=now)
+
     def _create_playlist(
         self, name, seq, image_path, parent, smart_list=None, attribute=None
     ):
@@ -964,6 +1055,8 @@ class Rekordbox6Database:
             for pl in query:
                 pl.Seq += 1
                 pl.updated_at = now
+                if self.playlist_xml is not None:
+                    self.playlist_xml.update(pl.ID, updated_at=now)
 
         # Add new playlist to database
         playlist = table.create(
@@ -979,13 +1072,6 @@ class Rekordbox6Database:
             updated_at=now,
         )
         self.add(playlist)
-
-        # Set update time of parent playlist
-        if parent_id != "root":
-            parent = self.get_playlist(ID=parent_id)
-            parent.updated_at = now
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(parent_id, updated_at=now)
 
         # Update masterPlaylists6.xml
         if self.playlist_xml is not None:
@@ -1160,6 +1246,172 @@ class Rekordbox6Database:
                     continue
                 pid = int(plxml["Id"], 16)
                 assert self.query(tables.DjmdPlaylist).filter_by(ID=pid).count() == 1
+
+    def move_playlist(self, playlist, parent=None, seq=None):
+        """Moves a playlist (folder) in the current parent folder or to a new one.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist or playlist folder to move. Can either be a
+            :class:`DjmdPlaylist` object or a playlist ID.
+        parent : DjmdPlaylist or int or str, optional
+            The new parent playlist of the playlist. If not given, the playlist will
+            be moved to `seq` in the current parent playlist. Can either be a
+            :class:`DjmdPlaylist` object or a playlist ID.
+        seq : int, optional
+            The new sequence number of the playlist. If the `parent` argument is given,
+            the playlist will be moved to `seq` in the new parent playlist or to
+            the end of the new parent folder if `seq=None`. If the `parent` argument is
+            not given, the playlist will be moved to `seq` in the current parent.
+
+        Examples
+        --------
+        Take the following playlist tree:
+
+        >>> db = Rekordbox6Database()
+        >>> playlists = sorted(db.get_playlist().all(), key=lambda x: x.Seq)
+        >>> [pl.Name for pl in playlists]  # noqa
+        ['Folder 1', 'Folder 2', 'Playlist 1', 'Playlist 2', 'Playlist 3']
+
+        The playlists and folders above are all in the `root` plalyist folder.
+        Move a playlist in the current parent folder:
+
+        >>> pl = db.get_playlist(Name="Playlist 2").one()  # noqa
+        >>> db.move_playlist(pl, seq=2)
+        >>> playlists = sorted(db.get_playlist().all(), key=lambda x: x.Seq)
+        >>> [pl.Name for pl in playlists]  # noqa
+        ['Folder 1', 'Playlist 2', 'Folder 2', 'Playlist 1', 'Playlist 3']
+
+        Move a playlist to a new parent folder:
+
+        >>> pl = db.get_playlist(Name="Playlist 1").one()  # noqa
+        >>> parent = db.get_playlist(Name="Folder 1").one()  # noqa
+        >>> db.move_playlist(pl, parent=parent)
+        >>> db.get_playlist(ParentID=parent.ID).all()
+        ['Playlist 1']
+        """
+        if parent is None and seq is None:
+            raise ValueError("Either parent or seq must be given")
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+
+        now = datetime.datetime.now()
+        table = tables.DjmdPlaylist
+
+        if parent is None:
+            # If no parent is given, keep the current parent
+            parent_id = playlist.ParentID
+        elif isinstance(parent, tables.DjmdPlaylist):
+            # Check if parent is a folder
+            parent_id = parent.ID
+            if parent.Attribute != 1:
+                raise ValueError("Parent is not a folder")
+        else:
+            # Check if parent exists and is a folder
+            parent_id = str(parent)
+            query = self.query(table.ID).filter(
+                table.ID == parent_id, table.Attribute == 1
+            )
+            if not self.query(query.exists()).scalar():
+                raise ValueError("Parent does not exist or is not a folder")
+
+        n = self.get_playlist(ParentID=parent_id).count()
+        old_seq = playlist.Seq
+
+        if parent_id != playlist.ParentID:
+            # Move to new parent
+
+            old_parent_id = playlist.ParentID
+            if seq is None:
+                # New playlist is last in parents
+                seq = n + 1
+                insert_at_end = True
+            else:
+                # Check if sequence number is valid
+                insert_at_end = False
+                if seq < 1:
+                    raise ValueError("Sequence number must be greater than 0")
+                elif seq > n + 1:
+                    raise ValueError(
+                        f"Sequence number too high, parent contains {n} items"
+                    )
+
+            # Update seq numbers higher than the new seq number in *new* parent
+            if not insert_at_end:
+                query = self.query(tables.DjmdPlaylist).filter(
+                    tables.DjmdPlaylist.ParentID == parent_id,
+                    tables.DjmdPlaylist.Seq >= seq,
+                )
+                for pl in query:
+                    pl.Seq += 1
+                    pl.updated_at = now
+                    if self.playlist_xml is not None:
+                        self.playlist_xml.update(pl.ID, updated_at=now)
+
+            # Set new parent, seq number and update time
+            playlist.ParentID = parent_id
+            playlist.Seq = seq
+            playlist.updated_at = now
+            if self.playlist_xml is not None:
+                self.playlist_xml.update(playlist.ID, updated_at=now)
+
+            # Update seq numbers higher than the old seq number in *old* parent
+            query = self.query(tables.DjmdPlaylist).filter(
+                tables.DjmdPlaylist.ParentID == old_parent_id,
+                tables.DjmdPlaylist.Seq > old_seq,
+            )
+            for pl in query:
+                pl.Seq -= 1
+                pl.updated_at = now
+                if self.playlist_xml is not None:
+                    self.playlist_xml.update(pl.ID, updated_at=now)
+
+        else:
+            # Keep parent, only change seq number
+
+            if seq < 1:
+                raise ValueError("Sequence number must be greater than 0")
+            elif seq > n + 1:
+                raise ValueError(f"Sequence number too high, parent contains {n} items")
+
+            if seq > old_seq:
+                query = self.query(tables.DjmdPlaylist).filter(
+                    tables.DjmdPlaylist.ParentID == playlist.ParentID,
+                    old_seq < tables.DjmdPlaylist.Seq,
+                    tables.DjmdPlaylist.Seq <= seq,
+                )
+                for pl in query:
+                    pl.Seq -= 1
+                    pl.updated_at = now
+                    if self.playlist_xml is not None:
+                        self.playlist_xml.update(pl.ID, updated_at=now)
+
+            elif seq < old_seq:
+                query = self.query(tables.DjmdPlaylist).filter(
+                    tables.DjmdPlaylist.ParentID == playlist.ParentID,
+                    seq <= tables.DjmdPlaylist.Seq,
+                    tables.DjmdPlaylist.Seq < old_seq,
+                )
+                for pl in query:
+                    pl.Seq += 1
+                    pl.updated_at = now
+                    if self.playlist_xml is not None:
+                        self.playlist_xml.update(pl.ID, updated_at=now)
+            else:
+                return
+            # Set seq number and update time
+            playlist.Seq = seq
+            playlist.updated_at = now
+            if self.playlist_xml is not None:
+                self.playlist_xml.update(playlist.ID, updated_at=now)
+
+        # Set update time of parent playlist
+        if parent_id != "root":
+            parent = self.get_playlist(ID=parent_id)
+            parent.updated_at = now
+            if self.playlist_xml is not None:
+                self.playlist_xml.update(parent_id, updated_at=now)
 
     # ----------------------------------------------------------------------------------
 

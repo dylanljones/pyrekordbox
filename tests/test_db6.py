@@ -324,6 +324,32 @@ def test_remove_song_from_playlist(db):
     assert songs[1].TrackNo == 2
 
 
+def test_move_in_playlist(db):
+    # Add songs to playlist
+    s1 = db.add_to_playlist(PID1, CID1)
+    _ = db.add_to_playlist(PID1, CID2)
+    s3 = db.add_to_playlist(PID1, CID3)
+    _ = db.add_to_playlist(PID1, CID4)
+    db.commit()
+    pl = db.get_playlist(ID=PID1)
+    songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+    assert [int(s.ContentID) for s in songs] == [CID1, CID2, CID3, CID4]
+
+    # Move song forward
+    db.move_song_in_playlist(PID1, s3, 1)
+    db.commit()
+    pl = db.get_playlist(ID=PID1)
+    songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+    assert [int(s.ContentID) for s in songs] == [CID3, CID1, CID2, CID4]
+
+    # Move song backward
+    db.move_song_in_playlist(PID1, s1, 4)
+    db.commit()
+    pl = db.get_playlist(ID=PID1)
+    songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+    assert [int(s.ContentID) for s in songs] == [CID3, CID2, CID4, CID1]
+
+
 def test_create_playlist(db):
     seqs = [pl.Seq for pl in db.get_playlist()]
     assert max(seqs) == 2
@@ -604,6 +630,106 @@ def test_delete_playlist_folder_chained(db):
     assert db.playlist_xml.get(pid4) is None
     assert db.playlist_xml.get(pid5) is None
     assert db.playlist_xml.get(pid6) is None
+
+
+def test_move_playlist_seq(db):
+    # Create playlist structure
+    folder = db.create_playlist_folder("folder")
+    f1 = db.create_playlist_folder("f 1", parent=folder)
+    _ = db.create_playlist_folder("f 2", parent=folder)
+    db.create_playlist("pl 1", parent=folder)
+    db.create_playlist("pl 2", parent=folder)
+    db.create_playlist("pl 3", parent=folder)
+    db.create_playlist("pl 4", parent=folder)
+    db.create_playlist("sub pl 1", parent=f1)
+    db.create_playlist("sub pl 2", parent=f1)
+    db.create_playlist("sub pl 3", parent=f1)
+    db.create_playlist("sub pl 4", parent=f1)
+    db.commit()
+
+    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    expected = ["f 1", "f 2", "pl 1", "pl 2", "pl 3", "pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
+
+    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
+
+    # Move playlist 1 to position 5
+    pl = db.get_playlist(Name="pl 1").one()
+    db.move_playlist(pl, seq=5)
+    db.commit()
+
+    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    expected = ["f 1", "f 2", "pl 2", "pl 3", "pl 1", "pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
+
+    # Move playlist 3 to position 2
+    pl = db.get_playlist(Name="pl 3").one()
+    db.move_playlist(pl, seq=2)
+    db.commit()
+
+    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    expected = ["f 1", "pl 3", "f 2", "pl 2", "pl 1", "pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
+
+
+def test_move_playlist_parent(db):
+    # Create playlist structure
+    folder = db.create_playlist_folder("folder")
+    f1 = db.create_playlist_folder("f 1", parent=folder)
+    _ = db.create_playlist_folder("f 2", parent=folder)
+    db.create_playlist("pl 1", parent=folder)
+    db.create_playlist("pl 2", parent=folder)
+    db.create_playlist("pl 3", parent=folder)
+    db.create_playlist("pl 4", parent=folder)
+    db.create_playlist("sub pl 1", parent=f1)
+    db.create_playlist("sub pl 2", parent=f1)
+    db.create_playlist("sub pl 3", parent=f1)
+    db.create_playlist("sub pl 4", parent=f1)
+    db.commit()
+
+    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    expected = ["f 1", "f 2", "pl 1", "pl 2", "pl 3", "pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
+
+    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
+
+    # Move playlist 1 to sub playlist (at the end)
+    pl = db.get_playlist(Name="pl 1").one()
+    db.move_playlist(pl, parent=f1)
+    db.commit()
+
+    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    expected = ["f 1", "f 2", "pl 2", "pl 3", "pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5]
+    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4", "pl 1"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5]
+
+    # Move playlist 2 to sub playlist
+    pl = db.get_playlist(Name="pl 2").one()
+    db.move_playlist(pl, seq=2, parent=f1)
+    db.commit()
+
+    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    expected = ["f 1", "f 2", "pl 3", "pl 4"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
+    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    expected = ["sub pl 1", "pl 2", "sub pl 2", "sub pl 3", "sub pl 4", "pl 1"]
+    assert [p.Name for p in playlists] == expected
+    assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
 
 
 def test_get_anlz_paths():
