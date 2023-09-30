@@ -51,9 +51,8 @@ platform-dependent and can not be installed via ``pip``.
 
 #### Windows
 
-SQLCipher can be used by building the libary against
-an amalgamation with [pysqlcipher3] or by using pre-built DLL's (not recommended). For a detailed instruction,
-see [INSTALLATION].
+SQLCipher can be used by building the libary against an amalgamation with [pysqlcipher3].
+For a detailed instruction, see [INSTALLATION].
 
 #### MacOS
 
