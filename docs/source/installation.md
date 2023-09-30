@@ -25,8 +25,6 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 ### Windows
 
-#### Building SQLCipher and installing pysqlcipher3 (recommended)
-
 
 1. **Install [Visual Studio Community Edition][VS]**
 
@@ -146,44 +144,6 @@ c = conn.cursor()
 c.execute("PRAGMA key='password'")
 ````
 
-
-#### Pre-built SQLCipher DLL's (not recommended)
-
-Alternatively, pyrekordbox includes Python SQLite DLL's (see [this](https://stackoverflow.com/questions/58964763/using-sqlcipher-in-python-the-easy-way)
-StackOverflow discussion), which can be used to open databases encrpyted by SQLCipher.
-The DLL's can be found in the ``Libs/sqlcipher_py38`` directory of the pyrekordbox package.
-To patch the sqlite3 installation, follow these steps:
-
-
-- **Replace ``sqlite3.dll`` in the Python DLL directory**
-
-  Rename the ``sqlcipher.dll`` file in the ``Libs/sqlcipher_py38`` directory to
-  ``sqlite3.dll`` and replace the existing DLL file in the Python DLL folder with it.
-
-   ```{tip}
-   Before replacing the original file, back up ``sqlite3.dll`` in the Python DLL
-   directory by renaming it to something like ``sqlite3_backup.dll``.
-   ```
-- **Optional: Copy `libcrypto-1_1.dll` into the Python DLL directory**
-
-- **Optional: Copy `libssl-1_1.dll` into the Python DLL directory**
-
-The last two steps are only required if the first step is not sufficient.
-
-After replacing the DLL files SQLCipher-databases can be unlocked via the normal `sqlite3` package:
-````python
-import sqlite3
-
-conn = sqlite3.connect('test.db')
-c = conn.cursor()
-c.execute("PRAGMA key='password'")
-````
-
-```{attention}
-The included DLL's only work with *Python 3.8 (32 bit)*! For other Python versions
-(specificly the version of the included SQLite3 libary) the DLL's have to be built
-from source.
-```
 
 ### MacOS
 
