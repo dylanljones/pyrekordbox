@@ -195,8 +195,8 @@ For MacOS follow these steps:
 ```shell
 git clone https://github.com/rigglemania/pysqlcipher3
 cd pysqlcipher3
-C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/lib python setup.py build
-C_INCLUDE_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/include LIBRARY_PATH=/opt/homebrew/Cellar/sqlcipher/4.5.1/lib python setup.py install
+SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py build
+SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
 ```
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
 
