@@ -23,9 +23,11 @@
 
 ### Improvements/Bug Fixes
 
+- **fix USN tracking and update times in playlist updates of the RBV6 db**
 - **prevent commits to the RBv6 db if Rekordbox is running**
 - **improve `Parent` relationship in nested tables.**  
-  The `Parent` relationship in nested tables (like playlists) are now declared via `backref`. This fixes a bug when deleting rows.
+  The `Parent` relationship in nested tables (like playlists) are now declared via `backref`. 
+  This fixes a bug when deleting rows.
 
 
 <a name="0.1.8"></a>
