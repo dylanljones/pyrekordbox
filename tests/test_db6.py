@@ -248,6 +248,9 @@ def test_autoincrement_local_usn(db):
 
 
 def test_add_song_to_playlist(db):
+    usn_old = db.get_local_usn()
+    mtime_old = db.get_playlist(ID=PID1).updated_at
+
     # test adding song to playlist
     song = db.add_to_playlist(PID1, CID1)
     db.commit()
@@ -257,10 +260,10 @@ def test_add_song_to_playlist(db):
     assert pl.Songs[0].ContentID == str(CID1)
     assert song.TrackNo == 1
 
-    # Get xml item
-    plxml = db.playlist_xml.get(PID1)
-    ts = plxml["Timestamp"]
-    assert int(pl.updated_at.timestamp() * 1000) == int(ts.timestamp() * 1000)
+    # Test USN and update time are correct
+    assert pl.updated_at == mtime_old
+    assert song.rb_local_usn == usn_old + 1
+    assert db.get_local_usn() == usn_old + 1
 
     # test raising error when adding song to playlist with wrong TrackNo
     with pytest.raises(ValueError):
@@ -270,14 +273,15 @@ def test_add_song_to_playlist(db):
 
 
 def test_add_song_to_playlist_trackno_end(db):
+    old_usn = db.get_local_usn()
     song1 = db.add_to_playlist(PID1, CID1)
     song2 = db.add_to_playlist(PID1, CID2)
     song3 = db.add_to_playlist(PID1, CID3)
+    db.commit()
     assert song1.TrackNo == 1
     assert song2.TrackNo == 2
     assert song3.TrackNo == 3
-
-    db.commit()
+    assert db.get_local_usn() == old_usn + 3
 
 
 def test_add_song_to_playlist_trackno_middle(db):
@@ -287,10 +291,13 @@ def test_add_song_to_playlist_trackno_middle(db):
     assert song2.TrackNo == 2
     db.commit()
 
+    usn_old = db.get_local_usn()
+    mtime_old = db.get_playlist(ID=PID1).updated_at
+
     # Insert song in the middle
     song3 = db.add_to_playlist(PID1, CID3, track_no=2)
-    assert song3.TrackNo == 2
     db.commit()
+    assert song3.TrackNo == 2
 
     pl = db.get_playlist(ID=PID1)
     songs = sorted(pl.Songs, key=lambda x: int(x.TrackNo))
@@ -302,14 +309,51 @@ def test_add_song_to_playlist_trackno_middle(db):
     assert songs[2].ContentID == str(CID2)
     assert songs[2].TrackNo == 3
 
+    # Test USN and update time are correct
+    # First USN increment is for adding song, second for updating track no
+    # of other songs in playlist
+    assert pl.updated_at == mtime_old
+    assert songs[1].rb_local_usn == usn_old + 2
+    assert songs[2].rb_local_usn == usn_old + 2
+    assert db.get_local_usn() == usn_old + 2
 
-def test_remove_song_from_playlist(db):
+
+def test_remove_song_from_playlist_end(db):
+    # Add songs to playlist
+    db.add_to_playlist(PID1, CID1, track_no=1)
+    db.add_to_playlist(PID1, CID2, track_no=2)
+    song3 = db.add_to_playlist(PID1, CID3, track_no=3)
+    sid3 = song3.ID
+    db.commit()
+
+    usn_old = db.get_local_usn()
+    mtime_old = db.get_playlist(ID=PID1).updated_at
+
+    # test removing song from playlist
+    db.remove_from_playlist(PID1, sid3)
+    db.commit()
+
+    pl = db.get_playlist(ID=PID1)
+    songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+    assert len(songs) == 2
+    assert songs[0].ContentID == str(CID1)
+    assert songs[0].TrackNo == 1
+    assert songs[1].ContentID == str(CID2)
+    assert songs[1].TrackNo == 2
+    pl = db.get_playlist(ID=PID1)
+    # Test USN and update time are correct
+    assert pl.updated_at == mtime_old
+    assert db.get_local_usn() == usn_old + 1
+
+
+def test_remove_song_from_playlist_middle(db):
     # Add songs to playlist
     db.add_to_playlist(PID1, CID1, track_no=1)
     song2 = db.add_to_playlist(PID1, CID2, track_no=2)
     db.add_to_playlist(PID1, CID3, track_no=3)
     sid2 = song2.ID
     db.commit()
+    usn_old = db.get_local_usn()
 
     # test removing song from playlist
     db.remove_from_playlist(PID1, sid2)
@@ -323,17 +367,22 @@ def test_remove_song_from_playlist(db):
     assert songs[1].ContentID == str(CID3)
     assert songs[1].TrackNo == 2
 
+    # Check USN is correct
+    assert db.get_local_usn() == usn_old + 2
+    assert songs[1].rb_local_usn == usn_old + 2
 
-def test_move_in_playlist(db):
+
+def test_move_in_playlist_forward(db):
     # Add songs to playlist
     s1 = db.add_to_playlist(PID1, CID1)
-    _ = db.add_to_playlist(PID1, CID2)
+    s2 = db.add_to_playlist(PID1, CID2)
     s3 = db.add_to_playlist(PID1, CID3)
-    _ = db.add_to_playlist(PID1, CID4)
+    s4 = db.add_to_playlist(PID1, CID4)
     db.commit()
     pl = db.get_playlist(ID=PID1)
     songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
     assert [int(s.ContentID) for s in songs] == [CID1, CID2, CID3, CID4]
+    usn_old = db.get_local_usn()
 
     # Move song forward
     db.move_song_in_playlist(PID1, s3, 1)
@@ -342,17 +391,47 @@ def test_move_in_playlist(db):
     songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
     assert [int(s.ContentID) for s in songs] == [CID3, CID1, CID2, CID4]
 
-    # Move song backward
-    db.move_song_in_playlist(PID1, s1, 4)
+    # Check USN
+    expected_usn = usn_old + 1
+    assert db.get_local_usn() == expected_usn
+    assert s1.rb_local_usn == expected_usn
+    assert s2.rb_local_usn == expected_usn
+    assert s3.rb_local_usn == expected_usn
+    assert s4.rb_local_usn == usn_old
+
+
+def test_move_in_playlist_backward(db):
+    # Add songs to playlist
+    s1 = db.add_to_playlist(PID1, CID1)
+    s2 = db.add_to_playlist(PID1, CID2)
+    s3 = db.add_to_playlist(PID1, CID3)
+    s4 = db.add_to_playlist(PID1, CID4)
     db.commit()
     pl = db.get_playlist(ID=PID1)
     songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
-    assert [int(s.ContentID) for s in songs] == [CID3, CID2, CID4, CID1]
+    assert [int(s.ContentID) for s in songs] == [CID1, CID2, CID3, CID4]
+    usn_old = db.get_local_usn()
+
+    # Move song backward
+    db.move_song_in_playlist(PID1, s1, 3)
+    db.commit()
+    pl = db.get_playlist(ID=PID1)
+    songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+    assert [int(s.ContentID) for s in songs] == [CID2, CID3, CID1, CID4]
+
+    # Check USN
+    expected_usn = usn_old + 1
+    assert db.get_local_usn() == expected_usn
+    assert s1.rb_local_usn == expected_usn
+    assert s2.rb_local_usn == expected_usn
+    assert s3.rb_local_usn == expected_usn
+    assert s4.rb_local_usn == usn_old
 
 
 def test_create_playlist(db):
     seqs = [pl.Seq for pl in db.get_playlist()]
     assert max(seqs) == 2
+    old_usn = db.get_local_usn()
 
     # Create playlist
     pl = db.create_playlist("Test playlist")
@@ -367,6 +446,10 @@ def test_create_playlist(db):
     assert pl.Songs == []
     assert pl.ParentID == "root"
     assert pl.Children == []
+
+    # Check USN is correct (+1 for creating, +1 for renaming)
+    assert pl.rb_local_usn == old_usn + 2
+    assert db.get_local_usn() == old_usn + 2
 
     # Try to add song to playlist
     db.add_to_playlist(pl, CID1)
@@ -385,13 +468,18 @@ def test_create_playlist(db):
 def test_create_playlist_seq_middle(db):
     seqs = [pl.Seq for pl in db.get_playlist()]
     assert max(seqs) == 2
+    old_usn = db.get_local_usn()
 
     # Create playlist
     pl = db.create_playlist("playlist1")
     pid1 = pl.ID
     assert pl.Seq == 3
     db.commit()
+    # Check USN is correct (+1 for creating, +1 for renaming)
+    assert pl.rb_local_usn == old_usn + 2
+    assert db.get_local_usn() == old_usn + 2
 
+    old_usn = db.get_local_usn()
     pl = db.create_playlist("playlist2", seq=3)
     pid2 = pl.ID
     db.commit()
@@ -400,11 +488,16 @@ def test_create_playlist_seq_middle(db):
     pl2 = db.get_playlist(ID=pid2)
     assert pl1.Seq == 4
     assert pl2.Seq == 3
+    # Check USN is correct
+    assert db.get_local_usn() == old_usn + 3  # +2 for creating, +1 for moving others
+    assert pl1.rb_local_usn == old_usn + 1
+    assert pl2.rb_local_usn == old_usn + 3
 
 
 def test_create_playlist_folder(db):
     seqs = [pl.Seq for pl in db.get_playlist()]
     assert max(seqs) == 2
+    usn_old = db.get_local_usn()
 
     # Create playlist
     pl = db.create_playlist_folder("Test playlist folder")
@@ -419,8 +512,11 @@ def test_create_playlist_folder(db):
     assert pl.Songs == []
     assert pl.ParentID == "root"
     assert pl.Children == []
-    # Try to add sub-playlist to playlist folder
+    # Check USN is correct (+1 for creating, +1 for renaming)
+    assert db.get_local_usn() == usn_old + 2
+    assert pl.rb_local_usn == usn_old + 2
 
+    # Try to add sub-playlist to playlist folder
     db.create_playlist("Test playlist", parent=pl)
     db.commit()
 
@@ -450,6 +546,32 @@ def test_playlist_xml_sync(db):
         assert int(pl.updated_at.timestamp() * 1000) == int(ts.timestamp() * 1000)
 
 
+def test_delete_playlist_empty_end(db):
+    # Create playlist structure
+    folder = db.create_playlist_folder("folder")
+    pl1 = db.create_playlist("sub playlist 1", parent=folder.ID)
+    pl2 = db.create_playlist("sub playlist 2", parent=folder.ID)
+    pl3 = db.create_playlist("sub playlist 3", parent=folder.ID)
+    assert pl1.Seq == 1 and pl2.Seq == 2 and pl3.Seq == 3
+    db.commit()
+    usn_old = db.get_local_usn()
+
+    # Delete playlist
+    pl = db.get_playlist(Name="sub playlist 3").one()
+    pid = pl.ID
+    db.delete_playlist(pl)
+    db.commit()
+
+    # Check if playlist was deleted
+    pl = db.get_playlist(ID=pid)
+    assert pl is None
+    # Check if playlist was deleted from xml
+    plxml = db.playlist_xml.get(pid)
+    assert plxml is None
+    # Check USN is correct (+1 for deleting)
+    assert db.get_local_usn() == usn_old + 1
+
+
 def test_delete_playlist_empty(db):
     # Create playlist structure
     folder = db.create_playlist_folder("folder")
@@ -457,9 +579,8 @@ def test_delete_playlist_empty(db):
     pl2 = db.create_playlist("sub playlist 2", parent=folder.ID)
     pl3 = db.create_playlist("sub playlist 3", parent=folder.ID)
     assert pl1.Seq == 1 and pl2.Seq == 2 and pl3.Seq == 3
-
-    parent_updated_at = folder.updated_at
     db.commit()
+    usn_old = db.get_local_usn()
 
     # Delete playlist
     pl = db.get_playlist(Name="sub playlist 2").one()
@@ -473,12 +594,12 @@ def test_delete_playlist_empty(db):
     # Check if playlist was deleted from xml
     plxml = db.playlist_xml.get(pid)
     assert plxml is None
-    # Check if parent was updated
-    pl = db.get_playlist(Name="folder").one()
-    assert pl.updated_at > parent_updated_at
+    # Check USN is correct (+1 for deleting, all moved playlists get same USN)
+    assert db.get_local_usn() == usn_old + 1
     # Check if seq numbers in parent were updated
     pl = db.get_playlist(Name="sub playlist 3").one()
     assert pl.Seq == 2
+    assert pl.rb_local_usn == usn_old + 1
 
 
 def test_delete_playlist_folder_empty(db):
@@ -488,9 +609,8 @@ def test_delete_playlist_folder_empty(db):
     pl2 = db.create_playlist_folder("sub playlist folder", parent=folder.ID)
     pl3 = db.create_playlist("sub playlist 3", parent=folder.ID)
     assert pl1.Seq == 1 and pl2.Seq == 2 and pl3.Seq == 3
-
-    parent_updated_at = folder.updated_at
     db.commit()
+    usn_old = db.get_local_usn()
 
     # Delete playlist
     pl = db.get_playlist(Name="sub playlist folder").one()
@@ -504,12 +624,12 @@ def test_delete_playlist_folder_empty(db):
     # Check if playlist was deleted from xml
     plxml = db.playlist_xml.get(pid)
     assert plxml is None
-    # Check if parent was updated
-    pl = db.get_playlist(Name="folder").one()
-    assert pl.updated_at > parent_updated_at
     # Check if seq numbers in parent were updated
     pl = db.get_playlist(Name="sub playlist 3").one()
     assert pl.Seq == 2
+    # Check USN is correct (+1 for deleting)
+    assert db.get_local_usn() == usn_old + 1
+    assert pl.rb_local_usn == usn_old + 1
 
 
 def test_delete_playlist_non_empty(db):
@@ -523,8 +643,8 @@ def test_delete_playlist_non_empty(db):
     sid2 = db.add_to_playlist(pl2, CID2).ID
     sid3 = db.add_to_playlist(pl2, CID3).ID
     sid4 = db.add_to_playlist(pl3, CID4).ID
-
     db.commit()
+    usn_old = db.get_local_usn()
 
     assert db.query(tables.DjmdSongPlaylist).count() == 4
 
@@ -543,6 +663,8 @@ def test_delete_playlist_non_empty(db):
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
+    # Check if USN is correct (+1 for deleting with contents)
+    assert db.get_local_usn() == usn_old + 1
 
 
 def test_delete_playlist_folder_non_empty(db):
@@ -557,8 +679,8 @@ def test_delete_playlist_folder_non_empty(db):
     sid2 = db.add_to_playlist(pl2, CID2).ID
     sid3 = db.add_to_playlist(pl2, CID3).ID
     sid4 = db.add_to_playlist(pl3, CID4).ID
-
     db.commit()
+    usn_old = db.get_local_usn()
 
     assert db.query(tables.DjmdSongPlaylist).count() == 4
 
@@ -582,6 +704,9 @@ def test_delete_playlist_folder_non_empty(db):
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
+
+    # Check if USN is correct (+1 for deleting with Seq update, +1 for children)
+    assert db.get_local_usn() == usn_old + 2
 
 
 def test_delete_playlist_folder_chained(db):
@@ -607,6 +732,7 @@ def test_delete_playlist_folder_chained(db):
     sid4 = db.add_to_playlist(pl2, CID4).ID
 
     db.commit()
+    usn_old = db.get_local_usn()
 
     db.delete_playlist(folder)
     db.commit()
@@ -631,6 +757,9 @@ def test_delete_playlist_folder_chained(db):
     assert db.playlist_xml.get(pid5) is None
     assert db.playlist_xml.get(pid6) is None
 
+    # Check if USN is correct (+1 for deleting with Seq update, +1 for children)
+    assert db.get_local_usn() == usn_old + 2
+
 
 def test_move_playlist_seq(db):
     # Create playlist structure
@@ -647,35 +776,65 @@ def test_move_playlist_seq(db):
     db.create_playlist("sub pl 4", parent=f1)
     db.commit()
 
-    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 1", "pl 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
 
-    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
 
+    usn_old = db.get_local_usn()
     # Move playlist 1 to position 5
     pl = db.get_playlist(Name="pl 1").one()
+    mtime_old = pl.updated_at
     db.move_playlist(pl, seq=5)
     db.commit()
 
-    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 2", "pl 3", "pl 1", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
+    # Check that the usn and update time was updated correctly
+    # First the moved playlist USN is set, then the other updated playlists
+    # in the seq order
+    pl1 = db.get_playlist(Name="pl 1").one()
+    pl2 = db.get_playlist(Name="pl 2").one()
+    pl3 = db.get_playlist(Name="pl 3").one()
+    assert db.get_local_usn() == usn_old + 3
+    assert pl1.rb_local_usn == usn_old + 1
+    assert pl2.rb_local_usn == usn_old + 2
+    assert pl3.rb_local_usn == usn_old + 3
+    assert pl1.updated_at > mtime_old
+    assert pl2.updated_at > mtime_old
+    assert pl3.updated_at > mtime_old
 
+    usn_old = db.get_local_usn()
     # Move playlist 3 to position 2
     pl = db.get_playlist(Name="pl 3").one()
+    mtime_old = pl.updated_at
     db.move_playlist(pl, seq=2)
     db.commit()
 
-    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["f 1", "pl 3", "f 2", "pl 2", "pl 1", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
+    # Check that the usn and update time was updated correctly
+    # First the moved playlist USN is set, then the other updated playlists
+    # in the seq order
+    pl2 = db.get_playlist(Name="pl 2").one()
+    pl3 = db.get_playlist(Name="pl 3").one()
+    f2 = db.get_playlist(Name="f 2").one()
+    assert db.get_local_usn() == usn_old + 3
+    assert pl3.rb_local_usn == usn_old + 1
+    assert f2.rb_local_usn == usn_old + 2
+    assert pl2.rb_local_usn == usn_old + 3
+    assert pl2.updated_at > mtime_old
+    assert pl3.updated_at > mtime_old
+    assert f2.updated_at > mtime_old
 
 
 def test_move_playlist_parent(db):
@@ -693,43 +852,67 @@ def test_move_playlist_parent(db):
     db.create_playlist("sub pl 4", parent=f1)
     db.commit()
 
-    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 1", "pl 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
 
-    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
 
     # Move playlist 1 to sub playlist (at the end)
+    old_usn = db.get_local_usn()
     pl = db.get_playlist(Name="pl 1").one()
+    old_mtime = pl.updated_at
     db.move_playlist(pl, parent=f1)
     db.commit()
 
-    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5]
-    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4", "pl 1"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5]
 
+    # Check that the usn and update time was updated correctly
+    pl = db.get_playlist(Name="pl 1").one()
+    assert db.get_local_usn() == old_usn + 1
+    assert pl.rb_local_usn == old_usn + 1
+    assert pl.updated_at > old_mtime
+
     # Move playlist 2 to sub playlist
+    old_usn = db.get_local_usn()
     pl = db.get_playlist(Name="pl 2").one()
+    old_mtime = pl.updated_at
     db.move_playlist(pl, seq=2, parent=f1)
     db.commit()
 
-    playlists = sorted(list(db.get_playlist(ParentID=folder.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
-    playlists = sorted(list(db.get_playlist(ParentID=f1.ID)), key=lambda p: p.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "pl 2", "sub pl 2", "sub pl 3", "sub pl 4", "pl 1"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
+    # Check that the usn and update time was updated correctly
+    _ = db.get_playlist(Name="sub pl 1").one()
+    subpl2 = db.get_playlist(Name="sub pl 2").one()
+    subpl3 = db.get_playlist(Name="sub pl 3").one()
+    subpl4 = db.get_playlist(Name="sub pl 4").one()
+    pl1 = db.get_playlist(Name="pl 1").one()
+    pl = db.get_playlist(Name="pl 2").one()
+    assert db.get_local_usn() == old_usn + 5
+    assert pl.rb_local_usn == old_usn + 1
+    assert pl.updated_at > old_mtime
+    assert subpl2.rb_local_usn == old_usn + 2
+    assert subpl3.rb_local_usn == old_usn + 3
+    assert subpl4.rb_local_usn == old_usn + 4
+    assert pl1.rb_local_usn == old_usn + 5
 
 
 def test_get_anlz_paths():

@@ -67,8 +67,6 @@ class _Base(object):
         # noinspection PyArgumentList
         self = cls(**kwargs)
         RekordboxAgentRegistry.enable_tracking()
-
-        RekordboxAgentRegistry.on_create(self)
         return self
 
     @classmethod

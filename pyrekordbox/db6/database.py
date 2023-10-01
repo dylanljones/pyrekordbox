@@ -832,15 +832,24 @@ class Rekordbox6Database:
         logger.debug("UUID:        %s", uuid)
         logger.debug("TrackNo:     %s", track_no)
 
+        moved = list()
         if not insert_at_end:
+            self.registry.disable_tracking()
             # Update track numbers higher than the removed track
-            query = self.query(tables.DjmdSongPlaylist).filter(
-                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
-                tables.DjmdSongPlaylist.TrackNo >= track_no,
+            query = (
+                self.query(tables.DjmdSongPlaylist)
+                .filter(
+                    tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                    tables.DjmdSongPlaylist.TrackNo >= track_no,
+                )
+                .order_by(tables.DjmdSongPlaylist.TrackNo)
             )
             for song in query:
                 song.TrackNo += 1
                 song.updated_at = now
+                moved.append(song)
+            self.registry.enable_tracking()
+
         # Add song to playlist
         song = tables.DjmdSongPlaylist.create(
             ID=id_,
@@ -852,11 +861,9 @@ class Rekordbox6Database:
             updated_at=now,
         )
         self.add(song)
-
-        # Set update time
-        playlist.updated_at = now
-        if self.playlist_xml is not None:
-            self.playlist_xml.update(pid, updated_at=now)
+        if not insert_at_end:
+            moved.append(song)
+            self.registry.on_move(moved)
 
         return song
 
@@ -890,24 +897,28 @@ class Rekordbox6Database:
             "Removing song with ID=%s from playlist with ID=%s", song.ID, playlist.ID
         )
         now = datetime.datetime.now()
-
         # Remove track from playlist
         track_no = song.TrackNo
         self.delete(song)
-
+        self.commit()
         # Update track numbers higher than the removed track
-        query = self.query(tables.DjmdSongPlaylist).filter(
-            tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
-            tables.DjmdSongPlaylist.TrackNo > track_no,
+        query = (
+            self.query(tables.DjmdSongPlaylist)
+            .filter(
+                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                tables.DjmdSongPlaylist.TrackNo > track_no,
+            )
+            .order_by(tables.DjmdSongPlaylist.TrackNo)
         )
+        moved = list()
+        self.registry.disable_tracking()
         for song in query:
             song.TrackNo -= 1
             song.updated_at = now
-
-        # Set update time
-        playlist.updated_at = now
-        if self.playlist_xml is not None:
-            self.playlist_xml.update(playlist.ID, updated_at=now)
+            moved.append(song)
+        self.registry.enable_tracking()
+        if moved:
+            self.registry.on_move(moved)
 
     def move_song_in_playlist(self, playlist, song, new_track_no):
         """Sets a new track number of a song.
@@ -972,15 +983,23 @@ class Rekordbox6Database:
         )
         now = datetime.datetime.now()
         old_track_no = song.TrackNo
+
+        self.registry.disable_tracking()
+        moved = list()
         if new_track_no > old_track_no:
-            query = self.query(tables.DjmdSongPlaylist).filter(
-                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
-                old_track_no < tables.DjmdSongPlaylist.TrackNo,
-                tables.DjmdSongPlaylist.TrackNo <= new_track_no,
+            query = (
+                self.query(tables.DjmdSongPlaylist)
+                .filter(
+                    tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                    old_track_no < tables.DjmdSongPlaylist.TrackNo,
+                    tables.DjmdSongPlaylist.TrackNo <= new_track_no,
+                )
+                .order_by(tables.DjmdSongPlaylist.TrackNo)
             )
             for other_song in query:
                 other_song.TrackNo -= 1
                 other_song.updated_at = now
+                moved.append(other_song)
         elif new_track_no < old_track_no:
             query = self.query(tables.DjmdSongPlaylist).filter(
                 tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
@@ -990,16 +1009,16 @@ class Rekordbox6Database:
             for other_song in query:
                 other_song.TrackNo += 1
                 other_song.updated_at = now
+                moved.append(other_song)
         else:
             return
 
         song.TrackNo = new_track_no
         song.updated_at = now
+        moved.append(song)
 
-        # Set playlist update time
-        playlist.updated_at = now
-        if self.playlist_xml is not None:
-            self.playlist_xml.update(playlist.ID, updated_at=now)
+        self.registry.enable_tracking()
+        self.registry.on_move(moved)
 
     def _create_playlist(
         self, name, seq, image_path, parent, smart_list=None, attribute=None
@@ -1059,15 +1078,18 @@ class Rekordbox6Database:
             )
             for pl in query:
                 pl.Seq += 1
+                self.registry.disable_tracking()
                 pl.updated_at = now
+                self.registry.enable_tracking()
                 if self.playlist_xml is not None:
                     self.playlist_xml.update(pl.ID, updated_at=now)
 
         # Add new playlist to database
+        # First create with name 'New playlist'
         playlist = table.create(
             ID=id_,
             Seq=seq,
-            Name=name,
+            Name="New playlist",
             ImagePath=image_path,
             Attribute=attribute,
             ParentID=parent_id,
@@ -1077,6 +1099,8 @@ class Rekordbox6Database:
             updated_at=now,
         )
         self.add(playlist)
+        # Then update with correct name for correct USN
+        playlist.Name = name
 
         # Update masterPlaylists6.xml
         if self.playlist_xml is not None:
@@ -1208,26 +1232,27 @@ class Rekordbox6Database:
         seq = playlist.Seq
         parent_id = playlist.ParentID
 
+        self.registry.disable_tracking()
         # Update seq numbers higher than the deleted seq number
-        query = self.query(tables.DjmdPlaylist).filter(
-            tables.DjmdPlaylist.ParentID == parent_id,
-            tables.DjmdPlaylist.Seq > seq,
+        query = (
+            self.query(tables.DjmdPlaylist)
+            .filter(
+                tables.DjmdPlaylist.ParentID == parent_id,
+                tables.DjmdPlaylist.Seq > seq,
+            )
+            .order_by(tables.DjmdPlaylist.Seq)
         )
+        moved = list()
         for pl in query:
             pl.Seq -= 1
             pl.updated_at = now
             if self.playlist_xml is not None:
                 self.playlist_xml.update(pl.ID, updated_at=now)
+            moved.append(pl)
+        moved.append(playlist)
 
-        # Update parent playlist update time
-        if parent_id != "root":
-            parent = self.get_playlist(ID=parent_id)
-            parent.updated_at = now
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(parent_id, updated_at=now)
-
-        # Get all child playlist IDs
         children = [playlist]
+        # Get all child playlist IDs
         child_ids = list()
         while len(children):
             new_children = list()
@@ -1236,6 +1261,8 @@ class Rekordbox6Database:
                 new_children.extend(list(child.Children))
             children = new_children
 
+        # First ID in 'child_ids' is always the deleted playlist, others are children
+
         # Remove playlist from masterPlaylists6.xml
         if self.playlist_xml is not None:
             for pid in child_ids:
@@ -1243,6 +1270,11 @@ class Rekordbox6Database:
 
         # Remove playlist from database
         self.delete(playlist)
+        self.registry.enable_tracking()
+        if len(child_ids) > 1:
+            # The playlist folder had children: on extra USN increment
+            self.registry.on_delete(child_ids[1:])
+        self.registry.on_delete(moved)
 
         # Check masterPlaylist6.xml
         if self.playlist_xml is not None:
@@ -1342,35 +1374,54 @@ class Rekordbox6Database:
                         f"Sequence number too high, parent contains {n} items"
                     )
 
-            # Update seq numbers higher than the new seq number in *new* parent
             if not insert_at_end:
-                query = self.query(tables.DjmdPlaylist).filter(
-                    tables.DjmdPlaylist.ParentID == parent_id,
-                    tables.DjmdPlaylist.Seq >= seq,
+                # Get all playlists with seq between old_seq and seq
+                query = (
+                    self.query(tables.DjmdPlaylist)
+                    .filter(
+                        tables.DjmdPlaylist.ParentID == parent_id,
+                        tables.DjmdPlaylist.Seq >= seq,
+                    )
+                    .order_by(tables.DjmdPlaylist.Seq)
                 )
-                for pl in query:
-                    pl.Seq += 1
-                    pl.updated_at = now
-                    if self.playlist_xml is not None:
-                        self.playlist_xml.update(pl.ID, updated_at=now)
-
-            # Set new parent, seq number and update time
+                other_playlists = query.all()
+            # Set seq number and update time *before* other playlists to ensure
+            # right USN increment order
             playlist.ParentID = parent_id
+            self.registry.disable_tracking()
             playlist.Seq = seq
             playlist.updated_at = now
+            self.registry.enable_tracking()
             if self.playlist_xml is not None:
                 self.playlist_xml.update(playlist.ID, updated_at=now)
 
+            if not insert_at_end:
+                # Update seq numbers higher than the new seq number in *new* parent
+                # noinspection PyUnboundLocalVariable
+                for pl in other_playlists:
+                    # Update time of other playlists are left unchanged
+                    pl.Seq += 1
+                    # Each move counts as one USN increment, so disable for update time
+                    self.registry.disable_tracking()
+                    pl.updated_at = now
+                    self.registry.enable_tracking()
+
             # Update seq numbers higher than the old seq number in *old* parent
-            query = self.query(tables.DjmdPlaylist).filter(
-                tables.DjmdPlaylist.ParentID == old_parent_id,
-                tables.DjmdPlaylist.Seq > old_seq,
+            # USN is not updated here
+            self.registry.disable_tracking()
+            query = (
+                self.query(tables.DjmdPlaylist)
+                .filter(
+                    tables.DjmdPlaylist.ParentID == old_parent_id,
+                    tables.DjmdPlaylist.Seq > old_seq,
+                )
+                .order_by(tables.DjmdPlaylist.Seq)
             )
             for pl in query:
+                # Update time of other playlists are left unchanged
                 pl.Seq -= 1
                 pl.updated_at = now
-                if self.playlist_xml is not None:
-                    self.playlist_xml.update(pl.ID, updated_at=now)
+            self.registry.enable_tracking()
 
         else:
             # Keep parent, only change seq number
@@ -1381,42 +1432,54 @@ class Rekordbox6Database:
                 raise ValueError(f"Sequence number too high, parent contains {n} items")
 
             if seq > old_seq:
-                query = self.query(tables.DjmdPlaylist).filter(
-                    tables.DjmdPlaylist.ParentID == playlist.ParentID,
-                    old_seq < tables.DjmdPlaylist.Seq,
-                    tables.DjmdPlaylist.Seq <= seq,
+                # Get all playlists with seq between old_seq and seq
+                query = (
+                    self.query(tables.DjmdPlaylist)
+                    .filter(
+                        tables.DjmdPlaylist.ParentID == playlist.ParentID,
+                        old_seq < tables.DjmdPlaylist.Seq,
+                        tables.DjmdPlaylist.Seq <= seq,
+                    )
+                    .order_by(tables.DjmdPlaylist.Seq)
                 )
-                for pl in query:
-                    pl.Seq -= 1
-                    pl.updated_at = now
-                    if self.playlist_xml is not None:
-                        self.playlist_xml.update(pl.ID, updated_at=now)
-
+                other_playlists = query.all()
+                delta_seq = -1
             elif seq < old_seq:
-                query = self.query(tables.DjmdPlaylist).filter(
-                    tables.DjmdPlaylist.ParentID == playlist.ParentID,
-                    seq <= tables.DjmdPlaylist.Seq,
-                    tables.DjmdPlaylist.Seq < old_seq,
+                query = (
+                    self.query(tables.DjmdPlaylist)
+                    .filter(
+                        tables.DjmdPlaylist.ParentID == playlist.ParentID,
+                        seq <= tables.DjmdPlaylist.Seq,
+                        tables.DjmdPlaylist.Seq < old_seq,
+                    )
+                    .order_by(tables.DjmdPlaylist.Seq)
                 )
-                for pl in query:
-                    pl.Seq += 1
-                    pl.updated_at = now
-                    if self.playlist_xml is not None:
-                        self.playlist_xml.update(pl.ID, updated_at=now)
+                other_playlists = query.all()
+                delta_seq = +1
             else:
                 return
-            # Set seq number and update time
+
+            # Set seq number and update time *before* other playlists to ensure
+            # right USN increment order
             playlist.Seq = seq
+            # Each move counts as one USN increment, so disable for update time
+            self.registry.disable_tracking()
             playlist.updated_at = now
+            self.registry.enable_tracking()
+
+            # Set seq number and update time for playlists between old_seq and seq
+            for pl in other_playlists:
+                pl.Seq += delta_seq
+                # Each move counts as one USN increment, so disable for update time
+                self.registry.disable_tracking()
+                pl.updated_at = now
+                self.registry.enable_tracking()
+                if self.playlist_xml is not None:
+                    self.playlist_xml.update(pl.ID, updated_at=now)
+
+            # Update XML
             if self.playlist_xml is not None:
                 self.playlist_xml.update(playlist.ID, updated_at=now)
-
-        # Set update time of parent playlist
-        if parent_id != "root":
-            parent = self.get_playlist(ID=parent_id)
-            parent.updated_at = now
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(parent_id, updated_at=now)
 
     # ----------------------------------------------------------------------------------
 

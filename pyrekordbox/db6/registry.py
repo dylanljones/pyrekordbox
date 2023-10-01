@@ -2,6 +2,10 @@
 # Author: Dylan Jones
 # Date:   2023-08-07
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class RekordboxAgentRegistry:
     """Rekordbox Agent Registry handler.
@@ -41,6 +45,7 @@ class RekordboxAgentRegistry:
             The new value of the updated column.
         """
         if cls.__enabled__:
+            logger.debug("On update: %s, %s, %s", instance, key, value)
             cls.__update_sequence__.append((instance, "update", key, value))
 
     @classmethod
@@ -53,6 +58,7 @@ class RekordboxAgentRegistry:
             The table entry instance.
         """
         if cls.__enabled__:
+            logger.debug("On create: %s", instance)
             cls.__update_sequence__.append((instance, "create", "", ""))
 
     @classmethod
@@ -65,7 +71,21 @@ class RekordboxAgentRegistry:
             The table entry instance.
         """
         if cls.__enabled__:
+            logger.debug("On delete: %s", instance)
             cls.__update_sequence__.append((instance, "delete", "", ""))
+
+    @classmethod
+    def on_move(cls, instances):
+        """Called when instanced of a database model are moved.
+
+        Parameters
+        ----------
+        instances : list[tables.Base]
+            The table entry instance.
+        """
+        if cls.__enabled__:
+            logger.debug("On move: %s", instances)
+            cls.__update_sequence__.append((instances, "move", "", ""))
 
     @classmethod
     def clear_buffer(cls):
@@ -264,14 +284,19 @@ class RekordboxAgentRegistry:
         """
         reg = self.db.get_agent_registry(registry_id="localUpdateCount")
         usn = reg.int_1
-
+        self.disable_tracking()
         with self.db.session.no_autoflush:
-            for instance, op, _, _ in self.__update_sequence__.copy():
+            for instances, op, _, _ in self.__update_sequence__.copy():
                 usn += 1
-                if set_row_usn and op != "delete" and hasattr(instance, "rb_local_usn"):
-                    instance.rb_local_usn = usn
+                if set_row_usn:
+                    # All instances in a list get the same USN
+                    if not isinstance(instances, list):
+                        instances = [instances]
+                    for instance in instances:
+                        if hasattr(instance, "rb_local_usn"):
+                            instance.rb_local_usn = usn
             reg.int_1 = usn
 
         self.clear_buffer()
-
+        self.enable_tracking()
         return usn
