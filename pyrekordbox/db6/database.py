@@ -591,22 +591,20 @@ class Rekordbox6Database:
         query = self.query(tables.DjmdHistory).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_history_songs(self, id_):
+    def get_history_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongHistory`` table."""
-        query = self.query(tables.DjmdSongHistory).filter_by(HistoryID=id_)
-        return query
+        query = self.query(tables.DjmdSongHistory).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_hot_cue_banklist(self, **kwargs):
         """Creates a filtered query for the ``DjmdHotCueBanklist`` table."""
         query = self.query(tables.DjmdHotCueBanklist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_hot_cue_banklist_songs(self, id_):
+    def get_hot_cue_banklist_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongHotCueBanklist`` table."""
-        query = self.query(tables.DjmdSongHotCueBanklist).filter_by(
-            HotCueBanklistID=id_
-        )
-        return query
+        query = self.query(tables.DjmdSongHotCueBanklist).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_key(self, **kwargs):
         """Creates a filtered query for the ``DjmdKey`` table."""
@@ -633,20 +631,20 @@ class Rekordbox6Database:
         query = self.query(tables.DjmdMyTag).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_my_tag_songs(self, id_):
+    def get_my_tag_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongMyTag`` table."""
-        query = self.query(tables.DjmdSongMyTag).filter_by(MyTagID=id_)
-        return query
+        query = self.query(tables.DjmdSongMyTag).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_playlist(self, **kwargs):
         """Creates a filtered query for the ``DjmdPlaylist`` table."""
         query = self.query(tables.DjmdPlaylist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_playlist_songs(self, id_):
+    def get_playlist_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongPlaylist`` table."""
-        query = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=id_)
-        return query
+        query = self.query(tables.DjmdSongPlaylist).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_property(self, **kwargs):
         """Creates a filtered query for the ``DjmdProperty`` table."""
@@ -658,25 +656,25 @@ class Rekordbox6Database:
         query = self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_related_tracks_songs(self, id_):
+    def get_related_tracks_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongRelatedTracks`` table."""
-        query = self.query(tables.DjmdSongRelatedTracks).filter_by(RelatedTracksID=id_)
-        return query
+        query = self.query(tables.DjmdSongRelatedTracks).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_sampler(self, **kwargs):
         """Creates a filtered query for the ``DjmdSampler`` table."""
         query = self.query(tables.DjmdSampler).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_sampler_songs(self, id_):
+    def get_sampler_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongSampler`` table."""
-        query = self.query(tables.DjmdSongSampler).filter_by(SamplerID=id_)
-        return query
+        query = self.query(tables.DjmdSongSampler).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
-    def get_tag_list_songs(self, id_):
+    def get_tag_list_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongTagList`` table."""
-        query = self.query(tables.DjmdSongTagList).filter_by(ID=id_)
-        return query
+        query = self.query(tables.DjmdSongTagList).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_sort(self, **kwargs):
         """Creates a filtered query for the ``DjmdSort`` table."""
