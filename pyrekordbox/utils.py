@@ -62,7 +62,7 @@ def get_process_id(name: str, raise_exec=False) -> int:
         try:
             if proc_name == name:
                 return proc.pid
-        except psutil.AccessDenied:
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
             pass
     if raise_exec:
         raise RuntimeError("No process with name 'rekordbox' found!")
