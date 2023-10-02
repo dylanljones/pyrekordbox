@@ -154,17 +154,17 @@ def test_getter_by_id(name, cls):
 
 
 @mark.parametrize(
-    "parent_name,cls",
+    "parent_name,key,cls",
     [
-        ("get_playlist", tables.DjmdSongHistory),
-        ("get_hot_cue_banklist", tables.DjmdSongHotCueBanklist),
-        ("get_my_tag", tables.DjmdSongMyTag),
-        ("get_playlist", tables.DjmdSongPlaylist),
-        ("get_related_tracks", tables.DjmdSongPlaylist),
-        ("get_sampler", tables.DjmdSongPlaylist),
+        ("get_history", "HistoryID", tables.DjmdSongHistory),
+        ("get_hot_cue_banklist", "HotCueBanklistID", tables.DjmdSongHotCueBanklist),
+        ("get_my_tag", "MyTagID", tables.DjmdSongMyTag),
+        ("get_playlist", "PlaylistID", tables.DjmdSongPlaylist),
+        ("get_related_tracks", "RelatedTracksID", tables.DjmdSongPlaylist),
+        ("get_sampler", "SamplerID", tables.DjmdSongPlaylist),
     ],
 )
-def test_songs_getters(parent_name, cls):
+def test_songs_getters(parent_name, key, cls):
     # Get list (containing songs) getter
     getter = getattr(DB, parent_name)
     # Try to get a valid list ID
@@ -178,7 +178,7 @@ def test_songs_getters(parent_name, cls):
     # Get list songs getter
     getter = getattr(DB, f"{parent_name}_songs")
     # Get song items
-    query = getter(id_)
+    query = getter(**{key: id_})
     if not query.count():
         return  # No data to check...
 
