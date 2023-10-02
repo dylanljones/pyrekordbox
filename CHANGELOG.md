@@ -20,9 +20,13 @@
   The track number of songs in playlists can now be updated. The track numbers of the 
   other songs are updated accordingly. Playlists or playlist folders can also be 
   rearranged or moved to a new parent folder.
+- **add method for renaming playlists/playlist folders in the RBv6 db**  
+  The update time and USN are updated accordingly.
 
 ### Improvements/Bug Fixes
 
+- **generalize getters of list content tables in the RBv6 db**  
+  This makes all getters consistent.
 - **fix USN tracking and update times in playlist updates of the RBv6 db**
 - **prevent commits to the RBv6 db if Rekordbox is running**
 - **improve `Parent` relationship in nested tables.**  
