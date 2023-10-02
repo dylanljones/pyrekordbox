@@ -247,6 +247,7 @@ def _get_rb_config(
     pioneer_install_dir: Path,
     pioneer_app_dir: Path,
     major_version: int,
+    application_dirname: str = "",
 ) -> dict:
     """Get the program configuration for a given Rekordbox major version.
 
@@ -258,33 +259,52 @@ def _get_rb_config(
         The path of the Pioneer application data directory.
     major_version : int
         The major version of Rekordbox.
+    application_dirname : str, optional
+        The name of the Rekordbox application directory. If not given, the latest
+        Rekordbox installation directory for major version `major_version` is used.
 
     Returns
     -------
     config : dict
         The program configuration.
     """
-    # Get latest Rekordbox installation directory for major release `major_version`
+    if application_dirname:
+        # Applitcation dirname is given, only extract version from it
+        # `major_version` is compared to the version string
+        rb_version = application_dirname.replace("rekordbox", "").strip()
+        if not rb_version.startswith(str(major_version)):
+            raise ValueError(
+                f"Major version is {major_version}, but the supplied application "
+                f"dirname is '{application_dirname}'"
+            )
+        rb_prog_dir = pioneer_install_dir / application_dirname
+        if not rb_prog_dir.exists():
+            raise InvalidApplicationDirname(
+                f"The supplied application dirname '{application_dirname}' does not "
+                f"exist in '{pioneer_install_dir}'"
+            )
+    else:
+        # Get latest Rekordbox installation directory for major release `major_version`
 
-    # Find all 'V.x.x' version strings in dir names
-    versions = list()
-    for p in pioneer_install_dir.iterdir():
-        name = p.name
-        if name.startswith("rekordbox"):
-            ver_str = name.replace("rekordbox", "").strip()
-            if ver_str.startswith(str(major_version)):
-                versions.append(ver_str)
-    # Get latest 'V.x.x' version string and assure there is one
-    versions.sort(key=lambda s: list(map(int, s.split("."))))
-    try:
-        rb_version = versions[-1]
-    except IndexError:
-        raise FileNotFoundError(
-            f"No Rekordbox {major_version} folder found in installation "
-            f"directory '{pioneer_install_dir}'"
-        )
-    # Name of the Rekordbox application directory in `pioneer_install_dir`
-    rb_prog_dir = pioneer_install_dir / f"rekordbox {rb_version}"
+        # Find all 'V.x.x' version strings in dir names
+        versions = list()
+        for p in pioneer_install_dir.iterdir():
+            name = p.name
+            if name.startswith("rekordbox"):
+                ver_str = name.replace("rekordbox", "").strip()
+                if ver_str.startswith(str(major_version)):
+                    versions.append(ver_str)
+        # Get latest 'V.x.x' version string and assure there is one
+        versions.sort(key=lambda s: list(map(int, s.split("."))))
+        try:
+            rb_version = versions[-1]
+        except IndexError:
+            raise FileNotFoundError(
+                f"No Rekordbox {major_version} folder found in installation "
+                f"directory '{pioneer_install_dir}'"
+            )
+        # Name of the Rekordbox application directory in `pioneer_install_dir`
+        rb_prog_dir = pioneer_install_dir / f"rekordbox {rb_version}"
 
     # Check installation directory
     if not rb_prog_dir.exists():
@@ -318,10 +338,12 @@ def _get_rb_config(
     return conf
 
 
-def _get_rb5_config(pioneer_prog_dir: Path, pioneer_app_dir: Path) -> dict:
+def _get_rb5_config(
+    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
+) -> dict:
     """Get the program configuration for Rekordbox v5.x.x."""
     major_version = 5
-    conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version)
+    conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
     return conf
 
 
@@ -377,10 +399,12 @@ def write_db6_key_cache(key: str) -> None:  # pragma: no cover
     __config__["rekordbox6"]["dp"] = key
 
 
-def _get_rb6_config(pioneer_prog_dir: Path, pioneer_app_dir: Path) -> dict:
+def _get_rb6_config(
+    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
+) -> dict:
     """Get the program configuration for Rekordbox v6.x.x."""
     major_version = 6
-    conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version)
+    conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
 
     # Read Rekordbox 6 'options.json' and check db_path
     opts = read_rekordbox6_options(pioneer_app_dir)
@@ -488,6 +512,8 @@ def read_pyrekordbox_configuration():
 def update_config(
     pioneer_install_dir: Union[str, Path] = None,
     pioneer_app_dir: Union[str, Path] = None,
+    rb5_install_dirname: str = "",
+    rb6_install_dirname: str = "",
 ):
     """Update the pyrekordbox configuration.
 
@@ -508,6 +534,12 @@ def update_config(
         The path to the Pioneer application directory. This is where the application
         user data of Pioneer programs is stored. By default, the normal location of
         the Pioneer application data is used.
+    rb5_install_dirname : str, optional
+        The name of the Rekordbox 5 installation directory. By default, the normal
+        directory name is used (Windows: 'rekordbox 5.x.x', macOS: 'rekordbox 5.app').
+    rb6_install_dirname : str, optional
+        The name of the Rekordbox 6 installation directory. By default, the normal
+        directory name is used (Windows: 'rekordbox 6.x.x', macOS: 'rekordbox 6.app').
     """
     # Read config file
     conf = read_pyrekordbox_configuration()
@@ -515,6 +547,10 @@ def update_config(
         pioneer_install_dir = conf["pioneer-install-dir"]
     if pioneer_app_dir is None and "pioneer-app-dir" in conf:
         pioneer_app_dir = conf["pioneer-app-dir"]
+    if not rb5_install_dirname and "rekordbox5-install-dirname" in conf:
+        rb5_install_dirname = conf["rekordbox5-install-dirname"]
+    if not rb6_install_dirname and "rekordbox6-install-dirname" in conf:
+        rb6_install_dirname = conf["rekordbox6-install-dirname"]
 
     # Pioneer installation directory
     try:
@@ -534,14 +570,18 @@ def update_config(
 
     # Update Rekordbox 5 config
     try:
-        conf = _get_rb5_config(pioneer_install_dir, pioneer_app_dir)
+        conf = _get_rb5_config(
+            pioneer_install_dir, pioneer_app_dir, rb5_install_dirname
+        )
         __config__["rekordbox5"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)
 
     # Update Rekordbox 6 config
     try:
-        conf = _get_rb6_config(pioneer_install_dir, pioneer_app_dir)
+        conf = _get_rb6_config(
+            pioneer_install_dir, pioneer_app_dir, rb6_install_dirname
+        )
         __config__["rekordbox6"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)
