@@ -1307,7 +1307,7 @@ class Rekordbox6Database:
         Take the following playlist tree:
 
         >>> db = Rekordbox6Database()
-        >>> playlists = sorted(db.get_playlist().all(), key=lambda x: x.Seq)
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
         >>> [pl.Name for pl in playlists]  # noqa
         ['Folder 1', 'Folder 2', 'Playlist 1', 'Playlist 2', 'Playlist 3']
 
@@ -1316,7 +1316,7 @@ class Rekordbox6Database:
 
         >>> pl = db.get_playlist(Name="Playlist 2").one()  # noqa
         >>> db.move_playlist(pl, seq=2)
-        >>> playlists = sorted(db.get_playlist().all(), key=lambda x: x.Seq)
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
         >>> [pl.Name for pl in playlists]  # noqa
         ['Folder 1', 'Playlist 2', 'Folder 2', 'Playlist 1', 'Playlist 3']
 
@@ -1480,6 +1480,47 @@ class Rekordbox6Database:
             # Update XML
             if self.playlist_xml is not None:
                 self.playlist_xml.update(playlist.ID, updated_at=now)
+
+    def rename_playlist(self, playlist, name):
+        """Renames a playlist or playlist folder.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist or playlist folder to move. Can either be a
+            :class:`DjmdPlaylist` object or a playlist ID.
+        name : str
+            The new name of the playlist or playlist folder.
+
+        Examples
+        --------
+        Take the following playlist tree:
+
+        >>> db = Rekordbox6Database()
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
+        >>> [pl.Name for pl in playlists]  # noqa
+        ['Playlist 1', 'Playlist 2']
+
+        Rename a playlist:
+
+        >>> pl = db.get_playlist(Name="Playlist 1").one()  # noqa
+        >>> db.rename_playlist(pl, name="Playlist new")
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
+        >>> [pl.Name for pl in playlists]  # noqa
+        ['Playlist new', 'Playlist 2']
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        now = datetime.datetime.now()
+        # Update name of playlist
+        playlist.Name = name
+        # Update update time: USN not incremented
+        self.registry.disable_tracking()
+        playlist.updated_at = now
+        self.registry.enable_tracking()
+        # Update XML
+        if self.playlist_xml is not None:
+            self.playlist_xml.update(playlist.ID, updated_at=now)
 
     # ----------------------------------------------------------------------------------
 

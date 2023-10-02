@@ -915,6 +915,29 @@ def test_move_playlist_parent(db):
     assert pl1.rb_local_usn == old_usn + 5
 
 
+def test_rename_playlist(db):
+    # Create playlist structure
+    folder = db.create_playlist_folder("folder")
+    db.create_playlist("pl 1", parent=folder)
+    db.create_playlist("pl 2", parent=folder)
+    db.commit()
+
+    pl = db.get_playlist(Name="pl 1").one()
+    pid = pl.ID
+    mtime_old = pl.updated_at
+    usn_old = db.get_local_usn()
+
+    # Rename playlist
+    db.rename_playlist(pl, "pl 1 new")
+    db.commit()
+
+    pl = db.get_playlist(ID=pid)
+    assert pl.Name == "pl 1 new"
+    assert pl.updated_at > mtime_old
+    assert db.get_local_usn() == usn_old + 1
+    assert pl.rb_local_usn == usn_old + 1
+
+
 def test_get_anlz_paths():
     content = DB.get_content().first()
 
