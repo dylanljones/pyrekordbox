@@ -473,8 +473,27 @@ class Rekordbox6Database:
             self.registry.autoincrement_local_update_count(set_row_usn=True)
         self.session.commit()
         self.registry.clear_buffer()
-        if self.playlist_xml is not None and self.playlist_xml.modified:
-            self.playlist_xml.save()
+
+        # Update the masterPlaylists6.xml file
+        if self.playlist_xml is not None:
+            # Sync the updated_at values of the playlists in the DB and the XML file
+            for pl in self.get_playlist():
+                plxml = self.playlist_xml.get(pl.ID)
+                if plxml is None:
+                    raise ValueError(
+                        f"Playlist {pl.ID} not found in masterPlaylists6.xml! "
+                        "Did you add it manually? "
+                        "Use the create_playlist method instead."
+                    )
+                ts = plxml["Timestamp"]
+                diff = pl.updated_at - ts
+                if abs(diff.total_seconds()) > 1:
+                    logger.debug("Updating updated_at of playlist %s in XML", pl.ID)
+                    self.playlist_xml.update(pl.ID, updated_at=pl.updated_at)
+
+            # Save the XML file if it was modified
+            if self.playlist_xml.modified:
+                self.playlist_xml.save()
 
     def rollback(self):
         """Rolls back the uncommited changes to the database."""
@@ -1079,8 +1098,6 @@ class Rekordbox6Database:
                 self.registry.disable_tracking()
                 pl.updated_at = now
                 self.registry.enable_tracking()
-                if self.playlist_xml is not None:
-                    self.playlist_xml.update(pl.ID, updated_at=now)
 
         # Add new playlist to database
         # First create with name 'New playlist'
@@ -1244,8 +1261,6 @@ class Rekordbox6Database:
         for pl in query:
             pl.Seq -= 1
             pl.updated_at = now
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(pl.ID, updated_at=now)
             moved.append(pl)
         moved.append(playlist)
 
@@ -1390,8 +1405,6 @@ class Rekordbox6Database:
             playlist.Seq = seq
             playlist.updated_at = now
             self.registry.enable_tracking()
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(playlist.ID, updated_at=now)
 
             if not insert_at_end:
                 # Update seq numbers higher than the new seq number in *new* parent
@@ -1472,12 +1485,6 @@ class Rekordbox6Database:
                 self.registry.disable_tracking()
                 pl.updated_at = now
                 self.registry.enable_tracking()
-                if self.playlist_xml is not None:
-                    self.playlist_xml.update(pl.ID, updated_at=now)
-
-            # Update XML
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(playlist.ID, updated_at=now)
 
     def rename_playlist(self, playlist, name):
         """Renames a playlist or playlist folder.
@@ -1516,9 +1523,6 @@ class Rekordbox6Database:
         self.registry.disable_tracking()
         playlist.updated_at = now
         self.registry.enable_tracking()
-        # Update XML
-        if self.playlist_xml is not None:
-            self.playlist_xml.update(playlist.ID, updated_at=now)
 
     # ----------------------------------------------------------------------------------
 
