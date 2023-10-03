@@ -1,8 +1,10 @@
 # What's New
 
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.2.0"></a>
+## [0.2.0] - 2023-10-03
+
+This release adds methods for playlists/playlist folders and their contents.
 
 ### New Features
 
@@ -403,7 +405,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.8...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/dylanljones/pyrekordbox/compare/0.1.8...0.2.0
 [0.1.8]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...0.1.8
 [0.1.7]: https://github.com/dylanljones/pyrekordbox/compare/0.1.6...0.1.7
 [0.1.6]: https://github.com/dylanljones/pyrekordbox/compare/0.1.5...0.1.6
