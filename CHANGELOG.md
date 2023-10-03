@@ -22,6 +22,7 @@
   rearranged or moved to a new parent folder.
 - **add method for renaming playlists/playlist folders in the RBv6 db**  
   The update time and USN are updated accordingly.
+- **add method for creating a decrypted copy of the RBv6 database ([#86](https://github.com/dylanljones/pyrekordbox/issues/86))**  
 
 ### Improvements/Bug Fixes
 
@@ -32,6 +33,7 @@
 - **improve `Parent` relationship in nested tables.**  
   The `Parent` relationship in nested tables (like playlists) are now declared via `backref`. 
   This fixes a bug when deleting rows.
+- **set `updated_at` in the playlist XML when committing the RBv6 db**  
 
 
 <a name="0.1.8"></a>
