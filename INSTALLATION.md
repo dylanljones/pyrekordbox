@@ -58,68 +58,53 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
    To compile the amalgamation files, follow [this tutorial](http://www.jerryrw.com/howtocompile.php).
 
 
-6. **Clone [pysqlcipher3] into any directory**
+6. **Clone [sqlcipher3] into any directory**
 
    ````commandline
-   git clone https://github.com/rigglemania/pysqlcipher3
+   git clone https://github.com/coleifer/sqlcipher3
    ````
 
 
-7. **Create directory ``...\pysqlcipher3\amalgamation``**
+7. **Copy amalgamation files to the `sqlcipher3` directory**
 
    Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5
+   to the root of the ``sqlcipher3`` directory from step 6.
 
 
-8. **Create directory ``...\pysqlcipher3\src\python3\sqlcipher``**
 
-   Copy files ``sqlite3.c``, ``sqlite3.h`` and ``sqlite3ext.h`` from the amalgamation directory from step 5
-
-
-9. **Modify the ``...\pysqlcipher3\setup.py`` script (optional, see [this](https://stackoverflow.com/questions/65345077/unable-to-build-sqlcipher3-on-windows) discussion)**
+8. **Modify the ``sqlcipher3/setup.py`` script (optional, see [this](https://stackoverflow.com/questions/65345077/unable-to-build-sqlcipher3-on-windows) discussion)**
 
    If building the amalgamation fails, modify the ``setup.py`` script:
-   - Change
-      ````python
-      def quote_argument(arg):
-          quote = '"' if sys.platform != 'win32' else '\\"'
-          return quote + arg + quote
-      ````
-      to
-      ````python
-      def quote_argument(arg):
-          quote = '"'
-          return quote + arg + quote
-      ````
 
    - The library names of OpenSSL have changed in version 1.1.0. If you are using a newer version, you might have to change the library name from
      ````python
-     ext.extra_link_args.append("libeay32.lib")
+     openssl_libname = os.environ.get('OPENSSL_LIBNAME') or 'libeay32.lib'
      ````
      to
      ````python
-     ext.extra_link_args.append("<NAME>")
+     openssl_libname = os.environ.get('OPENSSL_LIBNAME') or '<NAME>'
      ````
      where ``<NAME>`` is something like ``libcrypto.lib`` (depending on your version).
 
 
-10. **Build using the amalgamation**
+9. **Build using the amalgamation**
 
-    ``cd`` into the ``pysqlcipher3`` directory and run
+    ``cd`` into the ``sqlcipher3`` directory and run
     ````commandline
-    python setup.py build_amalgamation
+    python setup.py build_static build
     ````
 
 
-11. **Install ``pysqlcipher3``**
+10. **Install ``sqlcipher3``**
 
     ````commandline
     python setup.py install
     ````
 
-You now should have a working ``pysqlcipher3`` installation! The directory of the
-cloned ``pysqlcipher3`` repo can be deleted after installing the package.
+You now should have a working ``sqlcipher3`` installation! The directory of the
+cloned ``sqlcipher3`` repo can be deleted after installing the package.
 
-Steps 5-11 can be automated using the CLI of ``pyrekordbox``:
+Steps 5-10 can be automated using the CLI of ``pyrekordbox``:
 ````commandline
 > python3 -m pyrekordbox install-sqlcipher --help
 usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
@@ -128,13 +113,13 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
   -t TMPDIR, --tmpdir TMPDIR
                         Path for storing temporary data (default: '.tmp')
   -l CRYPTOLIB, --cryptolib CRYPTOLIB
-  -q, --fixquote        Don't fix the quotes in the pysqlcipher3 setup.py script
-  -b, --buildonly       Don't install pysqlcipher3, only build the amalgamation
+                        The name of the OpenSSl crypto libary (default: 'libcrypto.lib')
+  -b, --buildonly       Don't install sqlcipher3, only build the amalgamation
 ````
 
 After the installation SQLCipher-databases can be unlocked via the `pysqlcipher3` package:
 ````python
-from pysqlcipher3 import dbapi2 as sqlite3
+from sqlcipher3 import dbapi2 as sqlite3
 
 conn = sqlite3.connect('test.db')
 c = conn.cursor()
@@ -167,7 +152,7 @@ Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher pa
 
 [VS]: https://visualstudio.microsoft.com/de/vs/community/
 [OpenSSL]: https://slproweb.com/products/Win32OpenSSL.html
-[pysqlcipher3]: https://github.com/rigglemania/pysqlcipher3
+[sqlcipher3]: https://github.com/coleifer/sqlcipher3
 [Pypi]: https://pypi.org/project/pyrekordbox/
 [GitHub]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
