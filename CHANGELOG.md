@@ -4,7 +4,7 @@
 <a name="0.2.0"></a>
 ## [0.2.0] - 2023-10-03
 
-This release adds methods for playlists/playlist folders and their contents.
+This release adds methods for updating playlists/playlist folders and their contents.
 
 ### New Features
 
