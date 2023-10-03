@@ -1289,14 +1289,6 @@ class Rekordbox6Database:
             self.registry.on_delete(child_ids[1:])
         self.registry.on_delete(moved)
 
-        # Check masterPlaylist6.xml
-        if self.playlist_xml is not None:
-            for plxml in self.playlist_xml.get_playlists():
-                if plxml["Lib_Type"] != 0:
-                    continue
-                pid = int(plxml["Id"], 16)
-                assert self.query(tables.DjmdPlaylist).filter_by(ID=pid).count() == 1
-
     def move_playlist(self, playlist, parent=None, seq=None):
         """Moves a playlist (folder) in the current parent folder or to a new one.
 

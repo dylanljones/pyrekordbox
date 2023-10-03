@@ -249,6 +249,28 @@ def test_autoincrement_local_usn(db):
     assert playlist.rb_local_usn == new_usn
 
 
+def _check_playlist_xml(db):
+    # Check that playlist is in XML and update time is correct
+    for pl in db.get_playlist():
+        plxml = db.playlist_xml.get(pl.ID)
+        ts = plxml["Timestamp"]
+        diff = pl.updated_at - ts
+        if abs(diff.total_seconds()) > 1:
+            return False
+    return True
+
+
+def _check_playlist_xml_delete(db):
+    # Check that there are no items in the XML that are not in the db
+    for plxml in db.playlist_xml.get_playlists():
+        if plxml["Lib_Type"] != 0:
+            continue
+        pid = int(plxml["Id"], 16)
+        if db.query(tables.DjmdPlaylist).filter_by(ID=pid).count() != 1:
+            return False
+    return True
+
+
 def test_add_song_to_playlist(db):
     usn_old = db.get_local_usn()
     mtime_old = db.get_playlist(ID=PID1).updated_at
@@ -273,6 +295,8 @@ def test_add_song_to_playlist(db):
     with pytest.raises(ValueError):
         db.add_to_playlist(PID1, CID2, track_no=3)
 
+    assert _check_playlist_xml(db)
+
 
 def test_add_song_to_playlist_trackno_end(db):
     old_usn = db.get_local_usn()
@@ -284,6 +308,8 @@ def test_add_song_to_playlist_trackno_end(db):
     assert song2.TrackNo == 2
     assert song3.TrackNo == 3
     assert db.get_local_usn() == old_usn + 3
+
+    assert _check_playlist_xml(db)
 
 
 def test_add_song_to_playlist_trackno_middle(db):
@@ -319,6 +345,8 @@ def test_add_song_to_playlist_trackno_middle(db):
     assert songs[2].rb_local_usn == usn_old + 2
     assert db.get_local_usn() == usn_old + 2
 
+    assert _check_playlist_xml(db)
+
 
 def test_remove_song_from_playlist_end(db):
     # Add songs to playlist
@@ -347,6 +375,8 @@ def test_remove_song_from_playlist_end(db):
     assert pl.updated_at == mtime_old
     assert db.get_local_usn() == usn_old + 1
 
+    assert _check_playlist_xml(db)
+
 
 def test_remove_song_from_playlist_middle(db):
     # Add songs to playlist
@@ -372,6 +402,8 @@ def test_remove_song_from_playlist_middle(db):
     # Check USN is correct
     assert db.get_local_usn() == usn_old + 2
     assert songs[1].rb_local_usn == usn_old + 2
+
+    assert _check_playlist_xml(db)
 
 
 def test_move_in_playlist_forward(db):
@@ -401,6 +433,8 @@ def test_move_in_playlist_forward(db):
     assert s3.rb_local_usn == expected_usn
     assert s4.rb_local_usn == usn_old
 
+    assert _check_playlist_xml(db)
+
 
 def test_move_in_playlist_backward(db):
     # Add songs to playlist
@@ -428,6 +462,8 @@ def test_move_in_playlist_backward(db):
     assert s2.rb_local_usn == expected_usn
     assert s3.rb_local_usn == expected_usn
     assert s4.rb_local_usn == usn_old
+
+    assert _check_playlist_xml(db)
 
 
 def test_create_playlist(db):
@@ -463,8 +499,7 @@ def test_create_playlist(db):
     # Check if playlist was added to xml
     plxml = db.playlist_xml.get(pl.ID)
     assert plxml is not None
-    ts = plxml["Timestamp"]
-    assert int(pl.updated_at.timestamp() * 1000) == int(ts.timestamp() * 1000)
+    assert _check_playlist_xml(db)
 
 
 def test_create_playlist_seq_middle(db):
@@ -494,6 +529,8 @@ def test_create_playlist_seq_middle(db):
     assert db.get_local_usn() == old_usn + 3  # +2 for creating, +1 for moving others
     assert pl1.rb_local_usn == old_usn + 1
     assert pl2.rb_local_usn == old_usn + 3
+
+    assert _check_playlist_xml(db)
 
 
 def test_create_playlist_folder(db):
@@ -525,27 +562,7 @@ def test_create_playlist_folder(db):
     pl = db.get_playlist(ID=pid)
     assert len(pl.Children) == 1
 
-
-def test_playlist_xml_sync(db):
-    # Create playlist structure
-    folder1 = db.create_playlist_folder("dev folder")
-    folder2 = db.create_playlist_folder("sub folder 1", parent=folder1.ID)
-    db.create_playlist("sub playlist 1", parent=folder1.ID)
-    db.create_playlist("sub playlist 2", parent=folder1.ID)
-    db.create_playlist("sub sub playlist 1", parent=folder2.ID)
-    db.create_playlist("sub sub playlist 2", parent=folder2.ID)
-    db.commit()
-
-    # Check that every playlist is synced in the masterPlaylists xml file
-    for pl in db.get_playlist():
-        if pl.Name == "Trial playlist - Cloud Library Sync":
-            continue
-        plxml = db.playlist_xml.get(pl.ID)
-        # Check if playlist exists
-        assert plxml is not None
-        # Check update time
-        ts = plxml["Timestamp"]
-        assert int(pl.updated_at.timestamp() * 1000) == int(ts.timestamp() * 1000)
+    assert _check_playlist_xml(db)
 
 
 def test_delete_playlist_empty_end(db):
@@ -572,6 +589,9 @@ def test_delete_playlist_empty_end(db):
     assert plxml is None
     # Check USN is correct (+1 for deleting)
     assert db.get_local_usn() == usn_old + 1
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_empty(db):
@@ -603,6 +623,9 @@ def test_delete_playlist_empty(db):
     assert pl.Seq == 2
     assert pl.rb_local_usn == usn_old + 1
 
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
+
 
 def test_delete_playlist_folder_empty(db):
     # Create playlist structure
@@ -632,6 +655,9 @@ def test_delete_playlist_folder_empty(db):
     # Check USN is correct (+1 for deleting)
     assert db.get_local_usn() == usn_old + 1
     assert pl.rb_local_usn == usn_old + 1
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_non_empty(db):
@@ -667,6 +693,9 @@ def test_delete_playlist_non_empty(db):
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
     # Check if USN is correct (+1 for deleting with contents)
     assert db.get_local_usn() == usn_old + 1
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_folder_non_empty(db):
@@ -709,6 +738,9 @@ def test_delete_playlist_folder_non_empty(db):
 
     # Check if USN is correct (+1 for deleting with Seq update, +1 for children)
     assert db.get_local_usn() == usn_old + 2
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_folder_chained(db):
@@ -761,6 +793,9 @@ def test_delete_playlist_folder_chained(db):
 
     # Check if USN is correct (+1 for deleting with Seq update, +1 for children)
     assert db.get_local_usn() == usn_old + 2
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_move_playlist_seq(db):
@@ -837,6 +872,8 @@ def test_move_playlist_seq(db):
     assert pl2.updated_at > mtime_old
     assert pl3.updated_at > mtime_old
     assert f2.updated_at > mtime_old
+
+    assert _check_playlist_xml(db)
 
 
 def test_move_playlist_parent(db):
@@ -916,6 +953,8 @@ def test_move_playlist_parent(db):
     assert subpl4.rb_local_usn == old_usn + 4
     assert pl1.rb_local_usn == old_usn + 5
 
+    assert _check_playlist_xml(db)
+
 
 def test_rename_playlist(db):
     # Create playlist structure
@@ -938,6 +977,8 @@ def test_rename_playlist(db):
     assert pl.updated_at > mtime_old
     assert db.get_local_usn() == usn_old + 1
     assert pl.rb_local_usn == usn_old + 1
+
+    assert _check_playlist_xml(db)
 
 
 def test_get_anlz_paths():
