@@ -8,7 +8,7 @@ import secrets
 from uuid import uuid4
 from pathlib import Path
 from typing import Optional
-from sqlalchemy import create_engine, or_, event
+from sqlalchemy import create_engine, or_, event, MetaData
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import NoResultFound
 from packaging import version
@@ -1763,3 +1763,48 @@ class Rekordbox6Database:
         data = self.to_dict(verbose=verbose)
         with open(file, "w") as fp:
             json.dump(data, fp, indent=indent, sort_keys=sort_keys, default=json_serial)
+
+    def copy_unlocked(self, output_file):
+        src_metadata = MetaData(bind=self.engine)
+        exclude_tables = ("sqlite_master", "sqlite_sequence", "sqlite_temp_master")
+
+        dst_engine = create_engine(f"sqlite:///{output_file}")
+        dst_metadata = MetaData(bind=dst_engine)
+
+        @event.listens_for(src_metadata, "column_reflect")
+        def genericize_datatypes(inspector, tablename, column_dict):
+            column_dict["type"] = column_dict["type"].as_generic(allow_nulltype=True)
+
+        dst_engine.connect()
+        dst_metadata.reflect()
+
+        # drop all tables in target database
+        for table in reversed(dst_metadata.sorted_tables):
+            if table.name not in exclude_tables:
+                print("dropping table =", table.name)
+                table.drop()
+
+        dst_metadata.clear()
+        dst_metadata.reflect()
+        src_metadata.reflect()
+
+        # create all tables in target database
+        for table in src_metadata.sorted_tables:
+            if table.name not in exclude_tables:
+                table.create(bind=dst_engine)
+
+        # refresh metadata before you can copy data
+        dst_metadata.clear()
+        dst_metadata.reflect()
+
+        # Copy all data from src to target
+        print("Copying data...")
+        string = "\rCopying table {name}: Inserting row {row}"
+        for table in dst_metadata.sorted_tables:
+            src_table = src_metadata.tables[table.name]
+            stmt = table.insert()
+            index = 0
+            for index, row in enumerate(src_table.select().execute()):
+                print(string.format(name=table.name, row=index), end="", flush=True)
+                stmt.execute(row._asdict())  # noqa
+            print(f"\rCopying table {table.name}: Inserted {index} rows", flush=True)

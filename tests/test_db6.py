@@ -13,8 +13,10 @@ from pyrekordbox import Rekordbox6Database, open_rekordbox_database
 from pyrekordbox.db6 import tables
 
 TEST_ROOT = Path(__file__).parent.parent / ".testdata"
+LOCKED = TEST_ROOT / "rekordbox 6" / "master_locked.db"
 UNLOCKED = TEST_ROOT / "rekordbox 6" / "master_unlocked.db"
 UNLOCKED_COPY = TEST_ROOT / "rekordbox 6" / "master_unlocked_copy.db"
+UNLOCKED_OUT = TEST_ROOT / "rekordbox 6" / "master_unlocked_out.db"
 MASTER_PLAYLIST_SRC = TEST_ROOT / "rekordbox 6" / "masterPlaylists6_template.xml"
 MASTER_PLAYLIST_DST = TEST_ROOT / "rekordbox 6" / "masterPlaylists6.xml"
 # Create a copy of the masterPlaylists6.xml file
@@ -955,3 +957,25 @@ def test_to_json():
     finally:
         tmp.close()
         os.remove(tmp.name)
+
+
+def test_copy_unlocked():
+    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    db.copy_unlocked(UNLOCKED_OUT)
+
+    db2 = Rekordbox6Database(UNLOCKED_OUT, unlock=False)
+    # Check everything got copied
+    for name in tables.__all__:
+        if name.startswith("Stats") or name == "Base":
+            continue
+        table = getattr(tables, name)
+        for row in db.query(table):
+            data = row.to_dict()
+            if name == "AgentRegistry":
+                query = db2.query(table).filter_by(registry_id=row.registry_id)
+            elif name == "DjmdProperty":
+                query = db2.query(table).filter_by(DBID=row.DBID)
+            else:
+                query = db2.query(table).filter_by(ID=row.ID)
+            data2 = query.one().to_dict()
+            assert data == data2
