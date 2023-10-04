@@ -4,6 +4,10 @@
 
 """Rekordbox 6 `master.db` SQLAlchemy table declarations."""
 
+import math
+import struct
+
+import numpy as np
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, DateTime
 from sqlalchemy import Text, ForeignKey, Float
 from sqlalchemy.orm import declarative_base, relationship, backref
@@ -1032,6 +1036,52 @@ class DjmdMixerParam(Base, StatsFull):
 
     Content = relationship("DjmdContent")
     """The content this mixer parameters belong to (links to :class:`DjmdContent`)."""
+
+    @staticmethod
+    def _get_db(low, high):
+        integer = (high << 16) | low
+        byte_data = integer.to_bytes(4, byteorder="big")
+        factor = struct.unpack("!f", byte_data)[0]
+        if factor <= 0:
+            return -np.inf
+        return 20 * math.log10(factor)
+
+    @staticmethod
+    def _set_db(value):
+        if value == -np.inf:
+            return 0, 0
+        factor = 10 ** (value / 20)
+        byte_data = struct.pack("!f", factor)
+        integer = int.from_bytes(byte_data, byteorder="big")
+        low, high = integer & 0xFFFF, integer >> 16
+        return low, high
+
+    @property
+    def Gain(self) -> float:
+        """The auto-gain value of a track in dB.
+
+        This value is computed from the low and high gain values.
+        It is the value of the auto-gain knob in the Grid Edit panel or Rekordbox,
+        which is also set by the analysis process.
+        """
+        return self._get_db(self.GainLow, self.GainHigh)
+
+    @Gain.setter
+    def Gain(self, value: float) -> None:
+        self.GainLow, self.GainHigh = self._set_db(value)
+
+    @property
+    def Peak(self):
+        """The peak amplitude of a track in dB.
+
+        This value is computed from the low and high peak values.
+        It is not exposed in Rekordbox.
+        """
+        return self._get_db(self.PeakLow, self.PeakHigh)
+
+    @Peak.setter
+    def Peak(self, value):
+        self.PeakLow, self.PeakHigh = self._set_db(value)
 
 
 class DjmdMyTag(Base, StatsFull):
