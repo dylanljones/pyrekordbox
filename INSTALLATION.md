@@ -129,6 +129,7 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 #### Troubleshooting
 
 - **Microsoft Visual C++ or LINK error**
+
   If you are getting an error like
   ````commandline
   error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools"``
@@ -136,6 +137,7 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
   and have Visual Studio installed, you might not have all the necessary C/C++ components.
 
 - **LINK error**
+
   If you are getting an error like
   ````commandline
   LINK : fatal error LNK1158: cannot run 'rc.exe'
