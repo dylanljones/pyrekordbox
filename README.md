@@ -62,8 +62,8 @@ For MacOS follow these steps:
 2) Install SQLCipher with `brew install SQLCipher`.
 3) With the python environment you are using to run pyrekordbox active execute the following:
 ```shell
-git clone https://github.com/rigglemania/pysqlcipher3
-cd pysqlcipher3
+git clone https://github.com/coleifer/sqlcipher3
+cd sqlcipher3
 SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py build
 SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
 ```
