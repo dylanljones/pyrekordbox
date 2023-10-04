@@ -35,7 +35,8 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 2. **Install a prebuilt [OpenSSL binary][OpenSSL]**
 
-   Choose the latest Win32/Win64 version.
+   Choose the latest Win32/Win64 version. Make sure to download the full version,
+   not the light version.
 
 
 3. **Confirm that the `OPENSSL_CONF` environment variable is set properly in environment variables**
