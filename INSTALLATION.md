@@ -28,6 +28,9 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 1. **Install [Visual Studio Community Edition][VS]**
 
    Make sure to select all the GCC options (VC++, C++, etc) in the installation process.
+   The following workloads under ``Desktop & Mobile`` should be sufficient:
+   - Desktop Development with C++
+   - .NET desktop development
 
 
 2. **Install a prebuilt [OpenSSL binary][OpenSSL]**
@@ -43,13 +46,18 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
    - 64-bit: ``C:/Program Files/openssl-Win64/bin/openssl.cfg``
 
 
-4. **Copy the openssl folder to the VC include directory (ex: `C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include`)**
+4. **Copy the openssl folder to the Microsoft Visual Studio VC include directory**
 
-   The openssl folder is
+   The openssl folder can be found here:
    - 32-bit: `C:/Program Files (x86)/OpenSSL-Win32/include/openssl`
    - 64-bit: `C:/Program Files/OpenSSL-Win64/include/openssl`
 
-   Confirm the following path exists `../../VC/include/openssl/aes.h`
+   The VC include directory can be foun d in the Visual Studio installation directory:
+   - 32-bit: `C:/Program Files (x86)/Microsoft Visual Studio/<year>/Community/VC/Tools/MSVC/<version>/include`
+   - 64-bit: `C:/Program Files/Microsoft Visual Studio/<year>/Community/VC/Tools/MSVC/<version>/include`
+
+   If you are using VS 14 the include path is located at `C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include`
+   Confirm the following path exists `.../include/openssl/aes.h`
 
 
 5. **Download / compile the SQLCipher 3 amalgamation files**
@@ -117,14 +125,27 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
   -b, --buildonly       Don't install sqlcipher3, only build the amalgamation
 ````
 
-After the installation SQLCipher-databases can be unlocked via the `pysqlcipher3` package:
-````python
-from sqlcipher3 import dbapi2 as sqlite3
+#### Troubleshooting
 
-conn = sqlite3.connect('test.db')
-c = conn.cursor()
-c.execute("PRAGMA key='password'")
-````
+- **Microsoft Visual C++ or LINK error**
+  If you are getting an error like
+  ````commandline
+  error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools"``
+  ````
+  and have Visual Studio installed, you might not have all the necessary C/C++ components.
+
+- **LINK error**
+  If you are getting an error like
+  ````commandline
+  LINK : fatal error LNK1158: cannot run 'rc.exe'
+  ````
+  or
+  ````commandline
+  LINK : fatal error LNK1327: failure during running rc.exe
+  ````
+  make sure all the necessary C/C++ components are installed and that you have selected
+  the latest Win 10/11 SDK in the Visual Studio installer. If you are still getting the error,
+  follow the suggestions in this [StackOverflow post](https://stackoverflow.com/questions/14372706/visual-studio-cant-build-due-to-rc-exe).
 
 
 ### MacOS
@@ -141,6 +162,18 @@ SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_
 SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
 ```
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
+
+
+## Using SQLCipher
+
+After the installation SQLCipher-databases can be unlocked via the `sqlcipher3` package:
+````python
+from sqlcipher3 import dbapi2 as sqlite3
+
+conn = sqlite3.connect('test.db')
+c = conn.cursor()
+c.execute("PRAGMA key='password'")
+````
 
 
 ### References:
