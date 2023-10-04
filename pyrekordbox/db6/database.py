@@ -22,12 +22,9 @@ from .tables import DjmdContent
 from . import tables
 
 try:
-    from pysqlcipher3 import dbapi2 as sqlite3  # noqa
+    from sqlcipher3 import dbapi2 as sqlite3  # noqa
 except ImportError:
-    try:
-        from sqlcipher3 import dbapi2 as sqlite3  # noqa
-    except ImportError:
-        import sqlite3
+    import sqlite3
 
 MAX_VERSION = version.parse("6.6.5")
 
