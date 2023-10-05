@@ -58,6 +58,13 @@ __all__ = [
 
 
 class DateTime(TypeDecorator):
+    """Custom datetime column with timezone support.
+
+    The datetime format in the database is `YYYY-MM-DD HH:MM:SS.SSS +00:00`.
+    The timezone seems to always be `+00:00` (UTC).
+    This format is not supported by the `DateTime` column of SQLAlchemy 2.
+    """
+
     impl = Text
     cache_ok = True
 
@@ -74,6 +81,7 @@ class DateTime(TypeDecorator):
             else:
                 datestr, tzinfo = value, ""
             return datetime.fromisoformat(datestr)
+        return None
 
 
 # -- Base- and Mixin classes -----------------------------------------------------------
