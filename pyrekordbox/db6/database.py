@@ -9,8 +9,9 @@ from uuid import uuid4
 from pathlib import Path
 from typing import Optional
 from sqlalchemy import create_engine, or_, event, MetaData
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.sql.sqltypes import DateTime, String
 from packaging import version
 from ..utils import get_rekordbox_pid
 from ..config import get_config
@@ -21,12 +22,9 @@ from .tables import DjmdContent
 from . import tables
 
 try:
-    from pysqlcipher3 import dbapi2 as sqlite3  # noqa
+    from sqlcipher3 import dbapi2 as sqlite3  # noqa
 except ImportError:
-    try:
-        from sqlcipher3 import dbapi2 as sqlite3  # noqa
-    except ImportError:
-        import sqlite3
+    import sqlite3
 
 MAX_VERSION = version.parse("6.6.5")
 
@@ -87,12 +85,12 @@ def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
 
     To use the ``pysqlcipher3`` package as SQLite driver, either import it as
 
-    >>> from pysqlcipher3 import dbapi2 as sqlite3  # noqa
+    >>> from sqlcipher3 import dbapi2 as sqlite3  # noqa
     >>> db = open_rekordbox_database("path/to/master_copy.db")
 
     or supply the package as driver:
 
-    >>> from pysqlcipher3 import dbapi2
+    >>> from sqlcipher3 import dbapi2  # noqa
     >>> db = open_rekordbox_database("path/to/master_copy.db", sql_driver=dbapi2)
     """
     if not path:
@@ -231,7 +229,6 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
 
         self.engine = engine
-        self._Session = sessionmaker(bind=self.engine)
         self.session: Optional[Session] = None
 
         self.registry = RekordboxAgentRegistry(self)
@@ -272,7 +269,7 @@ class Rekordbox6Database:
         >>> db.open()
         """
         if self.session is None:
-            self.session = self._Session()
+            self.session = Session(bind=self.engine)
             self.registry.clear_buffer()
 
     def close(self):
@@ -1761,46 +1758,51 @@ class Rekordbox6Database:
             json.dump(data, fp, indent=indent, sort_keys=sort_keys, default=json_serial)
 
     def copy_unlocked(self, output_file):
-        src_metadata = MetaData(bind=self.engine)
+        src_engine = self.engine
+        src_metadata = MetaData()
         exclude_tables = ("sqlite_master", "sqlite_sequence", "sqlite_temp_master")
 
         dst_engine = create_engine(f"sqlite:///{output_file}")
-        dst_metadata = MetaData(bind=dst_engine)
+        dst_metadata = MetaData()
 
         @event.listens_for(src_metadata, "column_reflect")
         def genericize_datatypes(inspector, tablename, column_dict):
-            column_dict["type"] = column_dict["type"].as_generic(allow_nulltype=True)
+            type_ = column_dict["type"].as_generic(allow_nulltype=True)
+            if isinstance(type_, DateTime):
+                type_ = String
+            column_dict["type"] = type_
 
-        dst_engine.connect()
-        dst_metadata.reflect()
-
+        src_conn = src_engine.connect()
+        dst_conn = dst_engine.connect()
+        dst_metadata.reflect(bind=dst_engine)
         # drop all tables in target database
         for table in reversed(dst_metadata.sorted_tables):
             if table.name not in exclude_tables:
                 print("dropping table =", table.name)
-                table.drop()
-
+                table.drop(bind=dst_engine)
+        # # Delete all data in target database
+        # for table in reversed(dst_metadata.sorted_tables):
+        #    table.delete()
         dst_metadata.clear()
-        dst_metadata.reflect()
-        src_metadata.reflect()
-
+        dst_metadata.reflect(bind=dst_engine)
+        src_metadata.reflect(bind=src_engine)
         # create all tables in target database
         for table in src_metadata.sorted_tables:
             if table.name not in exclude_tables:
                 table.create(bind=dst_engine)
-
         # refresh metadata before you can copy data
         dst_metadata.clear()
-        dst_metadata.reflect()
-
+        dst_metadata.reflect(bind=dst_engine)
         # Copy all data from src to target
         print("Copying data...")
         string = "\rCopying table {name}: Inserting row {row}"
+        index = 0
         for table in dst_metadata.sorted_tables:
             src_table = src_metadata.tables[table.name]
             stmt = table.insert()
-            index = 0
-            for index, row in enumerate(src_table.select().execute()):
+            for index, row in enumerate(src_conn.execute(src_table.select())):
                 print(string.format(name=table.name, row=index), end="", flush=True)
-                stmt.execute(row._asdict())  # noqa
+                dst_conn.execute(stmt.values(row))
             print(f"\rCopying table {table.name}: Inserted {index} rows", flush=True)
+
+        dst_conn.commit()
