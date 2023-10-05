@@ -131,7 +131,7 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 
 #### Troubleshooting
 
-- **Microsoft Visual C++ or LINK error**
+- **Microsoft Visual C++ error**
 
   If you are getting an error like
   ````commandline
