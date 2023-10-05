@@ -10,6 +10,12 @@
   The gain and peak values are stored as high/low binary values. 
   It is now possible to get or set the gain/peak as a simple decibel value. 
   Thank you [@gsuberland](https://github.com/gsuberland) for the help!
+- **migrate to SqlAlchemy 2.0**  
+
+### BREAKING CHANGE
+
+`pyrekordbox` now only supports `sqlcipher3`. `pysqlcipher3` is no longer supported
+since it is not compatible with SqlAlchemy 2.0.
 
 
 <a name="0.2.0"></a>
