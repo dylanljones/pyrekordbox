@@ -54,17 +54,16 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
    You might have to restart Windows for the changes to take effect.
 
 
-4. **Copy the openssl folder to the Microsoft Visual Studio VC include directory**
+4. **Copy the openssl folder to the Microsoft Visual Studio 14 VC include directory**
 
    The openssl folder can be found here:
    - 32-bit: `C:/Program Files (x86)/OpenSSL-Win32/include/openssl`
    - 64-bit: `C:/Program Files/OpenSSL-Win64/include/openssl`
 
-   The VC include directory can be foun d in the Visual Studio installation directory:
-   - 32-bit: `C:/Program Files (x86)/Microsoft Visual Studio/<year>/Community/VC/Tools/MSVC/<version>/include`
-   - 64-bit: `C:/Program Files/Microsoft Visual Studio/<year>/Community/VC/Tools/MSVC/<version>/include`
+   The VC include directory (for any VS version) can be found in the
+   Visual Studio installation directory:
+   `C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include`
 
-   If you are using VS 14 the include path is located at `C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include`
    Confirm the following path exists `.../include/openssl/aes.h`
 
 
