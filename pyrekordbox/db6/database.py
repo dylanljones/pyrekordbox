@@ -1780,9 +1780,9 @@ class Rekordbox6Database:
             if table.name not in exclude_tables:
                 print("dropping table =", table.name)
                 table.drop(bind=dst_engine)
-        # # Delete all data in target database
-        # for table in reversed(dst_metadata.sorted_tables):
-        #    table.delete()
+        # Delete all data in target database
+        for table in reversed(dst_metadata.sorted_tables):
+            table.delete()
         dst_metadata.clear()
         dst_metadata.reflect(bind=dst_engine)
         src_metadata.reflect(bind=src_engine)
