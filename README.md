@@ -51,7 +51,7 @@ platform-dependent and can not be installed via ``pip``.
 
 #### Windows
 
-SQLCipher can be used by building the libary against an amalgamation with [pysqlcipher3].
+SQLCipher can be used by building the libary against an amalgamation with [sqlcipher3].
 For a detailed instruction, see [INSTALLATION].
 
 #### MacOS
@@ -313,7 +313,7 @@ the CI setup since it requires a working Rekordbox installation.
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
-[pysqlcipher3]: https://github.com/rigglemania/pysqlcipher3
+[sqlcipher3]: https://github.com/coleifer/sqlcipher3
 [rekordcrate]: https://github.com/Holzhaus/rekordcrate
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
