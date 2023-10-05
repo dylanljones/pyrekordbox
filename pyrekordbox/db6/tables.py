@@ -6,6 +6,7 @@
 
 import math
 import struct
+import numpy as np
 from datetime import datetime
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, Text, Float
 from sqlalchemy import ForeignKey, TypeDecorator
