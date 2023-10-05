@@ -187,6 +187,23 @@ def test_songs_getters(parent_name, key, cls):
     assert isinstance(query.first(), cls)
 
 
+def test_mixer_gain_setters(db):
+    for item in db.get_mixer_param():
+        # Check Gain setter
+        low, high, value = int(item.GainLow), int(item.GainHigh), item.Gain
+        item.Gain = value
+        db.flush()
+        assert item.GainLow == low
+        assert item.GainHigh == high
+
+        # Check Peak setter
+        low, high, value = int(item.PeakLow), int(item.PeakHigh), item.Peak
+        item.Peak = value
+        db.flush()
+        assert item.PeakLow == low
+        assert item.PeakHigh == high
+
+
 @mark.parametrize(
     "search,ids",
     [
