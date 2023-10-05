@@ -46,6 +46,13 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
    - 32-bit: ``C:/Program Files (x86)/openssl-Win32/bin/openssl.cfg``
    - 64-bit: ``C:/Program Files/openssl-Win64/bin/openssl.cfg``
 
+   The library names of OpenSSL have changed in version 1.1.0 (see [this](https://stackoverflow.com/questions/65345077/unable-to-build-sqlcipher3-on-windows) discussion).
+   If you are using a newer version, you can set an environment variable
+   ``OPENSSL_LIBNAME`` to the name of the library, e.g. ``libcrypto.lib``.
+   Alternatively, you can modify the ``setup.py`` script (see step 8 below).
+
+   You might have to restart Windows for the changes to take effect.
+
 
 4. **Copy the openssl folder to the Microsoft Visual Studio VC include directory**
 
@@ -80,20 +87,17 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
    to the root of the ``sqlcipher3`` directory from step 6.
 
 
+8. **Modify the ``sqlcipher3/setup.py`` script (optional)**
 
-8. **Modify the ``sqlcipher3/setup.py`` script (optional, see [this](https://stackoverflow.com/questions/65345077/unable-to-build-sqlcipher3-on-windows) discussion)**
-
-   If building the amalgamation fails, modify the ``setup.py`` script:
-
-   - The library names of OpenSSL have changed in version 1.1.0. If you are using a newer version, you might have to change the library name from
-     ````python
-     openssl_libname = os.environ.get('OPENSSL_LIBNAME') or 'libeay32.lib'
-     ````
-     to
-     ````python
-     openssl_libname = os.environ.get('OPENSSL_LIBNAME') or '<NAME>'
-     ````
-     where ``<NAME>`` is something like ``libcrypto.lib`` (depending on your version).
+   If building the amalgamation fails and you haven't set the ``OPENSSL_LIBNAME``
+   environment variable in step 3, you have to modify the ``setup.py`` script. Change
+   ````python
+   openssl_libname = os.environ.get('OPENSSL_LIBNAME') or 'libeay32.lib'
+   ````
+   to
+   ````python
+   openssl_libname = os.environ.get('OPENSSL_LIBNAME') or 'libcrypto.lib'
+   ````
 
 
 9. **Build using the amalgamation**

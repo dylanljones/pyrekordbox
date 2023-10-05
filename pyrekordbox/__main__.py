@@ -47,6 +47,8 @@ def clone_repo(https_url: str) -> Path:
     if not path.exists():
         os.system(f"git clone {https_url}")
         assert path.exists()
+    else:
+        print(f"Repository {https_url} already cloned")
     return path
 
 
@@ -80,13 +82,6 @@ def prepare_pysqlcipher(pysqlcipher_dir: Path, amalgamation_src: Path):
     shutil.copy2(amalgamation_src / "sqlite3.c", root / "sqlite3.c")
     shutil.copy2(amalgamation_src / "sqlite3.h", root / "sqlite3.h")
 
-    # Create sqlcipher directory
-    # root = pysqlcipher_dir / "src" / "python3" / "sqlcipher"
-    # root.mkdir(parents=True, exist_ok=True)
-    # shutil.copy2(amalgamation_src / "sqlite3.c", root / "sqlite3.c")
-    # shutil.copy2(amalgamation_src / "sqlite3.h", root / "sqlite3.h")
-    # shutil.copy2(amalgamation_src / "sqlite3ext.h", root / "sqlite3ext.h")
-
 
 def install_pysqlcipher(
     tmpdir="pysqlcipher3",
@@ -108,7 +103,9 @@ def install_pysqlcipher(
         amalgamation_src = amalgamation_dir / "src"
 
         prepare_pysqlcipher(pysqlcipher_dir, amalgamation_src)
-        patch_pysqlcipher_setup(pysqlcipher_dir, crypto_lib)
+        if os.getenv("OPENSSL_LIBNAME") is None:
+            print("No OPENSSL_LIBNAME environment variable found, updating `setup.py`!")
+            patch_pysqlcipher_setup(pysqlcipher_dir, crypto_lib)
 
     # Build amalgamation and install pysqlcipher
     if not pyexecutable:
