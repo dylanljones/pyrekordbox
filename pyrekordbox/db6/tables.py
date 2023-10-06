@@ -158,9 +158,13 @@ class Base(DeclarativeBase):
 class StatsTime:
     """Mixin class for tables that only use time statistics columns."""
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
     """The creation date of the table entry (from :class:`StatsTime`)."""
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+    )
     """The last update date of the table entry (from :class:`StatsTime`)."""
 
 
@@ -185,9 +189,13 @@ class StatsFull:
     rb_local_usn: Mapped[int] = mapped_column(BigInteger, default=None)
     """The local USN (unique sequence number) of the table entry
     (from :class:`StatsFull`)."""
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
     """The creation date of the table entry (from :class:`StatsFull`)."""
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+    )
     """The last update date of the table entry (from :class:`StatsFull`)."""
 
     def __repr__(self):
