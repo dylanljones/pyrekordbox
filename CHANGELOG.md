@@ -6,11 +6,17 @@
 
 ### Improvements/Bug Fixes
 
+- **migrate to SqlAlchemy 2.0**  
 - **add getters/setters for the mixer gain/peak settings in the RBv6 db ([#88](https://github.com/dylanljones/pyrekordbox/issues/88)).**  
   The gain and peak values are stored as high/low binary values. 
   It is now possible to get or set the gain/peak as a simple decibel value. 
   Thank you [@gsuberland](https://github.com/gsuberland) for the help!
-- **migrate to SqlAlchemy 2.0**  
+- **automatically set `updated_at` of tables in the RBv6 db**  
+  The `updated_at` column is automatically updated via `onupdate` if rows are modified. 
+  This only happens if the user did not set the column manually.
+- **flush the RBv6 db changes before applying USN auto-increment.**  
+  This allows the user to use `before_flush` events more easily without 
+  affecting the USN changes
 
 ### BREAKING CHANGE
 
