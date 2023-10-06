@@ -58,8 +58,8 @@ def get_process_id(name: str, raise_exec=False) -> int:
     23456
     """
     for proc in psutil.process_iter():
-        proc_name = os.path.splitext(proc.name())[0]  # needed on Windows (.exe)
         try:
+            proc_name = os.path.splitext(proc.name())[0]  # needed on Windows (.exe)
             if proc_name == name:
                 return proc.pid
         except (psutil.AccessDenied, psutil.NoSuchProcess):
