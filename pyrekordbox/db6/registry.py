@@ -285,6 +285,7 @@ class RekordboxAgentRegistry:
         reg = self.db.get_agent_registry(registry_id="localUpdateCount")
         usn = reg.int_1
         self.disable_tracking()
+        self.db.flush()
         with self.db.session.no_autoflush:
             for instances, op, _, _ in self.__update_sequence__.copy():
                 usn += 1
@@ -298,5 +299,6 @@ class RekordboxAgentRegistry:
             reg.int_1 = usn
 
         self.clear_buffer()
+        self.db.flush()
         self.enable_tracking()
         return usn
