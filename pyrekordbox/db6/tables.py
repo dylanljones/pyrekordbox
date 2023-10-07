@@ -73,14 +73,18 @@ class DateTime(TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value:
-            if len(value.strip()) > 23:
-                datestr, tzinfo = value[:23], value[23:]
-                datestr = datestr.strip()
-                tzinfo = tzinfo.strip()
-                assert tzinfo == "+00:00", tzinfo
-            else:
-                datestr, tzinfo = value, ""
-            return datetime.fromisoformat(datestr)
+            try:
+                dt = datetime.fromisoformat(value)
+            except ValueError:
+                if len(value.strip()) > 23:
+                    datestr, tzinfo = value[:23], value[23:]
+                    datestr = datestr.strip()
+                    tzinfo = tzinfo.strip()
+                    assert tzinfo == "+00:00", tzinfo
+                else:
+                    datestr, tzinfo = value, ""
+                dt = datetime.fromisoformat(datestr)
+            return dt
         return None
 
 
