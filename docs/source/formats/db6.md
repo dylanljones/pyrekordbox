@@ -441,10 +441,10 @@ corresponding ID.
 This table stores the cue points (memory and hotcues) of the tracks in Rekordbox.
 
 Note: Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
-The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with 
-variable bit-rate (VBR) or average bit-rage (ABR), the the `InMpegFrame` and `OutMpegFrame` values 
-are filled out to assist with correctly seeking. Despite the names, these values are **not** the 
-frame indices within the MPEG file, but instead use an alternative timing scheme that is typically 
+The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with
+variable bit-rate (VBR) or average bit-rage (ABR), the the `InMpegFrame` and `OutMpegFrame` values
+are filled out to assist with correctly seeking. Despite the names, these values are **not** the
+frame indices within the MPEG file, but instead use an alternative timing scheme that is typically
 around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity of normal frames.
 
 ```{eval-rst}
@@ -713,12 +713,12 @@ This table stores the configurable menu items shown in the Rekordbox application
 
 This table stores the mixer parameters of tracks in the Rekordbox collection.
 
-Each of the two gain values are represented by a 32-bit floating point number that is packed into a 
-pair of 16-bit integers. The floating point value represents the linear gain factor, which can be 
+Each of the two gain values are represented by a 32-bit floating point number that is packed into a
+pair of 16-bit integers. The floating point value represents the linear gain factor, which can be
 converted into decibels (dB) by calculating `20.0 * math.log10(f)` where `f` is the gain factor.
 
-The auto-gain value is the one shown in the grid edit panel. The peak value does not appear to be 
-displayed anywhere in the program, and is most likely used internally for limiting and/or waveform 
+The auto-gain value is the one shown in the grid edit panel. The peak value does not appear to be
+displayed anywhere in the program, and is most likely used internally for limiting and/or waveform
 scaling.
 
 ```{eval-rst}
@@ -976,10 +976,10 @@ This table stores the hot cue entries contained in the hot-cue bank lists in the
 `djmdHotCueBanklist` table.
 
 Note: Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
-The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with 
-variable bit-rate (VBR) or average bit-rage (ABR), the the `InMpegFrame` and `OutMpegFrame` values 
-are filled out to assist with correctly seeking. Despite the names, these values are **not** the 
-frame indices within the MPEG file, but instead use an alternative timing scheme that is typically 
+The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with
+variable bit-rate (VBR) or average bit-rage (ABR), the the `InMpegFrame` and `OutMpegFrame` values
+are filled out to assist with correctly seeking. Despite the names, these values are **not** the
+frame indices within the MPEG file, but instead use an alternative timing scheme that is typically
 around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity of normal frames.
 
 ```{eval-rst}
