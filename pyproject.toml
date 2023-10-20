@@ -56,14 +56,6 @@ Source = "https://github.com/dylanljones/pyrekordbox"
 Documentation = "https://pyrekordbox.readthedocs.io/en/stable/"
 Tracker = "https://github.com/dylanljones/pyrekordbox/issues"
 
-[tool.setuptools]
-platforms = ["any"]
-zip-safe = false
-include-package-data = true
-
-[tool.setuptools.packages]
-find = {}
-
 
 # -- Build -----------------------------------------------------------------------------
 
@@ -75,6 +67,14 @@ requires = [
     "wheel >= 0.37.0",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+platforms = ["any"]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {}
 
 [tool.setuptools_scm]
 write_to = "pyrekordbox/_version.py"
