@@ -32,21 +32,21 @@ dependencies = [
     "bidict>=0.21.0",
     "blowfish>=0.6.0",
     "construct>=2.10.0",
-    "hypothesis>=6.0.0",
     "numpy>=1.19.0",
     "packaging",
-    "pytest>=6.2.0",
     "psutil>=5.9.0",
-    "setuptools>=60.0.0",
-    "setuptools-scm[toml]>=4",
     "sqlalchemy>=2.0.0",
 ]
 
 [project.optional-dependencies]
 build = [
+    "setuptools>=60.0.0",
+    "setuptools-scm[toml]>=4",
     "wheel>=0.37.0",
 ]
 test = [
+    "hypothesis>=6.0.0",
+    "pytest>=6.2.0",
     "pytest-cov",
     "wheel>=0.37.0",
 ]
@@ -62,7 +62,7 @@ Tracker = "https://github.com/dylanljones/pyrekordbox/issues"
 [build-system]
 requires = [
     "setuptools >= 60.0.0",
-    "setuptools_scm[toml] >= 4, <6",
+    "setuptools_scm[toml] >= 4",
     "setuptools_scm_git_archive",
     "wheel >= 0.37.0",
 ]
