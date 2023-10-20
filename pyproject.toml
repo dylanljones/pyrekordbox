@@ -57,7 +57,7 @@ Documentation = "https://pyrekordbox.readthedocs.io/en/stable/"
 Tracker = "https://github.com/dylanljones/pyrekordbox/issues"
 
 [tool.setuptools]
-packages = ["find"]
+find = {}
 platforms = ["any"]
 zip-safe = false
 include-package-data = true
