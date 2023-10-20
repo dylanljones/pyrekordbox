@@ -106,7 +106,7 @@ add_ignore = [
 # -- Coverage --------------------------------------------------------------------------
 
 [tool.coverage.run]
-branch = true
+branch = false
 source = ["pyrekordbox"]
 
 [tool.coverage.report]
