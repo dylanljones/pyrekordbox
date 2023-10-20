@@ -39,21 +39,24 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install twine
+        pip install --upgrade build
+        pip install --upgrade twine
         pip install .[build]
 
-    - name: Build and publish distribution 📦 to Test PyPI
+    - name: Build distribution 📦
+      run: |
+        python -m build
+
+    - name: Publish distribution 📦 to Test PyPI
       env:
         TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
       run: |
-        python setup.py sdist bdist_wheel
         twine upload --repository testpypi dist/*
 
-    - name: Build and publish distribution 📦 to PyPI
+    - name: Publish distribution 📦 to PyPI
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python setup.py sdist bdist_wheel
         twine upload dist/*
