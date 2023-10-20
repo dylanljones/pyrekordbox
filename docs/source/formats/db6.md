@@ -440,12 +440,14 @@ corresponding ID.
 
 This table stores the cue points (memory and hotcues) of the tracks in Rekordbox.
 
-Note: Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
+```{note}
+Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
 The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with
-variable bit-rate (VBR) or average bit-rage (ABR), the the `InMpegFrame` and `OutMpegFrame` values
+variable bit-rate (VBR) or average bit-rate (ABR), the `InMpegFrame` and `OutMpegFrame` values
 are filled out to assist with correctly seeking. Despite the names, these values are **not** the
 frame indices within the MPEG file, but instead use an alternative timing scheme that is typically
 around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity of normal frames.
+```
 
 ```{eval-rst}
 .. list-table:: djmdCue columns
@@ -825,7 +827,7 @@ either be a playlist folder or an actual playlist containing tracks.
 This table stores internal properties of the Rekordbox application. Most columns of it
 are reserved.
 
-```{note}
+```{important}
 This table does not use the default columns the other tables use. Therefore *all*
 columns in the table are shown below
 ```
@@ -975,12 +977,14 @@ This table stores tracks contained in the history lists in the `djmdHistory` tab
 This table stores the hot cue entries contained in the hot-cue bank lists in the
 `djmdHotCueBanklist` table.
 
-Note: Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
+```{note}
+Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
 The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with
-variable bit-rate (VBR) or average bit-rage (ABR), the the `InMpegFrame` and `OutMpegFrame` values
+variable bit-rate (VBR) or average bit-rate (ABR), the `InMpegFrame` and `OutMpegFrame` values
 are filled out to assist with correctly seeking. Despite the names, these values are **not** the
 frame indices within the MPEG file, but instead use an alternative timing scheme that is typically
 around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity of normal frames.
+```
 
 ```{eval-rst}
 .. list-table:: djmdSongHotCueBanklist columns
