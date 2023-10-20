@@ -15,6 +15,7 @@ import logging
 import base64
 import blowfish
 import json
+import packaging.version
 import xml.etree.cElementTree as xml
 from pathlib import Path
 from typing import Union
@@ -273,11 +274,12 @@ def _get_rb_config(
         if name.startswith("rekordbox"):
             ver_str = name.replace("rekordbox", "").strip()
             if ver_str.startswith(str(major_version)):
-                versions.append(ver_str)
+                v = packaging.version.parse(ver_str)
+                versions.append(v)
     # Get latest 'V.x.x' version string and assure there is one
-    versions.sort(key=lambda s: list(map(int, s.split("."))))
+    versions.sort()  # key=lambda s: list(map(int, s.split("."))))
     try:
-        rb_version = versions[-1]
+        rb_version = str(versions[-1])
     except IndexError:
         raise FileNotFoundError(
             f"No Rekordbox {major_version} folder found in installation "

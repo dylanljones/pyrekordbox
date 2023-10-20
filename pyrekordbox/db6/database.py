@@ -12,7 +12,7 @@ from sqlalchemy import create_engine, or_, event, MetaData
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.sqltypes import DateTime, String
-from packaging import version
+import packaging.version
 from ..utils import get_rekordbox_pid
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
@@ -26,7 +26,7 @@ try:
 except ImportError:
     import sqlite3
 
-MAX_VERSION = version.parse("6.6.5")
+MAX_VERSION = packaging.version.parse("6.6.5")
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
 
     if unlock:
         if not key:
-            ver = version.parse(rb6_config["version"])
+            ver = packaging.version.parse(rb6_config["version"])
             if ver >= MAX_VERSION:
                 raise IncompatibleVersionError(rb6_config["version"])
             try:
@@ -208,7 +208,7 @@ class Rekordbox6Database:
         # Open database
         if unlock:
             if not key:
-                ver = version.parse(rb6_config["version"])
+                ver = packaging.version.parse(rb6_config["version"])
                 if ver >= MAX_VERSION:
                     raise IncompatibleVersionError(rb6_config["version"])
                 try:
