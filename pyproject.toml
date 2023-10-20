@@ -41,11 +41,6 @@ dependencies = [
     "setuptools-scm[toml]>=4",
     "sqlalchemy>=2.0.0",
 ]
-packages = "find"
-platforms = ["any"]
-zip-safe = false
-include-package-data = true
-
 
 [project.optional-dependencies]
 build = [
@@ -56,11 +51,16 @@ test = [
     "wheel>=0.37.0",
 ]
 
-
 [project.urls]
 Source = "https://github.com/dylanljones/pyrekordbox"
 Documentation = "https://pyrekordbox.readthedocs.io/en/stable/"
 Tracker = "https://github.com/dylanljones/pyrekordbox/issues"
+
+[tool.setuptools]
+packages = "find"
+platforms = ["any"]
+zip-safe = false
+include-package-data = true
 
 
 # -- Build -----------------------------------------------------------------------------
@@ -73,7 +73,6 @@ requires = [
     "wheel >= 0.37.0",
 ]
 build-backend = "setuptools.build_meta"
-
 
 [tool.setuptools_scm]
 write_to = "pyrekordbox/_version.py"
@@ -107,7 +106,6 @@ add_ignore = [
 [tool.coverage.run]
 branch = true
 source = ["pyrekordbox"]
-
 
 [tool.coverage.report]
 exclude_lines = [
