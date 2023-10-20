@@ -1,8 +1,10 @@
 # What's New
 
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.2.1"></a>
+## [0.2.1] - 2023-10-20
+
+This release migrates to SqlAlchemy 2.0 and fixes some bugs.
 
 ### Improvements/Bug Fixes
 
@@ -428,7 +430,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/dylanljones/pyrekordbox/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/dylanljones/pyrekordbox/compare/0.1.8...0.2.0
 [0.1.8]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...0.1.8
 [0.1.7]: https://github.com/dylanljones/pyrekordbox/compare/0.1.6...0.1.7
