@@ -39,16 +39,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-build = [
-    "setuptools>=60.0.0",
-    "setuptools-scm[toml]>=4",
-    "wheel>=0.37.0",
-]
 test = [
     "hypothesis>=6.0.0",
     "pytest>=6.2.0",
     "pytest-cov",
-    "wheel>=0.37.0",
 ]
 
 [project.urls]
