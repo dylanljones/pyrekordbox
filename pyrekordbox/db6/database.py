@@ -925,12 +925,12 @@ class Rekordbox6Database:
             .order_by(tables.DjmdSongPlaylist.TrackNo)
         )
         moved = list()
-        self.registry.disable_tracking()
-        for song in query:
-            song.TrackNo -= 1
-            song.updated_at = now
-            moved.append(song)
-        self.registry.enable_tracking()
+        with self.registry.disabled():
+            for song in query:
+                song.TrackNo -= 1
+                song.updated_at = now
+                moved.append(song)
+
         if moved:
             self.registry.on_move(moved)
 
@@ -1092,9 +1092,8 @@ class Rekordbox6Database:
             )
             for pl in query:
                 pl.Seq += 1
-                self.registry.disable_tracking()
-                pl.updated_at = now
-                self.registry.enable_tracking()
+                with self.registry.disabled():
+                    pl.updated_at = now
 
         # Add new playlist to database
         # First create with name 'New playlist'
@@ -1390,10 +1389,9 @@ class Rekordbox6Database:
             # Set seq number and update time *before* other playlists to ensure
             # right USN increment order
             playlist.ParentID = parent_id
-            self.registry.disable_tracking()
-            playlist.Seq = seq
-            playlist.updated_at = now
-            self.registry.enable_tracking()
+            with self.registry.disabled():
+                playlist.Seq = seq
+                playlist.updated_at = now
 
             if not insert_at_end:
                 # Update seq numbers higher than the new seq number in *new* parent
@@ -1402,9 +1400,8 @@ class Rekordbox6Database:
                     # Update time of other playlists are left unchanged
                     pl.Seq += 1
                     # Each move counts as one USN increment, so disable for update time
-                    self.registry.disable_tracking()
-                    pl.updated_at = now
-                    self.registry.enable_tracking()
+                    with self.registry.disabled():
+                        pl.updated_at = now
 
             # Update seq numbers higher than the old seq number in *old* parent
             # USN is not updated here
@@ -1463,17 +1460,15 @@ class Rekordbox6Database:
             # right USN increment order
             playlist.Seq = seq
             # Each move counts as one USN increment, so disable for update time
-            self.registry.disable_tracking()
-            playlist.updated_at = now
-            self.registry.enable_tracking()
+            with self.registry.disabled():
+                playlist.updated_at = now
 
             # Set seq number and update time for playlists between old_seq and seq
             for pl in other_playlists:
                 pl.Seq += delta_seq
                 # Each move counts as one USN increment, so disable for update time
-                self.registry.disable_tracking()
-                pl.updated_at = now
-                self.registry.enable_tracking()
+                with self.registry.disabled():
+                    pl.updated_at = now
 
     def rename_playlist(self, playlist, name):
         """Renames a playlist or playlist folder.
@@ -1509,9 +1504,8 @@ class Rekordbox6Database:
         # Update name of playlist
         playlist.Name = name
         # Update update time: USN not incremented
-        self.registry.disable_tracking()
-        playlist.updated_at = now
-        self.registry.enable_tracking()
+        with self.registry.disabled():
+            playlist.updated_at = now
 
     # ----------------------------------------------------------------------------------
 

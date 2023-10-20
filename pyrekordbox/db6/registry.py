@@ -3,6 +3,7 @@
 # Date:   2023-08-07
 
 import logging
+from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,25 @@ class RekordboxAgentRegistry:
     def disable_tracking(cls):
         """Disables the tracking of database changes."""
         cls.__enabled__ = False
+
+    @classmethod
+    @contextmanager
+    def disabled(cls):
+        """Context manager to temporarily disable the tracking of database changes.
+
+        Examples
+        --------
+        >>> registry = RekordboxAgentRegistry(db)  # noqa
+        >>> registry.__enabled__
+        True
+
+        >>> with registry.disabled():
+        ...     print(registry.__enabled__)
+        False
+        """
+        cls.disable_tracking()
+        yield cls
+        cls.enable_tracking()
 
     def get_registries(self):
         """Returns all agent registries.
