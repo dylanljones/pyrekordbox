@@ -41,7 +41,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade build
         pip install --upgrade twine
-        pip install .
 
     - name: Build distribution 📦
       run: |
