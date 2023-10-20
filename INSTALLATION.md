@@ -25,6 +25,9 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 ### Windows
 
+The easiest method to install SQLCipher on Windows is to build [sqlcipher3]
+against an amalgamation of the SQLite3 source code.
+
 1. **Install [Visual Studio Community Edition][VS]**
 
    Make sure to select all the GCC options (VC++, C++, etc) in the installation process.
@@ -168,6 +171,13 @@ SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_
 SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
 ```
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
+
+If you are having issues building sqlcipher on M1 Macs you might have to add some symlinks:
+```shell
+ln -s /opt/homebrew/lib/libsqlcipher.a /usr/local/lib/libsqlcipher.a
+ln -s /opt/homebrew/include/sqlcipher /usr/local/include/sqlcipher
+```
+Alternatively, you can also build [sqlcipher3] against an amalgamation (as described above for Windows, steps 5-10).
 
 
 ## Using SQLCipher
