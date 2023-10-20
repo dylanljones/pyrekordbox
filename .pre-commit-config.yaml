@@ -22,4 +22,4 @@ repos:
       rev: 6.1.0
       hooks:
           - id: flake8
-            args: [--config, setup.cfg]
+            additional_dependencies: [Flake8-pyproject]
