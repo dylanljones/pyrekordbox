@@ -1,6 +1,15 @@
 # What's New
 
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **add disabled context manager to the RBv6 `RekordboxAgentRegistry`**  
+- **only re-enable RBV6 USN tracking if it was enabled**  
+
+
 <a name="0.2.1"></a>
 ## [0.2.1] - 2023-10-20
 
