@@ -207,15 +207,13 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"File '{path}' does not exist!")
         # Open database
         if unlock:
+            if "dp" in rb6_config:
+                key = rb6_config["dp"]
             if not key:
                 ver = packaging.version.parse(rb6_config["version"])
                 if ver >= MAX_VERSION:
                     raise IncompatibleVersionError(rb6_config["version"])
-                try:
-                    key = rb6_config["dp"]
-                except KeyError:
-                    raise ValueError("Could not unlock database: No key found")
-                logger.info("Key: %s", key)
+            logger.info("Key: %s", key)
             # Unlock database and create engine
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
             engine = create_engine(url, module=sqlite3)
