@@ -98,12 +98,9 @@ class Base(DeclarativeBase):
 
     @classmethod
     def create(cls, **kwargs):
-        enabled = RekordboxAgentRegistry.__enabled__
-        RekordboxAgentRegistry.disable_tracking()
-        # noinspection PyArgumentList
-        self = cls(**kwargs)
-        if enabled:
-            RekordboxAgentRegistry.enable_tracking()
+        with RekordboxAgentRegistry.disabled():
+            # noinspection PyArgumentList
+            self = cls(**kwargs)
         return self
 
     @classmethod
