@@ -489,7 +489,7 @@ around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity 
      - `0` if not a loop or VBR/ABR MPEG file
    * - `Kind`
      - Type of cue point
-     - Cue= `0` , Fade-In= `0` , Fade-Out= `0` , Load= `3` , Loop= `4`
+     - Cue= `0` , Fade-In= `1` , Fade-Out= `2` , Load= `3` , Loop= `4`
    * - `Color`
      - The color ID of the cue point
      - `-1` if no color
