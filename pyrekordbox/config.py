@@ -285,28 +285,28 @@ def _get_rb_config(
                 f"exist in '{pioneer_install_dir}'"
             )
     else:
-      # Get latest Rekordbox installation directory for major release `major_version`
+        # Get latest Rekordbox installation directory for major release `major_version`
 
-      # Find all 'V.x.x' version strings in dir names
-      versions = list()
-      for p in pioneer_install_dir.iterdir():
-          name = p.name
-          if name.startswith("rekordbox"):
-              ver_str = name.replace("rekordbox", "").strip()
-              if ver_str.startswith(str(major_version)):
-                  v = packaging.version.parse(ver_str)
-                  versions.append(v)
-      # Get latest 'V.x.x' version string and assure there is one
-      versions.sort()  # key=lambda s: list(map(int, s.split("."))))
-      try:
-          rb_version = str(versions[-1])
-      except IndexError:
-          raise FileNotFoundError(
-              f"No Rekordbox {major_version} folder found in installation "
-              f"directory '{pioneer_install_dir}'"
-          )
-      # Name of the Rekordbox application directory in `pioneer_install_dir`
-      rb_prog_dir = pioneer_install_dir / f"rekordbox {rb_version}"
+        # Find all 'V.x.x' version strings in dir names
+        versions = list()
+        for p in pioneer_install_dir.iterdir():
+            name = p.name
+            if name.startswith("rekordbox"):
+                ver_str = name.replace("rekordbox", "").strip()
+                if ver_str.startswith(str(major_version)):
+                    v = packaging.version.parse(ver_str)
+                    versions.append(v)
+        # Get latest 'V.x.x' version string and assure there is one
+        versions.sort()  # key=lambda s: list(map(int, s.split("."))))
+        try:
+            rb_version = str(versions[-1])
+        except IndexError:
+            raise FileNotFoundError(
+                f"No Rekordbox {major_version} folder found in installation "
+                f"directory '{pioneer_install_dir}'"
+            )
+        # Name of the Rekordbox application directory in `pioneer_install_dir`
+        rb_prog_dir = pioneer_install_dir / f"rekordbox {rb_version}"
 
     # Check installation directory
     if not rb_prog_dir.exists():
