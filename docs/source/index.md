@@ -28,11 +28,7 @@ Pioneer's Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Settings files
 
-Tested Rekordbox versions: `5.8.6 | 6.5.3`
-
-Starting from version `6.6.5` Pioneer obfuscated the `app.asar` file contents, breaking
-the key extraction (see [this issue][issue] and the Rekordbox 6 database section for
-more details).
+Tested Rekordbox versions: `5.8.6 | 6.5.3 | 6.7.7`
 
 ```{warning}
 This project is still under development and might contain bugs or
@@ -59,10 +55,10 @@ maxdepth: 2
 caption: File formats
 ---
 
+formats/db6
 formats/xml
 formats/anlz
 formats/mysetting
-formats/db6
 ```
 
 ```{toctree}

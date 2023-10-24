@@ -22,7 +22,7 @@ Pioneers Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Setting files
 
-Tested Rekordbox versions: ``5.8.6 | 6.5.3``
+Tested Rekordbox versions: ``5.8.6 | 6.5.3 | 6.7.7``
 
 
 |⚠️| This project is still under development and might contain bugs or have breaking API changes in the future.   |
@@ -237,6 +237,8 @@ mysett = read_mysetting_file("MYSETTINGS.DAT")
 sync = mysett.get("sync")
 quant = mysett.get("quantize")
 ````
+
+The `DEVSETTING.DAT` file is still not supported
 
 
 ## 💡 File formats

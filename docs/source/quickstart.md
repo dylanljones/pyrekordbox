@@ -25,18 +25,6 @@ from pyrekordbox import show_config
 
 show_config()
 ````
-
-which, for example, will print
-````
-Pioneer:
-   app_dir =      C:\Users\user\AppData\Roaming\Pioneer
-   install_dir =  C:\Program Files\Pioneer
-Rekordbox 5:
-   app_dir =      C:\Users\user\AppData\Roaming\Pioneer\rekordbox
-   install_dir =  C:\Program Files\Pioneer\rekordbox 5.8.6
-   ...
-````
-
 If for some reason the configuration fails the values can be updated by providing the
 paths to the directory where Pioneer applications are installed (`pioneer_install_dir`)
 and to the directory where Pioneer stores the application data  (`pioneer_app_dir`)
@@ -45,10 +33,63 @@ from pyrekordbox.config import update_config
 
 update_config("<pioneer_install_dir>", "<pioneer_app_dir>")
 ````
-
 Alternatively the two paths can be specified in a configuration file under the section
 `rekordbox`. Supported configuration files are pyproject.toml, setup.cfg, pyrekordbox.toml,
 pyrekordbox.cfg and pyrekordbox.yaml.
+
+
+## Rekordbox 6 database
+
+Rekordbox 6 now uses a SQLite database for storing the collection content.
+Unfortunatly, the new `master.db` SQLite database is encrypted using
+[SQLCipher][sqlcipher], which means it can't be used without the encryption key.
+However, since your data is stored and used locally, the key must be present on the
+machine running Rekordbox.
+
+Pyrekordbox can unlock the new Rekordbox `master.db` SQLite database and provides
+an easy interface for accessing the data stored in it:
+
+````python
+from pyrekordbox import Rekordbox6Database
+
+db = Rekordbox6Database()
+
+for content in db.get_content():
+    print(content.Title, content.Artist.Name)
+
+playlist = db.get_playlist()[0]
+for song in playlist.Songs:
+    content = song.Content
+    print(content.Title, content.Artist.Name)
+````
+Fields in the Rekordbox database that are stored without linking to other tables
+can be changed via the corresponding property of the object:
+````python
+content = db.get_content()[0]
+content.Title = "New Title"
+````
+Some fields are stored as references to other tables, for example the artist of a track.
+Check the [documentation](#db6-format) of the corresponding object for more information.
+So far only a few tables support adding or deleting entries:
+- ``DjmdPlaylist``: Playlists/Playlist Folders
+- ``DjmdSongPlaylist``: Songs in a playlist
+
+````{important}
+Starting from Rekordbox version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file
+contents, breaking the key extraction (see [this discussion](https://github.com/dylanljones/pyrekordbox/discussions/97) for more details).
+If you are using a later version of Rekorbox and have no cached key from a previous
+version, the database can not be unlocked automatically.
+The command line interface of ``pyrekordbox`` provides a command for downloading
+the key from known sources and writing it to the cache file:
+```shell
+python -m pyrekordbox download-key
+```
+Once the key is cached the database can be opened without providing the key.
+The key can also be provided manually:
+```python
+db = Rekordbox6Database(key="<insert key here>")
+```
+````
 
 
 ## Rekordbox XML
@@ -107,6 +148,17 @@ Changing and creating the Rekordbox analysis files is planned as well, but for t
 full structure of the analysis files has to be understood.
 
 
+```{note}
+Some ANLZ tags are still unsupported:
+  - PCOB
+  - PCO2
+  - PSSI
+  - PWV6
+  - PWV7
+  - PWVC
+```
+
+
 ## Rekordbox My-Settings
 
 Rekordbox stores the user settings in `*SETTING.DAT` files, which get exported to USB
@@ -126,37 +178,8 @@ sync = mysett.get("sync")
 quant = mysett.get("quantize")
 ````
 
-
-## Rekordbox 6 database
-
-Rekordbox 6 now uses a SQLite database for storing the collection content.
-Unfortunatly, the new `master.db` SQLite database is encrypted using
-[SQLCipher][sqlcipher], which means it can't be used without the encryption key.
-However, since your data is stored and used locally, the key must be present on the
-machine running Rekordbox.
-
-Pyrekordbox can unlock the new Rekordbox `master.db` SQLite database and provides
-an easy interface for accessing the data stored in it:
-
-````python
-from pyrekordbox import Rekordbox6Database
-
-db = Rekordbox6Database()
-
-for content in db.get_content():
-    print(content.Title, content.Artist.Name)
-
-playlist = db.get_playlist()[0]
-for song in playlist.Songs:
-    content = song.Content
-    print(content.Title, content.Artist.Name)
-````
-Adding new rows to the tables of the database is not supported since it is not yet known
-how Rekordbox generates the UUID/ID's. Using wrong values for new database entries
-could corrupt the library. This feature will be added after some testing.
-Changing existing entries like the title, artist or file path of a track in the database
-should work as expected.
-
-
+```{note}
+The `DEVSETTING.DAT` file is still not supported
+```
 
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/

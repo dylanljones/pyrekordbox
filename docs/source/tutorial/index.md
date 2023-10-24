@@ -13,8 +13,8 @@ maxdepth: 3
 ---
 
 configuration
+db6
 xml
 anlz
 mysetting
-db6
 ````
