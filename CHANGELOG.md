@@ -6,6 +6,12 @@
 
 ### New Features
 
+- **add new albums to the RBv6 db**  
+  New entries can now be added to the `DjmdAlbum` table.
+- **add new genres to the RBv6 db**  
+  New entries can now be added to the `DjmdGenre` table.
+- **add new artists to the RBv6 db**  
+  New entries can now be added to the `DjmdArtist` table.
 - **support renamed Rekordbox application directory**  
   The user can now specify the directory name of the Rekordbox application directory. 
   This supports multiple Rekordbox installations of the same major version.
@@ -14,6 +20,7 @@
 
 - **add disabled context manager to the RBv6 `RekordboxAgentRegistry`**  
 - **only re-enable RBV6 USN tracking if it was enabled**  
+- **don't raise error if key is in config**  
 
 
 <a name="0.2.1"></a>
