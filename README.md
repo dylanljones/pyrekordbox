@@ -46,7 +46,7 @@ where `VERSION` is a release, tag or branch name.
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
 Pyrekordbox makes no attempt to download/install SQLCipher, as it is a
-pure Python package - whereas the SQLCipher/pysqlcipher3 installation is
+pure Python package - whereas the SQLCipher/sqlcipher3 installation is
 platform-dependent and can not be installed via ``pip``.
 
 #### Windows
@@ -139,7 +139,7 @@ So far only a few tables support adding or deleting entries:
 - ``DjmdSongPlaylist``: Songs in a playlist
 
 Starting from Rekordbox version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file
-contents, breaking the key extraction (see [this issue](https://github.com/dylanljones/pyrekordbox/issues/64) for more details).
+contents, breaking the key extraction (see [this discussion](https://github.com/dylanljones/pyrekordbox/discussions/97) for more details).
 If you are using a later version of Rekorbox and have no cached key from a previous
 version, the database can not be unlocked automatically.
 The command line interface of ``pyrekordbox`` provides a command for downloading
