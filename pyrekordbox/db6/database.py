@@ -1507,6 +1507,75 @@ class Rekordbox6Database:
         with self.registry.disabled():
             playlist.updated_at = now
 
+    def add_album(
+        self, name, artist=None, image_path=None, compilation=None, search_str=None
+    ):
+        """Adds a new album to the database.
+
+        Parameters
+        ----------
+        name : str
+            The name of the album. Must be a unique name (case-sensitive).
+            If an album with the same name already exists in the database,
+            use the `ID` of the existing album instead.
+        artist : str or int or DjmdArtist, optional
+            The artist of the album. Can either be a :class:`DjmdArtist` object
+            or an artist ID.
+        image_path : str, optional
+            The path to the album cover image.
+        compilation : bool, optional
+            Whether the album is a compilation album. If not given, the
+            default value of `False` is used.
+        search_str : str, optional
+            The search string of the album.
+
+        Returns
+        -------
+        album : DjmdAlbum
+            The newly created album.
+
+        Examples
+        --------
+        Add a new album to the database:
+
+        >>> db = Rekordbox6Database()
+        >>> db.add_album(name="Album 1")
+        <DjmdAlbum(148754249  Name=Album 1)>
+
+        Two artists with the same name cannot exist in the database:
+
+        >>> db.add_artist(name="Album 1")
+        ValueError: Album 'Album 1' already exists in database
+
+        Add a new album to the database with an album artist:
+
+        >>> artist = db.get_artist(Name="Artist 1").one()  # noqa
+        >>> db.add_album(name="Album 2", artist=artist)
+        <DjmdAlbum(148754249  Name=Album 2)>
+        """
+        # Check if album already exists
+        query = self.query(tables.DjmdAlbum).filter_by(Name=name)
+        if query.count() > 0:
+            raise ValueError(f"Album '{name}' already exists in database")
+
+        # Get artist ID
+        if artist is not None:
+            if isinstance(artist, (int, str)):
+                artist = self.get_artist(ID=artist)
+            artist = artist.ID
+
+        album = tables.DjmdAlbum.create(
+            ID=self.generate_unused_id(tables.DjmdAlbum),
+            Name=name,
+            AlbumArtistID=artist,
+            ImagePath=image_path,
+            Compilation=compilation,
+            SearchStr=search_str,
+        )
+        self.add(album)
+        self.flush()
+        return album
+
     def add_artist(self, name, search_str=None):
         """Adds a new artist to the database.
 
