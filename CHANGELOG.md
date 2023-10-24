@@ -4,6 +4,12 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+
+- **support renamed Rekordbox application directory**  
+  The user can now specify the directory name of the Rekordbox application directory. 
+  This supports multiple Rekordbox installations of the same major version.
+
 ### Improvements/Bug Fixes
 
 - **add disabled context manager to the RBv6 `RekordboxAgentRegistry`**  
