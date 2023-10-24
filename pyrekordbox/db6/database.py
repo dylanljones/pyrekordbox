@@ -1508,14 +1508,14 @@ class Rekordbox6Database:
             playlist.updated_at = now
 
     def add_artist(self, name, search_str=None):
-        """Adds an artist to the database.
+        """Adds a new artist to the database.
 
         Parameters
         ----------
         name : str
-            The name of the artist. Must be a unique name. If an artist with the
-            same name already exists in the database, use the `ID` of the existing
-            artist instead.
+            The name of the artist. Must be a unique name (case-sensitive).
+            If an artist with the same name already exists in the database,
+            use the `ID` of the existing artist instead.
         search_str : str, optional
             The search string of the artist.
 
@@ -1530,7 +1530,7 @@ class Rekordbox6Database:
 
         >>> db = Rekordbox6Database()
         >>> db.add_artist(name="Artist 1")
-        <DjmdArtist(1000, Name='Artist 1')>
+        <DjmdArtist(123456789, Name='Artist 1')>
 
         Two artists with the same name cannot exist in the database:
 
@@ -1540,7 +1540,7 @@ class Rekordbox6Database:
         Add a new artist to the database with a custom search string:
 
         >>> db.add_artist(name="Artist 2", search_str="artist 2")
-        <DjmdArtist(1001, Name='Artist 2')>
+        <DjmdArtist(123456789, Name='Artist 2')>
         """
         # Check if artist already exists
         query = self.query(tables.DjmdArtist).filter_by(Name=name)
@@ -1552,6 +1552,46 @@ class Rekordbox6Database:
         self.add(artist)
         self.flush()
         return artist
+
+    def add_genre(self, name):
+        """Adds a new genre to the database.
+
+        Parameters
+        ----------
+        name : str
+            The name of the genre. Must be a unique name (case-sensitive).
+            If a genre with the same name already exists in the database,
+            use the `ID` of the existing genre instead.
+
+        Returns
+        -------
+        genre : DjmdGenre
+            The newly created genre.
+
+        Examples
+        --------
+        Add a new genre to the database:
+
+        >>> db = Rekordbox6Database()
+        >>> db.add_genre(name="Genre 1")
+        <DjmdGenre(123456789 Name=Genre 1)>
+
+        Two genres with the same name cannot exist in the database:
+
+        >>> db.add_artist(name="Genre 1")
+        ValueError: Genre 'Genre 1' already exists in database
+
+        """
+        # Check if genre already exists
+        query = self.query(tables.DjmdGenre).filter_by(Name=name)
+        if query.count() > 0:
+            raise ValueError(f"Genre '{name}' already exists in database")
+
+        id_ = self.generate_unused_id(tables.DjmdGenre)
+        genre = tables.DjmdGenre.create(ID=id_, Name=name)
+        self.add(genre)
+        self.flush()
+        return genre
 
     # ----------------------------------------------------------------------------------
 
