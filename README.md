@@ -259,6 +259,9 @@ If you encounter an issue or want to contribute to pyrekordbox, please feel free
 `pyrekordbox` and the commit-message style can be found in
 [CONTRIBUTING].
 
+For general questions or discussions about Rekordbox, please use [GitHub Discussions][discussions]
+instead of opening an issue.
+
 Pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
 
@@ -310,6 +313,7 @@ the CI setup since it requires a working Rekordbox installation.
 [mysettings-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/mysetting.html
 
 [new-issue]: https://github.com/dylanljones/pyrekordbox/issues/new/choose
+[discussions]: https://github.com/dylanljones/pyrekordbox/discussions
 [CONTRIBUTING]: https://github.com/dylanljones/pyrekordbox/blob/master/CONTRIBUTING.md
 [CHANGELOG]: https://github.com/dylanljones/pyrekordbox/blob/master/CHANGELOG.md
 [INSTALLATION]: https://github.com/dylanljones/pyrekordbox/blob/master/INSTALLATION.md
