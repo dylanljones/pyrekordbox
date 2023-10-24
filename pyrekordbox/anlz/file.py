@@ -103,15 +103,17 @@ class AnlzFile(abc.Mapping):
             tag_data = data[i:]
             # Get the four byte struct type
             tag_type = tag_data[:4].decode("ascii")
-            
-            if tag_type == 'PSSI':
+
+            if tag_type == "PSSI":
                 # deobfuscate tag_data[18:] using xor with verysecretcode+len_entries
-                verysecretcode = bytearray.fromhex("CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1")
+                verysecretcode = bytearray.fromhex(
+                    "CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1"
+                )
                 len_entries = Int16ub.parse(tag_data[16:])
-                tag_data = bytearray(data[i:i+len(tag_data)])
+                tag_data = bytearray(data[i : i + len(tag_data)])
                 for x in range(len(tag_data[18:])):
-                    decryptmask = verysecretcode[x%len(verysecretcode)]+len_entries
-                    if decryptmask > 255 :
+                    decryptmask = verysecretcode[x % len(verysecretcode)] + len_entries
+                    if decryptmask > 255:
                         decryptmask -= 256
                     tag_data[x+18] ^= decryptmask
 
