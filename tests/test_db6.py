@@ -13,8 +13,10 @@ from pyrekordbox import Rekordbox6Database, open_rekordbox_database
 from pyrekordbox.db6 import tables
 
 TEST_ROOT = Path(__file__).parent.parent / ".testdata"
+LOCKED = TEST_ROOT / "rekordbox 6" / "master_locked.db"
 UNLOCKED = TEST_ROOT / "rekordbox 6" / "master_unlocked.db"
 UNLOCKED_COPY = TEST_ROOT / "rekordbox 6" / "master_unlocked_copy.db"
+UNLOCKED_OUT = TEST_ROOT / "rekordbox 6" / "master_unlocked_out.db"
 MASTER_PLAYLIST_SRC = TEST_ROOT / "rekordbox 6" / "masterPlaylists6_template.xml"
 MASTER_PLAYLIST_DST = TEST_ROOT / "rekordbox 6" / "masterPlaylists6.xml"
 # Create a copy of the masterPlaylists6.xml file
@@ -154,17 +156,17 @@ def test_getter_by_id(name, cls):
 
 
 @mark.parametrize(
-    "parent_name,cls",
+    "parent_name,key,cls",
     [
-        ("get_playlist", tables.DjmdSongHistory),
-        ("get_hot_cue_banklist", tables.DjmdSongHotCueBanklist),
-        ("get_my_tag", tables.DjmdSongMyTag),
-        ("get_playlist", tables.DjmdSongPlaylist),
-        ("get_related_tracks", tables.DjmdSongPlaylist),
-        ("get_sampler", tables.DjmdSongPlaylist),
+        ("get_history", "HistoryID", tables.DjmdSongHistory),
+        ("get_hot_cue_banklist", "HotCueBanklistID", tables.DjmdSongHotCueBanklist),
+        ("get_my_tag", "MyTagID", tables.DjmdSongMyTag),
+        ("get_playlist", "PlaylistID", tables.DjmdSongPlaylist),
+        ("get_related_tracks", "RelatedTracksID", tables.DjmdSongPlaylist),
+        ("get_sampler", "SamplerID", tables.DjmdSongPlaylist),
     ],
 )
-def test_songs_getters(parent_name, cls):
+def test_songs_getters(parent_name, key, cls):
     # Get list (containing songs) getter
     getter = getattr(DB, parent_name)
     # Try to get a valid list ID
@@ -178,11 +180,28 @@ def test_songs_getters(parent_name, cls):
     # Get list songs getter
     getter = getattr(DB, f"{parent_name}_songs")
     # Get song items
-    query = getter(id_)
+    query = getter(**{key: id_})
     if not query.count():
         return  # No data to check...
 
     assert isinstance(query.first(), cls)
+
+
+def test_mixer_gain_setters(db):
+    for item in db.get_mixer_param():
+        # Check Gain setter
+        low, high, value = int(item.GainLow), int(item.GainHigh), item.Gain
+        item.Gain = value
+        db.flush()
+        assert item.GainLow == low
+        assert item.GainHigh == high
+
+        # Check Peak setter
+        low, high, value = int(item.PeakLow), int(item.PeakHigh), item.Peak
+        item.Peak = value
+        db.flush()
+        assert item.PeakLow == low
+        assert item.PeakHigh == high
 
 
 @mark.parametrize(
@@ -247,6 +266,28 @@ def test_autoincrement_local_usn(db):
     assert playlist.rb_local_usn == new_usn
 
 
+def _check_playlist_xml(db):
+    # Check that playlist is in XML and update time is correct
+    for pl in db.get_playlist():
+        plxml = db.playlist_xml.get(pl.ID)
+        ts = plxml["Timestamp"]
+        diff = pl.updated_at - ts
+        if abs(diff.total_seconds()) > 1:
+            return False
+    return True
+
+
+def _check_playlist_xml_delete(db):
+    # Check that there are no items in the XML that are not in the db
+    for plxml in db.playlist_xml.get_playlists():
+        if plxml["Lib_Type"] != 0:
+            continue
+        pid = int(plxml["Id"], 16)
+        if db.query(tables.DjmdPlaylist).filter_by(ID=pid).count() != 1:
+            return False
+    return True
+
+
 def test_add_song_to_playlist(db):
     usn_old = db.get_local_usn()
     mtime_old = db.get_playlist(ID=PID1).updated_at
@@ -271,6 +312,8 @@ def test_add_song_to_playlist(db):
     with pytest.raises(ValueError):
         db.add_to_playlist(PID1, CID2, track_no=3)
 
+    assert _check_playlist_xml(db)
+
 
 def test_add_song_to_playlist_trackno_end(db):
     old_usn = db.get_local_usn()
@@ -282,6 +325,8 @@ def test_add_song_to_playlist_trackno_end(db):
     assert song2.TrackNo == 2
     assert song3.TrackNo == 3
     assert db.get_local_usn() == old_usn + 3
+
+    assert _check_playlist_xml(db)
 
 
 def test_add_song_to_playlist_trackno_middle(db):
@@ -317,6 +362,8 @@ def test_add_song_to_playlist_trackno_middle(db):
     assert songs[2].rb_local_usn == usn_old + 2
     assert db.get_local_usn() == usn_old + 2
 
+    assert _check_playlist_xml(db)
+
 
 def test_remove_song_from_playlist_end(db):
     # Add songs to playlist
@@ -345,6 +392,8 @@ def test_remove_song_from_playlist_end(db):
     assert pl.updated_at == mtime_old
     assert db.get_local_usn() == usn_old + 1
 
+    assert _check_playlist_xml(db)
+
 
 def test_remove_song_from_playlist_middle(db):
     # Add songs to playlist
@@ -370,6 +419,8 @@ def test_remove_song_from_playlist_middle(db):
     # Check USN is correct
     assert db.get_local_usn() == usn_old + 2
     assert songs[1].rb_local_usn == usn_old + 2
+
+    assert _check_playlist_xml(db)
 
 
 def test_move_in_playlist_forward(db):
@@ -399,6 +450,8 @@ def test_move_in_playlist_forward(db):
     assert s3.rb_local_usn == expected_usn
     assert s4.rb_local_usn == usn_old
 
+    assert _check_playlist_xml(db)
+
 
 def test_move_in_playlist_backward(db):
     # Add songs to playlist
@@ -426,6 +479,8 @@ def test_move_in_playlist_backward(db):
     assert s2.rb_local_usn == expected_usn
     assert s3.rb_local_usn == expected_usn
     assert s4.rb_local_usn == usn_old
+
+    assert _check_playlist_xml(db)
 
 
 def test_create_playlist(db):
@@ -461,8 +516,7 @@ def test_create_playlist(db):
     # Check if playlist was added to xml
     plxml = db.playlist_xml.get(pl.ID)
     assert plxml is not None
-    ts = plxml["Timestamp"]
-    assert int(pl.updated_at.timestamp() * 1000) == int(ts.timestamp() * 1000)
+    assert _check_playlist_xml(db)
 
 
 def test_create_playlist_seq_middle(db):
@@ -492,6 +546,8 @@ def test_create_playlist_seq_middle(db):
     assert db.get_local_usn() == old_usn + 3  # +2 for creating, +1 for moving others
     assert pl1.rb_local_usn == old_usn + 1
     assert pl2.rb_local_usn == old_usn + 3
+
+    assert _check_playlist_xml(db)
 
 
 def test_create_playlist_folder(db):
@@ -523,27 +579,7 @@ def test_create_playlist_folder(db):
     pl = db.get_playlist(ID=pid)
     assert len(pl.Children) == 1
 
-
-def test_playlist_xml_sync(db):
-    # Create playlist structure
-    folder1 = db.create_playlist_folder("dev folder")
-    folder2 = db.create_playlist_folder("sub folder 1", parent=folder1.ID)
-    db.create_playlist("sub playlist 1", parent=folder1.ID)
-    db.create_playlist("sub playlist 2", parent=folder1.ID)
-    db.create_playlist("sub sub playlist 1", parent=folder2.ID)
-    db.create_playlist("sub sub playlist 2", parent=folder2.ID)
-    db.commit()
-
-    # Check that every playlist is synced in the masterPlaylists xml file
-    for pl in db.get_playlist():
-        if pl.Name == "Trial playlist - Cloud Library Sync":
-            continue
-        plxml = db.playlist_xml.get(pl.ID)
-        # Check if playlist exists
-        assert plxml is not None
-        # Check update time
-        ts = plxml["Timestamp"]
-        assert int(pl.updated_at.timestamp() * 1000) == int(ts.timestamp() * 1000)
+    assert _check_playlist_xml(db)
 
 
 def test_delete_playlist_empty_end(db):
@@ -570,6 +606,9 @@ def test_delete_playlist_empty_end(db):
     assert plxml is None
     # Check USN is correct (+1 for deleting)
     assert db.get_local_usn() == usn_old + 1
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_empty(db):
@@ -601,6 +640,9 @@ def test_delete_playlist_empty(db):
     assert pl.Seq == 2
     assert pl.rb_local_usn == usn_old + 1
 
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
+
 
 def test_delete_playlist_folder_empty(db):
     # Create playlist structure
@@ -630,6 +672,9 @@ def test_delete_playlist_folder_empty(db):
     # Check USN is correct (+1 for deleting)
     assert db.get_local_usn() == usn_old + 1
     assert pl.rb_local_usn == usn_old + 1
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_non_empty(db):
@@ -665,6 +710,9 @@ def test_delete_playlist_non_empty(db):
     assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
     # Check if USN is correct (+1 for deleting with contents)
     assert db.get_local_usn() == usn_old + 1
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_folder_non_empty(db):
@@ -707,6 +755,9 @@ def test_delete_playlist_folder_non_empty(db):
 
     # Check if USN is correct (+1 for deleting with Seq update, +1 for children)
     assert db.get_local_usn() == usn_old + 2
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_delete_playlist_folder_chained(db):
@@ -759,6 +810,9 @@ def test_delete_playlist_folder_chained(db):
 
     # Check if USN is correct (+1 for deleting with Seq update, +1 for children)
     assert db.get_local_usn() == usn_old + 2
+
+    assert _check_playlist_xml(db)
+    assert _check_playlist_xml_delete(db)
 
 
 def test_move_playlist_seq(db):
@@ -835,6 +889,8 @@ def test_move_playlist_seq(db):
     assert pl2.updated_at > mtime_old
     assert pl3.updated_at > mtime_old
     assert f2.updated_at > mtime_old
+
+    assert _check_playlist_xml(db)
 
 
 def test_move_playlist_parent(db):
@@ -914,6 +970,33 @@ def test_move_playlist_parent(db):
     assert subpl4.rb_local_usn == old_usn + 4
     assert pl1.rb_local_usn == old_usn + 5
 
+    assert _check_playlist_xml(db)
+
+
+def test_rename_playlist(db):
+    # Create playlist structure
+    folder = db.create_playlist_folder("folder")
+    db.create_playlist("pl 1", parent=folder)
+    db.create_playlist("pl 2", parent=folder)
+    db.commit()
+
+    pl = db.get_playlist(Name="pl 1").one()
+    pid = pl.ID
+    mtime_old = pl.updated_at
+    usn_old = db.get_local_usn()
+
+    # Rename playlist
+    db.rename_playlist(pl, "pl 1 new")
+    db.commit()
+
+    pl = db.get_playlist(ID=pid)
+    assert pl.Name == "pl 1 new"
+    assert pl.updated_at > mtime_old
+    assert db.get_local_usn() == usn_old + 1
+    assert pl.rb_local_usn == usn_old + 1
+
+    assert _check_playlist_xml(db)
+
 
 def test_get_anlz_paths():
     content = DB.get_content().first()
@@ -932,3 +1015,25 @@ def test_to_json():
     finally:
         tmp.close()
         os.remove(tmp.name)
+
+
+def test_copy_unlocked():
+    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    db.copy_unlocked(UNLOCKED_OUT)
+
+    db2 = Rekordbox6Database(UNLOCKED_OUT, unlock=False)
+    # Check everything got copied
+    for name in tables.__all__:
+        if name.startswith("Stats") or name == "Base":
+            continue
+        table = getattr(tables, name)
+        for row in db.query(table):
+            data = row.to_dict()
+            if name == "AgentRegistry":
+                query = db2.query(table).filter_by(registry_id=row.registry_id)
+            elif name == "DjmdProperty":
+                query = db2.query(table).filter_by(DBID=row.DBID)
+            else:
+                query = db2.query(table).filter_by(ID=row.ID)
+            data2 = query.one().to_dict()
+            assert data == data2

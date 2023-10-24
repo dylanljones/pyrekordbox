@@ -25,14 +25,21 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
 
 ### Windows
 
+The easiest method to install SQLCipher on Windows is to build [sqlcipher3]
+against an amalgamation of the SQLite3 source code.
+
 1. **Install [Visual Studio Community Edition][VS]**
 
    Make sure to select all the GCC options (VC++, C++, etc) in the installation process.
+   The following workloads under ``Desktop & Mobile`` should be sufficient:
+   - Desktop Development with C++
+   - .NET desktop development
 
 
 2. **Install a prebuilt [OpenSSL binary][OpenSSL]**
 
-   Choose the latest Win32/Win64 version.
+   Choose the latest Win32/Win64 version. Make sure to download the full version,
+   not the light version.
 
 
 3. **Confirm that the `OPENSSL_CONF` environment variable is set properly in environment variables**
@@ -42,14 +49,25 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
    - 32-bit: ``C:/Program Files (x86)/openssl-Win32/bin/openssl.cfg``
    - 64-bit: ``C:/Program Files/openssl-Win64/bin/openssl.cfg``
 
+   The library names of OpenSSL have changed in version 1.1.0 (see [this](https://stackoverflow.com/questions/65345077/unable-to-build-sqlcipher3-on-windows) discussion).
+   If you are using a newer version, you can set an environment variable
+   ``OPENSSL_LIBNAME`` to the name of the library, e.g. ``libcrypto.lib``.
+   Alternatively, you can modify the ``setup.py`` script (see step 8 below).
 
-4. **Copy the openssl folder to the VC include directory (ex: `C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include`)**
+   You might have to restart Windows for the changes to take effect.
 
-   The openssl folder is
+
+4. **Copy the openssl folder to the Microsoft Visual Studio 14 VC include directory**
+
+   The openssl folder can be found here:
    - 32-bit: `C:/Program Files (x86)/OpenSSL-Win32/include/openssl`
    - 64-bit: `C:/Program Files/OpenSSL-Win64/include/openssl`
 
-   Confirm the following path exists `../../VC/include/openssl/aes.h`
+   The VC include directory (for any VS version) can be found in the
+   Visual Studio installation directory:
+   `C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include`
+
+   Confirm the following path exists `.../include/openssl/aes.h`
 
 
 5. **Download / compile the SQLCipher 3 amalgamation files**
@@ -58,68 +76,50 @@ Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sql
    To compile the amalgamation files, follow [this tutorial](http://www.jerryrw.com/howtocompile.php).
 
 
-6. **Clone [pysqlcipher3] into any directory**
+6. **Clone [sqlcipher3] into any directory**
 
    ````commandline
-   git clone https://github.com/rigglemania/pysqlcipher3
+   git clone https://github.com/coleifer/sqlcipher3
    ````
 
 
-7. **Create directory ``...\pysqlcipher3\amalgamation``**
+7. **Copy amalgamation files to the `sqlcipher3` directory**
 
    Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5
+   to the root of the ``sqlcipher3`` directory from step 6.
 
 
-8. **Create directory ``...\pysqlcipher3\src\python3\sqlcipher``**
+8. **Modify the ``sqlcipher3/setup.py`` script (optional)**
 
-   Copy files ``sqlite3.c``, ``sqlite3.h`` and ``sqlite3ext.h`` from the amalgamation directory from step 5
-
-
-9. **Modify the ``...\pysqlcipher3\setup.py`` script (optional, see [this](https://stackoverflow.com/questions/65345077/unable-to-build-sqlcipher3-on-windows) discussion)**
-
-   If building the amalgamation fails, modify the ``setup.py`` script:
-   - Change
-      ````python
-      def quote_argument(arg):
-          quote = '"' if sys.platform != 'win32' else '\\"'
-          return quote + arg + quote
-      ````
-      to
-      ````python
-      def quote_argument(arg):
-          quote = '"'
-          return quote + arg + quote
-      ````
-
-   - The library names of OpenSSL have changed in version 1.1.0. If you are using a newer version, you might have to change the library name from
-     ````python
-     ext.extra_link_args.append("libeay32.lib")
-     ````
-     to
-     ````python
-     ext.extra_link_args.append("<NAME>")
-     ````
-     where ``<NAME>`` is something like ``libcrypto.lib`` (depending on your version).
+   If building the amalgamation fails and you haven't set the ``OPENSSL_LIBNAME``
+   environment variable in step 3, you have to modify the ``setup.py`` script. Change
+   ````python
+   openssl_libname = os.environ.get('OPENSSL_LIBNAME') or 'libeay32.lib'
+   ````
+   to
+   ````python
+   openssl_libname = os.environ.get('OPENSSL_LIBNAME') or 'libcrypto.lib'
+   ````
 
 
-10. **Build using the amalgamation**
+9. **Build using the amalgamation**
 
-    ``cd`` into the ``pysqlcipher3`` directory and run
+    ``cd`` into the ``sqlcipher3`` directory and run
     ````commandline
-    python setup.py build_amalgamation
+    python setup.py build_static build
     ````
 
 
-11. **Install ``pysqlcipher3``**
+10. **Install ``sqlcipher3``**
 
     ````commandline
     python setup.py install
     ````
 
-You now should have a working ``pysqlcipher3`` installation! The directory of the
-cloned ``pysqlcipher3`` repo can be deleted after installing the package.
+You now should have a working ``sqlcipher3`` installation! The directory of the
+cloned ``sqlcipher3`` repo can be deleted after installing the package.
 
-Steps 5-11 can be automated using the CLI of ``pyrekordbox``:
+Steps 5-10 can be automated using the CLI of ``pyrekordbox``:
 ````commandline
 > python3 -m pyrekordbox install-sqlcipher --help
 usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
@@ -128,18 +128,33 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
   -t TMPDIR, --tmpdir TMPDIR
                         Path for storing temporary data (default: '.tmp')
   -l CRYPTOLIB, --cryptolib CRYPTOLIB
-  -q, --fixquote        Don't fix the quotes in the pysqlcipher3 setup.py script
-  -b, --buildonly       Don't install pysqlcipher3, only build the amalgamation
+                        The name of the OpenSSl crypto libary (default: 'libcrypto.lib')
+  -b, --buildonly       Don't install sqlcipher3, only build the amalgamation
 ````
 
-After the installation SQLCipher-databases can be unlocked via the `pysqlcipher3` package:
-````python
-from pysqlcipher3 import dbapi2 as sqlite3
+#### Troubleshooting
 
-conn = sqlite3.connect('test.db')
-c = conn.cursor()
-c.execute("PRAGMA key='password'")
-````
+- **Microsoft Visual C++ error**
+
+  If you are getting an error like
+  ````commandline
+  error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools"``
+  ````
+  and have Visual Studio installed, you might not have all the necessary C/C++ components.
+
+- **LINK error**
+
+  If you are getting an error like
+  ````commandline
+  LINK : fatal error LNK1158: cannot run 'rc.exe'
+  ````
+  or
+  ````commandline
+  LINK : fatal error LNK1327: failure during running rc.exe
+  ````
+  make sure all the necessary C/C++ components are installed and that you have selected
+  the latest Win 10/11 SDK in the Visual Studio installer. If you are still getting the error,
+  follow the suggestions in this [StackOverflow post](https://stackoverflow.com/questions/14372706/visual-studio-cant-build-due-to-rc-exe).
 
 
 ### MacOS
@@ -150,12 +165,31 @@ For MacOS follow these steps:
 2) Install SQLCipher with `brew install SQLCipher`.
 3) With the python environment you are using to run pyrekordbox active execute the following:
 ```shell
-git clone https://github.com/rigglemania/pysqlcipher3
-cd pysqlcipher3
+git clone https://github.com/coleifer/sqlcipher3
+cd sqlcipher3
 SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py build
 SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
 ```
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
+
+If you are having issues building sqlcipher on M1 Macs you might have to add some symlinks:
+```shell
+ln -s /opt/homebrew/lib/libsqlcipher.a /usr/local/lib/libsqlcipher.a
+ln -s /opt/homebrew/include/sqlcipher /usr/local/include/sqlcipher
+```
+Alternatively, you can also build [sqlcipher3] against an amalgamation (as described above for Windows, steps 5-10).
+
+
+## Using SQLCipher
+
+After the installation SQLCipher-databases can be unlocked via the `sqlcipher3` package:
+````python
+from sqlcipher3 import dbapi2 as sqlite3
+
+conn = sqlite3.connect('test.db')
+c = conn.cursor()
+c.execute("PRAGMA key='password'")
+````
 
 
 ### References:
@@ -167,7 +201,7 @@ Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher pa
 
 [VS]: https://visualstudio.microsoft.com/de/vs/community/
 [OpenSSL]: https://slproweb.com/products/Win32OpenSSL.html
-[pysqlcipher3]: https://github.com/rigglemania/pysqlcipher3
+[sqlcipher3]: https://github.com/coleifer/sqlcipher3
 [Pypi]: https://pypi.org/project/pyrekordbox/
 [GitHub]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/

@@ -47,31 +47,28 @@ def clone_repo(https_url: str) -> Path:
     if not path.exists():
         os.system(f"git clone {https_url}")
         assert path.exists()
+    else:
+        print(f"Repository {https_url} already cloned")
     return path
 
 
 def clone_pysqlcipher3() -> Path:
-    return clone_repo(r"https://github.com/rigglemania/pysqlcipher3")
+    return clone_repo(r"https://github.com/coleifer/sqlcipher3")
 
 
 def clone_sqlcipher_amalgamation() -> Path:
     return clone_repo(r"https://github.com/geekbrother/sqlcipher-amalgamation")
 
 
-def patch_pysqlcipher_setup(pysqlcipher_dir, cryptolib="libcrypto.lib", fix_quote=True):
+def patch_pysqlcipher_setup(pysqlcipher_dir, cryptolib="libcrypto.lib"):
     path = Path(pysqlcipher_dir, "setup.py")
 
     with open(path, "r") as fh:
         text = fh.read()
 
-    if fix_quote:
-        quote_old = "if sys.platform != 'win32' else '\\\\\"'"
-        quote_new = ""
-        text = text.replace(quote_old, quote_new)
-
     if cryptolib:
-        lib_old = 'ext.extra_link_args.append("libeay32.lib")'
-        lib_new = f'ext.extra_link_args.append("{cryptolib}")'
+        lib_old = "os.environ.get('OPENSSL_LIBNAME') or 'libeay32.lib'"
+        lib_new = f"os.environ.get('OPENSSL_LIBNAME') or '{cryptolib}'"
         text = text.replace(lib_old, lib_new)
 
     with open(path, "w") as fh:
@@ -79,28 +76,16 @@ def patch_pysqlcipher_setup(pysqlcipher_dir, cryptolib="libcrypto.lib", fix_quot
 
 
 def prepare_pysqlcipher(pysqlcipher_dir: Path, amalgamation_src: Path):
-    cpath = amalgamation_src / "sqlite3.c"
-    hpath = amalgamation_src / "sqlite3.h"
-    epath = amalgamation_src / "sqlite3ext.h"
-
-    # Create amalagamation directory
-    root = pysqlcipher_dir / "amalgamation"
+    # Copy amalgamation files to pysqlcipher directory
+    root = pysqlcipher_dir
     root.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(cpath, root / "sqlite3.c")
-    shutil.copy2(hpath, root / "sqlite3.h")
-
-    # Create sqlcipher directory
-    root = pysqlcipher_dir / "src" / "python3" / "sqlcipher"
-    root.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(cpath, root / "sqlite3.c")
-    shutil.copy2(hpath, root / "sqlite3.h")
-    shutil.copy2(epath, root / "sqlite3ext.h")
+    shutil.copy2(amalgamation_src / "sqlite3.c", root / "sqlite3.c")
+    shutil.copy2(amalgamation_src / "sqlite3.h", root / "sqlite3.h")
 
 
 def install_pysqlcipher(
     tmpdir="pysqlcipher3",
     crypto_lib="libcrypto.lib",
-    fix_quote=True,
     pyexecutable="",
     build=True,
     install=True,
@@ -118,7 +103,9 @@ def install_pysqlcipher(
         amalgamation_src = amalgamation_dir / "src"
 
         prepare_pysqlcipher(pysqlcipher_dir, amalgamation_src)
-        patch_pysqlcipher_setup(pysqlcipher_dir, crypto_lib, fix_quote)
+        if os.getenv("OPENSSL_LIBNAME") is None:
+            print("No OPENSSL_LIBNAME environment variable found, updating `setup.py`!")
+            patch_pysqlcipher_setup(pysqlcipher_dir, crypto_lib)
 
     # Build amalgamation and install pysqlcipher
     if not pyexecutable:
@@ -128,7 +115,7 @@ def install_pysqlcipher(
         if build:
             # Build amalgamation
             print()
-            os.system(f"{pyexecutable} setup.py build_amalgamation")
+            os.system(f"{pyexecutable} setup.py build_static build")
         if install:
             # Install pysqlcipher package
             print()
@@ -199,16 +186,10 @@ def main():
         help="The name of the OpenSSl crypto libary (default: 'libcrypto.lib')",
     )
     install_parser.add_argument(
-        "-q",
-        "--fixquote",
-        action="store_false",
-        help="Don't fix the quotes in the pysqlcipher3 setup.py script",
-    )
-    install_parser.add_argument(
         "-b",
         "--buildonly",
         action="store_true",
-        help="Don't install pysqlcipher3, only build the amalgamation",
+        help="Don't install sqlcipher3, only build the amalgamation",
     )
 
     # Parse args and handle command
@@ -216,9 +197,7 @@ def main():
     if args.command == "download-key":
         download_db6_key()
     elif args.command == "install-sqlcipher":
-        install_pysqlcipher(
-            args.tmpdir, args.cryptolib, args.fixquote, install=not args.buildonly
-        )
+        install_pysqlcipher(args.tmpdir, args.cryptolib, install=not args.buildonly)
 
 
 if __name__ == "__main__":

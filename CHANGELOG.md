@@ -4,6 +4,42 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Improvements/Bug Fixes
+
+- **add disabled context manager to the RBv6 `RekordboxAgentRegistry`**  
+- **only re-enable RBV6 USN tracking if it was enabled**  
+
+
+<a name="0.2.1"></a>
+## [0.2.1] - 2023-10-20
+
+This release migrates to SqlAlchemy 2.0 and fixes some bugs.
+
+### Improvements/Bug Fixes
+
+- **migrate to SqlAlchemy 2.0**  
+- **add getters/setters for the mixer gain/peak settings in the RBv6 db ([#88](https://github.com/dylanljones/pyrekordbox/issues/88)).**  
+  The gain and peak values are stored as high/low binary values. 
+  It is now possible to get or set the gain/peak as a simple decibel value. 
+  Thank you [@gsuberland](https://github.com/gsuberland) for the help!
+- **automatically set `updated_at` of tables in the RBv6 db**  
+  The `updated_at` column is automatically updated via `onupdate` if rows are modified. 
+  This only happens if the user did not set the column manually.
+- **flush the RBv6 db changes before applying USN auto-increment.**  
+  This allows the user to use `before_flush` events more easily without 
+  affecting the USN changes
+
+### BREAKING CHANGE
+
+`pyrekordbox` now only supports `sqlcipher3`. `pysqlcipher3` is no longer supported
+since it is not compatible with SqlAlchemy 2.0.
+
+
+<a name="0.2.0"></a>
+## [0.2.0] - 2023-10-03
+
+This release adds methods for updating playlists/playlist folders and their contents.
+
 ### New Features
 
 - **create or delete playlists/playlist folders in the RBv6 db**  
@@ -20,14 +56,20 @@
   The track number of songs in playlists can now be updated. The track numbers of the 
   other songs are updated accordingly. Playlists or playlist folders can also be 
   rearranged or moved to a new parent folder.
+- **add method for renaming playlists/playlist folders in the RBv6 db**  
+  The update time and USN are updated accordingly.
+- **add method for creating a decrypted copy of the RBv6 database ([#86](https://github.com/dylanljones/pyrekordbox/issues/86))**  
 
 ### Improvements/Bug Fixes
 
+- **generalize getters of list content tables in the RBv6 db**  
+  This makes all getters consistent.
 - **fix USN tracking and update times in playlist updates of the RBv6 db**
 - **prevent commits to the RBv6 db if Rekordbox is running**
 - **improve `Parent` relationship in nested tables.**  
   The `Parent` relationship in nested tables (like playlists) are now declared via `backref`. 
   This fixes a bug when deleting rows.
+- **set `updated_at` in the playlist XML when committing the RBv6 db**  
 
 
 <a name="0.1.8"></a>
@@ -397,7 +439,9 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.1.8...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/dylanljones/pyrekordbox/compare/0.2.0...0.2.1
+[0.2.0]: https://github.com/dylanljones/pyrekordbox/compare/0.1.8...0.2.0
 [0.1.8]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...0.1.8
 [0.1.7]: https://github.com/dylanljones/pyrekordbox/compare/0.1.6...0.1.7
 [0.1.6]: https://github.com/dylanljones/pyrekordbox/compare/0.1.5...0.1.6

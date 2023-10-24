@@ -1,15 +1,74 @@
 
+# -- Project metadata ------------------------------------------------------------------
+
+[project]
+name = "pyrekordbox"
+description = "Inofficial Python package for interacting with the library of Pioneers Rekordbox DJ software."
+readme = "README.md"
+authors = [
+    {name = "Dylan Jones", email = "dylanljones94@gmail.com"},
+]
+license = {file = "LICENSE"}
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "bidict>=0.21.0",
+    "blowfish>=0.6.0",
+    "construct>=2.10.0",
+    "numpy>=1.19.0",
+    "packaging",
+    "psutil>=5.9.0",
+    "sqlalchemy>=2.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "hypothesis>=6.0.0",
+    "pytest>=6.2.0",
+    "pytest-cov",
+]
+
+[project.urls]
+Source = "https://github.com/dylanljones/pyrekordbox"
+Documentation = "https://pyrekordbox.readthedocs.io/en/stable/"
+Tracker = "https://github.com/dylanljones/pyrekordbox/issues"
+
+
 # -- Build -----------------------------------------------------------------------------
 
 [build-system]
 requires = [
-    "setuptools >= 60.0.0",
-    "setuptools_scm[toml] >= 4, <6",
+    "setuptools >= 61.0.0",
+    "setuptools_scm[toml] >= 4",
     "setuptools_scm_git_archive",
     "wheel >= 0.37.0",
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+platforms = ["any"]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {}
 
 [tool.setuptools_scm]
 write_to = "pyrekordbox/_version.py"
@@ -28,3 +87,58 @@ force-exclude = """
     mysettings/structs.py
 )\
 """
+
+
+# -- Linting ---------------------------------------------------------------------------
+
+[tool.flake8]
+max-line-length = 88
+ignore = ["D203"]
+extend-ignore = ["E203", "W503"]
+per-file-ignores = ["__init__.py:F401"]
+exclude = [
+    ".git",
+    ".idea",
+    "__pycache__",
+    "build",
+    "dist",
+    "*/structs.py",
+    "*/_version.py",
+    "docs/*",
+]
+
+[tool.pydocstyle]
+add_ignore = [
+    "D105",  # ignore undocumented dunder methods like ``__str__`
+]
+
+
+# -- Coverage --------------------------------------------------------------------------
+
+[tool.coverage.run]
+branch = false
+source = ["pyrekordbox"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+
+    "def __repr__",
+    "def __str__",
+
+    "@abstract",
+    "@property",
+
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    "if 0:",
+    "if __name__ == .__main__.:"
+]
+omit = [
+    "pyrekordbox/utils.py",
+    "pyrekordbox/config.py",
+    "pyrekordbox/_version.py",
+    "pyrekordbox/__main__.py",
+]
+ignore_errors = true

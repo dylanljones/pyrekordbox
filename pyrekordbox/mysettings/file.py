@@ -49,31 +49,6 @@ CRC16_XMODEM_TABLE = [
 RE_INVALID_KEY = re.compile("[_u][0-9]?", flags=re.IGNORECASE)
 
 
-def crc16xmodem(data, crc=0):
-    """Calculates the CRC-CCITT (XModem) variant of the CRC16 checksum.
-
-    Parameters
-    ----------
-    data : bytes
-        The data used for calculating the CRC checksum.
-    crc : int, optional
-        The initial value.
-
-    Returns
-    -------
-    crc : int
-        The calculated CRC16-XModem checksum.
-
-
-    References
-    ----------
-    https://reveng.sourceforge.io/crc-catalogue/all.htm#crc.cat.crc-16-xmodem
-    """
-    for byte in data:
-        crc = ((crc << 8) & 0xFF00) ^ CRC16_XMODEM_TABLE[((crc >> 8) & 0xFF) ^ byte]
-    return crc & 0xFFFF
-
-
 def compute_checksum(data, struct):
     """Computes the CRC16 XModem checksum for My-Setting files.
 

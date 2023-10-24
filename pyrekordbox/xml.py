@@ -9,9 +9,9 @@ import os.path
 import urllib.parse
 from abc import abstractmethod
 from collections import abc
-from xml.dom import minidom
 import xml.etree.cElementTree as xml
 import bidict
+from .utils import pretty_xml
 
 logger = logging.getLogger(__name__)
 
@@ -43,47 +43,6 @@ class XmlAttributeKeyError(Exception):
         super().__init__(
             f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
         )
-
-
-def pretty_xml(element, indent=None, encoding="utf-8"):
-    """Generates a formatted string of an XML element.
-
-    Parameters
-    ----------
-    element : xml.etree.cElementTree.Element
-        The input XML element.
-    indent : str, optional
-        The indentation used for formatting the XML element. The default is 3 spaces.
-    encoding : str, optional
-        The encoding used for formatting the XML element. The default is 'utf-8'.
-
-    Returns
-    -------
-    xml_string : str
-        The formatted string of the XML element.
-
-    Notes
-    -----
-    This method is needed for Python 3.8 and below. Starting with Python 3.9 the XML
-    module has a built-in pretty-print function:
-
-    >>> tree = xml.ElementTree(root)
-    >>> xml.indent(tree, space="\t", level=0)
-    >>> tree.write(path, encoding="utf-8", xml_declaration=True)
-
-    This method will be used as soon support for Python 3.8 and below is dropped.
-    """
-    # Build pretty xml-string
-    if indent is None:
-        indent = "    "
-    if encoding is None:
-        encoding = "utf-8"
-    rough_string = xml.tostring(element, encoding)
-    reparsed = minidom.parseString(rough_string)
-    string = reparsed.toprettyxml(indent=indent, encoding=encoding).decode()
-    # Remove annoying empty lines
-    string = "\n".join([line for line in string.splitlines() if line.strip()])
-    return string
 
 
 def encode_path(path):

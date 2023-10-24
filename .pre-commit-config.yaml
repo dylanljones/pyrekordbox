@@ -3,7 +3,7 @@
 
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.4.0
+      rev: v4.5.0
       hooks:
           - id: end-of-file-fixer
           - id: trailing-whitespace
@@ -22,4 +22,4 @@ repos:
       rev: 6.1.0
       hooks:
           - id: flake8
-            args: [--config, setup.cfg]
+            additional_dependencies: [Flake8-pyproject]

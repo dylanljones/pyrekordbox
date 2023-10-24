@@ -7,6 +7,8 @@
 import os
 import warnings
 import psutil
+from xml.dom import minidom
+import xml.etree.cElementTree as xml
 
 warnings.simplefilter("always", DeprecationWarning)
 
@@ -56,11 +58,11 @@ def get_process_id(name: str, raise_exec=False) -> int:
     23456
     """
     for proc in psutil.process_iter():
-        proc_name = os.path.splitext(proc.name())[0]  # needed on Windows (.exe)
         try:
+            proc_name = os.path.splitext(proc.name())[0]  # needed on Windows (.exe)
             if proc_name == name:
                 return proc.pid
-        except psutil.AccessDenied:
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
             pass
     if raise_exec:
         raise RuntimeError("No process with name 'rekordbox' found!")
@@ -117,3 +119,44 @@ def get_rekordbox_agent_pid(raise_exec=False):
     23456
     """
     return get_process_id("rekordboxAgent", raise_exec)
+
+
+def pretty_xml(element, indent=None, encoding="utf-8"):
+    """Generates a formatted string of an XML element.
+
+    Parameters
+    ----------
+    element : xml.etree.cElementTree.Element
+        The input XML element.
+    indent : str, optional
+        The indentation used for formatting the XML element. The default is 3 spaces.
+    encoding : str, optional
+        The encoding used for formatting the XML element. The default is 'utf-8'.
+
+    Returns
+    -------
+    xml_string : str
+        The formatted string of the XML element.
+
+    Notes
+    -----
+    This method is needed for Python 3.8 and below. Starting with Python 3.9 the XML
+    module has a built-in pretty-print function:
+
+    >>> tree = xml.ElementTree(root)  # noqa
+    >>> xml.indent(tree, space="\t", level=0)
+    >>> tree.write(path, encoding="utf-8", xml_declaration=True)  # noqa
+
+    This method will be used as soon support for Python 3.8 and below is dropped.
+    """
+    # Build pretty xml-string
+    if indent is None:
+        indent = "    "
+    if encoding is None:
+        encoding = "utf-8"
+    rough_string = xml.tostring(element, encoding)
+    reparsed = minidom.parseString(rough_string)
+    string = reparsed.toprettyxml(indent=indent, encoding=encoding).decode()
+    # Remove annoying empty lines
+    string = "\n".join([line for line in string.splitlines() if line.strip()])
+    return string

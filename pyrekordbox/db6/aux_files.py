@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 import xml.etree.cElementTree as xml
 from ..config import get_config
-from ..xml import pretty_xml
+from ..utils import pretty_xml
 
 
 class MasterPlaylistXml:

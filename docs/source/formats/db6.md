@@ -440,6 +440,15 @@ corresponding ID.
 
 This table stores the cue points (memory and hotcues) of the tracks in Rekordbox.
 
+```{note}
+Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
+The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with
+variable bit-rate (VBR) or average bit-rate (ABR), the `InMpegFrame` and `OutMpegFrame` values
+are filled out to assist with correctly seeking. Despite the names, these values are **not** the
+frame indices within the MPEG file, but instead use an alternative timing scheme that is typically
+around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity of normal frames.
+```
+
 ```{eval-rst}
 .. list-table:: djmdCue columns
    :widths: 1 1 1
@@ -459,25 +468,25 @@ This table stores the cue points (memory and hotcues) of the tracks in Rekordbox
      - Unit: Millisecond
    * - `InFrame`
      - The frame number of the start time
-     -
+     - One frame is 1/150th of a second
    * - `InMpegFrame`
-     - The Mpeg frame number of the start time
-     - `0` if not a mpeg file
+     - The MPEG frame number of the start time
+     - See note above. `0` if not a VBR/ABR MPEG file.
    * - `InMpegAbs`
-     - ?
-     - `0` if not a mpeg file
+     - The offset (bytes) in the file where the starting frame appears.
+     - `0` if not a VBR/ABR MPEG file.
    * - `OutMsec`
      - End time of the cue point (for loops)
      - Unit: Millisecond, `-1` if not a loop
    * - `OutFrame`
      - The frame number of the end time (for loops)
-     - `0` if not a loop
+     - One frame is 1/150th of a second. `0` if not a loop
    * - `OutMpegFrame`
-     - The Mpeg frame number of the end time (for loops)
-     - `0` if not a loop or mpeg file
+     - The MPEG frame number of the end time (for loops)
+     - See note above. `0` if not a loop or VBR/ABR MPEG file
    * - `OutMpegAbs`
-     - ?
-     - `0` if not a loop or mpeg file
+     - The offset (bytes) in the file where the ending frame appears.
+     - `0` if not a loop or VBR/ABR MPEG file
    * - `Kind`
      - Type of cue point
      - Cue= `0` , Fade-In= `0` , Fade-Out= `0` , Load= `3` , Loop= `4`
@@ -706,6 +715,14 @@ This table stores the configurable menu items shown in the Rekordbox application
 
 This table stores the mixer parameters of tracks in the Rekordbox collection.
 
+Each of the two gain values are represented by a 32-bit floating point number that is packed into a
+pair of 16-bit integers. The floating point value represents the linear gain factor, which can be
+converted into decibels (dB) by calculating `20.0 * math.log10(f)` where `f` is the gain factor.
+
+The auto-gain value is the one shown in the grid edit panel. The peak value does not appear to be
+displayed anywhere in the program, and is most likely used internally for limiting and/or waveform
+scaling.
+
 ```{eval-rst}
 .. list-table:: djmdMixerParam columns
    :widths: 1 1 1
@@ -721,17 +738,17 @@ This table stores the mixer parameters of tracks in the Rekordbox collection.
      - The `ID` of the corrsponding track
      -
    * - `GainHigh`
-     - The maximum gain for the track
-     -
+     - The upper 16 bits of an IEEE754 single-precision floating point number representing the gain.
+     - Auto-gain for the track. See note above.
    * - `GainLow`
-     - The minimum gain for the track
-     -
+     - The lower 16 bits of an IEEE754 single-precision floating point number representing the gain.
+     - Auto-gain for the track. See note above.
    * - `PeakHigh`
-     - ?
-     - Maybe some sort of limiter setting
+     - The upper 16 bits of an IEEE754 single-precision floating point number representing the peak.
+     - Unknown functionality. Maybe some sort of limiter setting. See note above.
    * - `PeakLow`
-     - ?
-     - Maybe some sort of limiter setting
+     - The lower 16 bits of an IEEE754 single-precision floating point number representing the peak.
+     - Unknown functionality. Maybe some sort of limiter setting. See note above.
 
 ```
 
@@ -810,7 +827,7 @@ either be a playlist folder or an actual playlist containing tracks.
 This table stores internal properties of the Rekordbox application. Most columns of it
 are reserved.
 
-```{note}
+```{important}
 This table does not use the default columns the other tables use. Therefore *all*
 columns in the table are shown below
 ```
@@ -960,6 +977,15 @@ This table stores tracks contained in the history lists in the `djmdHistory` tab
 This table stores the hot cue entries contained in the hot-cue bank lists in the
 `djmdHotCueBanklist` table.
 
+```{note}
+Rekordbox internally represents time in "frames", each being 1/150th of a second (6.666ms).
+The `InFrame` and `OutFrame` values use this unit of time. However, when a track is encoded with
+variable bit-rate (VBR) or average bit-rate (ABR), the `InMpegFrame` and `OutMpegFrame` values
+are filled out to assist with correctly seeking. Despite the names, these values are **not** the
+frame indices within the MPEG file, but instead use an alternative timing scheme that is typically
+around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity of normal frames.
+```
+
 ```{eval-rst}
 .. list-table:: djmdSongHotCueBanklist columns
    :widths: 1 1 1
@@ -988,25 +1014,25 @@ This table stores the hot cue entries contained in the hot-cue bank lists in the
      - Unit: Millisecond
    * - `InFrame`
      - The frame number of the start time
-     -
+     - One frame is 1/150th of a second.
    * - `InMpegFrame`
-     - The Mpeg frame number of the start time
-     - `0` if not a mpeg file
+     - The MPEG frame number of the start time
+     - See note above. `0` if not a VBR/ABR MPEG file
    * - `InMpegAbs`
      - ?
-     - `0` if not a mpeg file
+     - `0` if not a VBR/ABR MPEG file
    * - `OutMsec`
      - End time of the cue point (for loops)
      - Unit: Millisecond, `-1` if not a loop
    * - `OutFrame`
      - The frame number of the end time (for loops)
-     - `0` if not a loop
+     - One frame is 1/150th of a second. `0` if not a loop
    * - `OutMpegFrame`
-     - The Mpeg frame number of the end time (for loops)
-     - `0` if not a loop or mpeg file
+     - The MPEG frame number of the end time (for loops)
+     - See note above. `0` if not a VBR/ABR MPEG file or if not a loop.
    * - `OutMpegAbs`
      - ?
-     - `0` if not a loop or mpeg file
+     - `0` if not a loop or VBR/ABR MPEG file
    * - `Color`
      - The color ID of the cue point
      - `-1` if no color

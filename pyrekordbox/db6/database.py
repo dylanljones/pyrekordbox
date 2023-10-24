@@ -8,10 +8,11 @@ import secrets
 from uuid import uuid4
 from pathlib import Path
 from typing import Optional
-from sqlalchemy import create_engine, or_, event
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import create_engine, or_, event, MetaData
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
-from packaging import version
+from sqlalchemy.sql.sqltypes import DateTime, String
+import packaging.version
 from ..utils import get_rekordbox_pid
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
@@ -21,14 +22,11 @@ from .tables import DjmdContent
 from . import tables
 
 try:
-    from pysqlcipher3 import dbapi2 as sqlite3  # noqa
+    from sqlcipher3 import dbapi2 as sqlite3  # noqa
 except ImportError:
-    try:
-        from sqlcipher3 import dbapi2 as sqlite3  # noqa
-    except ImportError:
-        import sqlite3
+    import sqlite3
 
-MAX_VERSION = version.parse("6.6.5")
+MAX_VERSION = packaging.version.parse("6.6.5")
 
 logger = logging.getLogger(__name__)
 
@@ -87,12 +85,12 @@ def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
 
     To use the ``pysqlcipher3`` package as SQLite driver, either import it as
 
-    >>> from pysqlcipher3 import dbapi2 as sqlite3  # noqa
+    >>> from sqlcipher3 import dbapi2 as sqlite3  # noqa
     >>> db = open_rekordbox_database("path/to/master_copy.db")
 
     or supply the package as driver:
 
-    >>> from pysqlcipher3 import dbapi2
+    >>> from sqlcipher3 import dbapi2  # noqa
     >>> db = open_rekordbox_database("path/to/master_copy.db", sql_driver=dbapi2)
     """
     if not path:
@@ -111,7 +109,7 @@ def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
 
     if unlock:
         if not key:
-            ver = version.parse(rb6_config["version"])
+            ver = packaging.version.parse(rb6_config["version"])
             if ver >= MAX_VERSION:
                 raise IncompatibleVersionError(rb6_config["version"])
             try:
@@ -210,7 +208,7 @@ class Rekordbox6Database:
         # Open database
         if unlock:
             if not key:
-                ver = version.parse(rb6_config["version"])
+                ver = packaging.version.parse(rb6_config["version"])
                 if ver >= MAX_VERSION:
                     raise IncompatibleVersionError(rb6_config["version"])
                 try:
@@ -231,7 +229,6 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
 
         self.engine = engine
-        self._Session = sessionmaker(bind=self.engine)
         self.session: Optional[Session] = None
 
         self.registry = RekordboxAgentRegistry(self)
@@ -272,7 +269,7 @@ class Rekordbox6Database:
         >>> db.open()
         """
         if self.session is None:
-            self.session = self._Session()
+            self.session = Session(bind=self.engine)
             self.registry.clear_buffer()
 
     def close(self):
@@ -473,8 +470,27 @@ class Rekordbox6Database:
             self.registry.autoincrement_local_update_count(set_row_usn=True)
         self.session.commit()
         self.registry.clear_buffer()
-        if self.playlist_xml is not None and self.playlist_xml.modified:
-            self.playlist_xml.save()
+
+        # Update the masterPlaylists6.xml file
+        if self.playlist_xml is not None:
+            # Sync the updated_at values of the playlists in the DB and the XML file
+            for pl in self.get_playlist():
+                plxml = self.playlist_xml.get(pl.ID)
+                if plxml is None:
+                    raise ValueError(
+                        f"Playlist {pl.ID} not found in masterPlaylists6.xml! "
+                        "Did you add it manually? "
+                        "Use the create_playlist method instead."
+                    )
+                ts = plxml["Timestamp"]
+                diff = pl.updated_at - ts
+                if abs(diff.total_seconds()) > 1:
+                    logger.debug("Updating updated_at of playlist %s in XML", pl.ID)
+                    self.playlist_xml.update(pl.ID, updated_at=pl.updated_at)
+
+            # Save the XML file if it was modified
+            if self.playlist_xml.modified:
+                self.playlist_xml.save()
 
     def rollback(self):
         """Rolls back the uncommited changes to the database."""
@@ -591,22 +607,20 @@ class Rekordbox6Database:
         query = self.query(tables.DjmdHistory).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_history_songs(self, id_):
+    def get_history_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongHistory`` table."""
-        query = self.query(tables.DjmdSongHistory).filter_by(HistoryID=id_)
-        return query
+        query = self.query(tables.DjmdSongHistory).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_hot_cue_banklist(self, **kwargs):
         """Creates a filtered query for the ``DjmdHotCueBanklist`` table."""
         query = self.query(tables.DjmdHotCueBanklist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_hot_cue_banklist_songs(self, id_):
+    def get_hot_cue_banklist_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongHotCueBanklist`` table."""
-        query = self.query(tables.DjmdSongHotCueBanklist).filter_by(
-            HotCueBanklistID=id_
-        )
-        return query
+        query = self.query(tables.DjmdSongHotCueBanklist).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_key(self, **kwargs):
         """Creates a filtered query for the ``DjmdKey`` table."""
@@ -633,20 +647,20 @@ class Rekordbox6Database:
         query = self.query(tables.DjmdMyTag).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_my_tag_songs(self, id_):
+    def get_my_tag_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongMyTag`` table."""
-        query = self.query(tables.DjmdSongMyTag).filter_by(MyTagID=id_)
-        return query
+        query = self.query(tables.DjmdSongMyTag).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_playlist(self, **kwargs):
         """Creates a filtered query for the ``DjmdPlaylist`` table."""
         query = self.query(tables.DjmdPlaylist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_playlist_songs(self, id_):
+    def get_playlist_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongPlaylist`` table."""
-        query = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=id_)
-        return query
+        query = self.query(tables.DjmdSongPlaylist).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_property(self, **kwargs):
         """Creates a filtered query for the ``DjmdProperty`` table."""
@@ -658,25 +672,25 @@ class Rekordbox6Database:
         query = self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_related_tracks_songs(self, id_):
+    def get_related_tracks_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongRelatedTracks`` table."""
-        query = self.query(tables.DjmdSongRelatedTracks).filter_by(RelatedTracksID=id_)
-        return query
+        query = self.query(tables.DjmdSongRelatedTracks).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_sampler(self, **kwargs):
         """Creates a filtered query for the ``DjmdSampler`` table."""
         query = self.query(tables.DjmdSampler).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_sampler_songs(self, id_):
+    def get_sampler_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongSampler`` table."""
-        query = self.query(tables.DjmdSongSampler).filter_by(SamplerID=id_)
-        return query
+        query = self.query(tables.DjmdSongSampler).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
-    def get_tag_list_songs(self, id_):
+    def get_tag_list_songs(self, **kwargs):
         """Creates a filtered query for the ``DjmdSongTagList`` table."""
-        query = self.query(tables.DjmdSongTagList).filter_by(ID=id_)
-        return query
+        query = self.query(tables.DjmdSongTagList).filter_by(**kwargs)
+        return _parse_query_result(query, kwargs)
 
     def get_sort(self, **kwargs):
         """Creates a filtered query for the ``DjmdSort`` table."""
@@ -911,12 +925,12 @@ class Rekordbox6Database:
             .order_by(tables.DjmdSongPlaylist.TrackNo)
         )
         moved = list()
-        self.registry.disable_tracking()
-        for song in query:
-            song.TrackNo -= 1
-            song.updated_at = now
-            moved.append(song)
-        self.registry.enable_tracking()
+        with self.registry.disabled():
+            for song in query:
+                song.TrackNo -= 1
+                song.updated_at = now
+                moved.append(song)
+
         if moved:
             self.registry.on_move(moved)
 
@@ -1078,11 +1092,8 @@ class Rekordbox6Database:
             )
             for pl in query:
                 pl.Seq += 1
-                self.registry.disable_tracking()
-                pl.updated_at = now
-                self.registry.enable_tracking()
-                if self.playlist_xml is not None:
-                    self.playlist_xml.update(pl.ID, updated_at=now)
+                with self.registry.disabled():
+                    pl.updated_at = now
 
         # Add new playlist to database
         # First create with name 'New playlist'
@@ -1246,8 +1257,6 @@ class Rekordbox6Database:
         for pl in query:
             pl.Seq -= 1
             pl.updated_at = now
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(pl.ID, updated_at=now)
             moved.append(pl)
         moved.append(playlist)
 
@@ -1276,14 +1285,6 @@ class Rekordbox6Database:
             self.registry.on_delete(child_ids[1:])
         self.registry.on_delete(moved)
 
-        # Check masterPlaylist6.xml
-        if self.playlist_xml is not None:
-            for plxml in self.playlist_xml.get_playlists():
-                if plxml["Lib_Type"] != 0:
-                    continue
-                pid = int(plxml["Id"], 16)
-                assert self.query(tables.DjmdPlaylist).filter_by(ID=pid).count() == 1
-
     def move_playlist(self, playlist, parent=None, seq=None):
         """Moves a playlist (folder) in the current parent folder or to a new one.
 
@@ -1307,7 +1308,7 @@ class Rekordbox6Database:
         Take the following playlist tree:
 
         >>> db = Rekordbox6Database()
-        >>> playlists = sorted(db.get_playlist().all(), key=lambda x: x.Seq)
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
         >>> [pl.Name for pl in playlists]  # noqa
         ['Folder 1', 'Folder 2', 'Playlist 1', 'Playlist 2', 'Playlist 3']
 
@@ -1316,7 +1317,7 @@ class Rekordbox6Database:
 
         >>> pl = db.get_playlist(Name="Playlist 2").one()  # noqa
         >>> db.move_playlist(pl, seq=2)
-        >>> playlists = sorted(db.get_playlist().all(), key=lambda x: x.Seq)
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
         >>> [pl.Name for pl in playlists]  # noqa
         ['Folder 1', 'Playlist 2', 'Folder 2', 'Playlist 1', 'Playlist 3']
 
@@ -1388,12 +1389,9 @@ class Rekordbox6Database:
             # Set seq number and update time *before* other playlists to ensure
             # right USN increment order
             playlist.ParentID = parent_id
-            self.registry.disable_tracking()
-            playlist.Seq = seq
-            playlist.updated_at = now
-            self.registry.enable_tracking()
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(playlist.ID, updated_at=now)
+            with self.registry.disabled():
+                playlist.Seq = seq
+                playlist.updated_at = now
 
             if not insert_at_end:
                 # Update seq numbers higher than the new seq number in *new* parent
@@ -1402,9 +1400,8 @@ class Rekordbox6Database:
                     # Update time of other playlists are left unchanged
                     pl.Seq += 1
                     # Each move counts as one USN increment, so disable for update time
-                    self.registry.disable_tracking()
-                    pl.updated_at = now
-                    self.registry.enable_tracking()
+                    with self.registry.disabled():
+                        pl.updated_at = now
 
             # Update seq numbers higher than the old seq number in *old* parent
             # USN is not updated here
@@ -1463,23 +1460,52 @@ class Rekordbox6Database:
             # right USN increment order
             playlist.Seq = seq
             # Each move counts as one USN increment, so disable for update time
-            self.registry.disable_tracking()
-            playlist.updated_at = now
-            self.registry.enable_tracking()
+            with self.registry.disabled():
+                playlist.updated_at = now
 
             # Set seq number and update time for playlists between old_seq and seq
             for pl in other_playlists:
                 pl.Seq += delta_seq
                 # Each move counts as one USN increment, so disable for update time
-                self.registry.disable_tracking()
-                pl.updated_at = now
-                self.registry.enable_tracking()
-                if self.playlist_xml is not None:
-                    self.playlist_xml.update(pl.ID, updated_at=now)
+                with self.registry.disabled():
+                    pl.updated_at = now
 
-            # Update XML
-            if self.playlist_xml is not None:
-                self.playlist_xml.update(playlist.ID, updated_at=now)
+    def rename_playlist(self, playlist, name):
+        """Renames a playlist or playlist folder.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist or playlist folder to move. Can either be a
+            :class:`DjmdPlaylist` object or a playlist ID.
+        name : str
+            The new name of the playlist or playlist folder.
+
+        Examples
+        --------
+        Take the following playlist tree:
+
+        >>> db = Rekordbox6Database()
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
+        >>> [pl.Name for pl in playlists]  # noqa
+        ['Playlist 1', 'Playlist 2']
+
+        Rename a playlist:
+
+        >>> pl = db.get_playlist(Name="Playlist 1").one()  # noqa
+        >>> db.rename_playlist(pl, name="Playlist new")
+        >>> playlists = db.get_playlist().order_by(tables.DjmdPlaylist.Seq)
+        >>> [pl.Name for pl in playlists]  # noqa
+        ['Playlist new', 'Playlist 2']
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        now = datetime.datetime.now()
+        # Update name of playlist
+        playlist.Name = name
+        # Update update time: USN not incremented
+        with self.registry.disabled():
+            playlist.updated_at = now
 
     # ----------------------------------------------------------------------------------
 
@@ -1724,3 +1750,53 @@ class Rekordbox6Database:
         data = self.to_dict(verbose=verbose)
         with open(file, "w") as fp:
             json.dump(data, fp, indent=indent, sort_keys=sort_keys, default=json_serial)
+
+    def copy_unlocked(self, output_file):
+        src_engine = self.engine
+        src_metadata = MetaData()
+        exclude_tables = ("sqlite_master", "sqlite_sequence", "sqlite_temp_master")
+
+        dst_engine = create_engine(f"sqlite:///{output_file}")
+        dst_metadata = MetaData()
+
+        @event.listens_for(src_metadata, "column_reflect")
+        def genericize_datatypes(inspector, tablename, column_dict):
+            type_ = column_dict["type"].as_generic(allow_nulltype=True)
+            if isinstance(type_, DateTime):
+                type_ = String
+            column_dict["type"] = type_
+
+        src_conn = src_engine.connect()
+        dst_conn = dst_engine.connect()
+        dst_metadata.reflect(bind=dst_engine)
+        # drop all tables in target database
+        for table in reversed(dst_metadata.sorted_tables):
+            if table.name not in exclude_tables:
+                print("dropping table =", table.name)
+                table.drop(bind=dst_engine)
+        # Delete all data in target database
+        for table in reversed(dst_metadata.sorted_tables):
+            table.delete()
+        dst_metadata.clear()
+        dst_metadata.reflect(bind=dst_engine)
+        src_metadata.reflect(bind=src_engine)
+        # create all tables in target database
+        for table in src_metadata.sorted_tables:
+            if table.name not in exclude_tables:
+                table.create(bind=dst_engine)
+        # refresh metadata before you can copy data
+        dst_metadata.clear()
+        dst_metadata.reflect(bind=dst_engine)
+        # Copy all data from src to target
+        print("Copying data...")
+        string = "\rCopying table {name}: Inserting row {row}"
+        index = 0
+        for table in dst_metadata.sorted_tables:
+            src_table = src_metadata.tables[table.name]
+            stmt = table.insert()
+            for index, row in enumerate(src_conn.execute(src_table.select())):
+                print(string.format(name=table.name, row=index), end="", flush=True)
+                dst_conn.execute(stmt.values(row))
+            print(f"\rCopying table {table.name}: Inserted {index} rows", flush=True)
+
+        dst_conn.commit()
