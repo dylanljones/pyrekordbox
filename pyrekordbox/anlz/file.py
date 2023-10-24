@@ -113,7 +113,7 @@ class AnlzFile(abc.Mapping):
                     decryptmask = verysecretcode[x%len(verysecretcode)]+len_entries
                     if decryptmask > 255 :
                         decryptmask -= 256
-                    tag_data[x+18] = tag_data[x+18] ^ decryptmask
+                    tag_data[x+18] ^= decryptmask
 
             try:
                 # Parse the struct
