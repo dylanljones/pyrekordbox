@@ -213,6 +213,8 @@ class Rekordbox6Database:
                 ver = packaging.version.parse(rb6_config["version"])
                 if ver >= MAX_VERSION:
                     raise IncompatibleVersionError(rb6_config["version"])
+                else:
+                    raise ValueError("Could not unlock database: No key found")
             logger.info("Key: %s", key)
             # Unlock database and create engine
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
@@ -1504,6 +1506,52 @@ class Rekordbox6Database:
         # Update update time: USN not incremented
         with self.registry.disabled():
             playlist.updated_at = now
+
+    def add_artist(self, name, search_str=None):
+        """Adds an artist to the database.
+
+        Parameters
+        ----------
+        name : str
+            The name of the artist. Must be a unique name. If an artist with the
+            same name already exists in the database, use the `ID` of the existing
+            artist instead.
+        search_str : str, optional
+            The search string of the artist.
+
+        Returns
+        -------
+        artist : DjmdArtist
+            The newly created artist.
+
+        Examples
+        --------
+        Add a new artist to the database:
+
+        >>> db = Rekordbox6Database()
+        >>> db.add_artist(name="Artist 1")
+        <DjmdArtist(1000, Name='Artist 1')>
+
+        Two artists with the same name cannot exist in the database:
+
+        >>> db.add_artist(name="Artist 1")
+        ValueError: Artist 'Artist 1' already exists in database
+
+        Add a new artist to the database with a custom search string:
+
+        >>> db.add_artist(name="Artist 2", search_str="artist 2")
+        <DjmdArtist(1001, Name='Artist 2')>
+        """
+        # Check if artist already exists
+        query = self.query(tables.DjmdArtist).filter_by(Name=name)
+        if query.count() > 0:
+            raise ValueError(f"Artist '{name}' already exists in database")
+
+        id_ = self.generate_unused_id(tables.DjmdArtist)
+        artist = tables.DjmdArtist.create(ID=id_, Name=name, SearchStr=search_str)
+        self.add(artist)
+        self.flush()
+        return artist
 
     # ----------------------------------------------------------------------------------
 
