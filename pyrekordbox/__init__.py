@@ -3,7 +3,7 @@
 # Date:   2022-04-10
 
 from .logger import logger
-from .config import show_config, get_config
+from .config import show_config, get_config, update_config
 from .xml import RekordboxXml, XmlDuplicateError, XmlAttributeKeyError
 from .anlz import get_anlz_paths, walk_anlz_paths, read_anlz_files, AnlzFile
 from .mysettings import (
