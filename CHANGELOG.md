@@ -31,6 +31,7 @@
 
 ### Documentation
 
+- **add missing documentation of the PSSI tag of ANLZ files**  
 - **Fix typo in djmdCue table documentation**  
 - **update quickstart documentation**  
 
