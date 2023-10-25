@@ -998,6 +998,84 @@ def test_rename_playlist(db):
     assert _check_playlist_xml(db)
 
 
+def test_add_album(db):
+    old_usn = db.get_local_usn()
+    name = "test"
+    db.add_album(name)
+    db.commit()
+
+    # Check that album was created and USN is incremented
+    instance = db.get_album(Name=name).one()
+    assert instance.Name == name
+    assert instance.rb_local_usn == old_usn + 1
+    assert db.get_local_usn() == old_usn + 1
+
+    # Fail if album with same name is added
+    with pytest.raises(ValueError):
+        db.add_album(name)
+
+    # Add album with album artist by artist
+    artist = db.get_artist().first()
+    album = db.add_album("album 2", artist=artist)
+    assert album.AlbumArtistID == artist.ID
+
+    # Add album with album artist by ID
+    artist = db.get_artist().first()
+    album = db.add_album("album 3", artist=artist.ID)
+    assert album.AlbumArtistID == artist.ID
+
+
+def test_add_artist(db):
+    old_usn = db.get_local_usn()
+    name = "test"
+    db.add_artist(name)
+    db.commit()
+
+    # Check that album was created and USN is incremented
+    instance = db.get_artist(Name=name).one()
+    assert instance.Name == name
+    assert instance.rb_local_usn == old_usn + 1
+    assert db.get_local_usn() == old_usn + 1
+
+    # Fail if album with same name is added
+    with pytest.raises(ValueError):
+        db.add_artist(name)
+
+
+def test_add_genre(db):
+    old_usn = db.get_local_usn()
+    name = "test"
+    db.add_genre(name)
+    db.commit()
+
+    # Check that album was created and USN is incremented
+    instance = db.get_genre(Name=name).one()
+    assert instance.Name == name
+    assert instance.rb_local_usn == old_usn + 1
+    assert db.get_local_usn() == old_usn + 1
+
+    # Fail if album with same name is added
+    with pytest.raises(ValueError):
+        db.add_genre(name)
+
+
+def test_add_label(db):
+    old_usn = db.get_local_usn()
+    name = "test"
+    db.add_label(name)
+    db.commit()
+
+    # Check that album was created and USN is incremented
+    instance = db.get_label(Name=name).one()
+    assert instance.Name == name
+    assert instance.rb_local_usn == old_usn + 1
+    assert db.get_local_usn() == old_usn + 1
+
+    # Fail if album with same name is added
+    with pytest.raises(ValueError):
+        db.add_label(name)
+
+
 def test_get_anlz_paths():
     content = DB.get_content().first()
 
