@@ -1534,6 +1534,10 @@ class Rekordbox6Database:
         album : DjmdAlbum
             The newly created album.
 
+        Raises
+        ------
+        ValueError : If an album with the same name already exists in the database.
+
         Examples
         --------
         Add a new album to the database:
@@ -1541,11 +1545,6 @@ class Rekordbox6Database:
         >>> db = Rekordbox6Database()
         >>> db.add_album(name="Album 1")
         <DjmdAlbum(148754249  Name=Album 1)>
-
-        Two artists with the same name cannot exist in the database:
-
-        >>> db.add_artist(name="Album 1")
-        ValueError: Album 'Album 1' already exists in database
 
         Add a new album to the database with an album artist:
 
@@ -1593,6 +1592,10 @@ class Rekordbox6Database:
         artist : DjmdArtist
             The newly created artist.
 
+        Raises
+        ------
+        ValueError : If an artist with the same name already exists in the database.
+
         Examples
         --------
         Add a new artist to the database:
@@ -1600,11 +1603,6 @@ class Rekordbox6Database:
         >>> db = Rekordbox6Database()
         >>> db.add_artist(name="Artist 1")
         <DjmdArtist(123456789, Name='Artist 1')>
-
-        Two artists with the same name cannot exist in the database:
-
-        >>> db.add_artist(name="Artist 1")
-        ValueError: Artist 'Artist 1' already exists in database
 
         Add a new artist to the database with a custom search string:
 
@@ -1637,6 +1635,10 @@ class Rekordbox6Database:
         genre : DjmdGenre
             The newly created genre.
 
+        Raises
+        ------
+        ValueError : If a genre with the same name already exists in the database.
+
         Examples
         --------
         Add a new genre to the database:
@@ -1644,12 +1646,6 @@ class Rekordbox6Database:
         >>> db = Rekordbox6Database()
         >>> db.add_genre(name="Genre 1")
         <DjmdGenre(123456789 Name=Genre 1)>
-
-        Two genres with the same name cannot exist in the database:
-
-        >>> db.add_artist(name="Genre 1")
-        ValueError: Genre 'Genre 1' already exists in database
-
         """
         # Check if genre already exists
         query = self.query(tables.DjmdGenre).filter_by(Name=name)
@@ -1661,6 +1657,44 @@ class Rekordbox6Database:
         self.add(genre)
         self.flush()
         return genre
+
+    def add_label(self, name):
+        """Adds a new label to the database.
+
+        Parameters
+        ----------
+        name : str
+            The name of the label. Must be a unique name (case-sensitive).
+            If a label with the same name already exists in the database,
+            use the `ID` of the existing label instead.
+
+        Returns
+        -------
+        label : DjmdLabel
+            The newly created label.
+
+        Raises
+        ------
+        ValueError : If a label with the same name already exists in the database.
+
+        Examples
+        --------
+        Add a new label to the database:
+
+        >>> db = Rekordbox6Database()
+        >>> db.add_label(name="Label 1")
+        <DjmdLabel(123456789 Name=Label 1)>
+        """
+        # Check if label already exists
+        query = self.query(tables.DjmdLabel).filter_by(Name=name)
+        if query.count() > 0:
+            raise ValueError(f"Label '{name}' already exists in database")
+
+        id_ = self.generate_unused_id(tables.DjmdLabel)
+        label = tables.DjmdLabel.create(ID=id_, Name=name)
+        self.add(label)
+        self.flush()
+        return label
 
     # ----------------------------------------------------------------------------------
 
