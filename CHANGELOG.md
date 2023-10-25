@@ -12,15 +12,27 @@
   New entries can now be added to the `DjmdGenre` table.
 - **add new artists to the RBv6 db**  
   New entries can now be added to the `DjmdArtist` table.
+- **add new labels to the RBv6 db**  
+  New entries can now be added to the `DjmdLabel` table.
 - **support renamed Rekordbox application directory**  
   The user can now specify the directory name of the Rekordbox application directory. 
   This supports multiple Rekordbox installations of the same major version.
 
 ### Improvements/Bug Fixes
 
+- **de-obfuscate PSSI tag data on exported ANLZ files**  
+  The PSSI tag data of ANLZ files that rekordbox 6 *exports* is garbled with an XOR mask.
+  If the first few known fields of the PSSI tag are not valid values this indicates a garbled tag
+  and the data is de-obfuscated. 
+  Thank you [@troyhacks](https://github.com/troyhacks) for the de-obfuscation.
 - **add disabled context manager to the RBv6 `RekordboxAgentRegistry`**  
 - **only re-enable RBV6 USN tracking if it was enabled**  
 - **don't raise error if key is in config**  
+
+### Documentation
+
+- **Fix typo in djmdCue table documentation**  
+- **update quickstart documentation**  
 
 
 <a name="0.2.1"></a>
