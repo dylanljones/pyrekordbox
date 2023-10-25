@@ -1551,6 +1551,17 @@ class Rekordbox6Database:
         >>> artist = db.get_artist(Name="Artist 1").one()  # noqa
         >>> db.add_album(name="Album 2", artist=artist)
         <DjmdAlbum(148754249  Name=Album 2)>
+
+        For setting the album of a track, the usual procedure is to first
+        check if an entry with the same album name already exists in the database,
+        and if not, add a new album:
+
+        >>> name = "Album name"
+        >>> content = db.get_content().one()
+        >>> album = db.get_album(Name=name).one_or_none()
+        >>> if album is None:
+        ...     album = db.add_album(name=name)
+        >>> content.AlbumID = album.ID
         """
         # Check if album already exists
         query = self.query(tables.DjmdAlbum).filter_by(Name=name)
@@ -1608,6 +1619,17 @@ class Rekordbox6Database:
 
         >>> db.add_artist(name="Artist 2", search_str="artist 2")
         <DjmdArtist(123456789, Name='Artist 2')>
+
+        For setting the artist of a track, the usual procedure is to first
+        check if an entry with the same artist name already exists in the database,
+        and if not, add a new artist:
+
+        >>> name = "Artist name"
+        >>> content = db.get_content().one()
+        >>> artist = db.get_artist(Name=name).one_or_none()
+        >>> if artist is None:
+        ...     artist = db.add_artist(name=name)
+        >>> content.ArtistID = artist.ID
         """
         # Check if artist already exists
         query = self.query(tables.DjmdArtist).filter_by(Name=name)
@@ -1646,6 +1668,17 @@ class Rekordbox6Database:
         >>> db = Rekordbox6Database()
         >>> db.add_genre(name="Genre 1")
         <DjmdGenre(123456789 Name=Genre 1)>
+
+        For setting the genre of a track, the usual procedure is to first
+        check if an entry with the same genre name already exists in the database,
+        and if not, add a new genre:
+
+        >>> name = "Genre name"
+        >>> content = db.get_content().one()
+        >>> genre = db.get_genre(Name=name).one_or_none()
+        >>> if genre is None:
+        ...     genre = db.add_genre(name=name)
+        >>> content.GenreID = genre.ID
         """
         # Check if genre already exists
         query = self.query(tables.DjmdGenre).filter_by(Name=name)
@@ -1684,6 +1717,17 @@ class Rekordbox6Database:
         >>> db = Rekordbox6Database()
         >>> db.add_label(name="Label 1")
         <DjmdLabel(123456789 Name=Label 1)>
+
+        For setting the label of a track, the usual procedure is to first
+        check if an entry with the same label name already exists in the database,
+        and if not, add a new label:
+
+        >>> name = "Label name"
+        >>> content = db.get_content().one()
+        >>> label = db.get_label(Name=name).one_or_none()
+        >>> if label is None:
+        ...     label = db.add_label(name=name)
+        >>> content.LabelID = label.ID
         """
         # Check if label already exists
         query = self.query(tables.DjmdLabel).filter_by(Name=name)
