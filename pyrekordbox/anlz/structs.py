@@ -195,8 +195,6 @@ PWV5 = Struct(
 
 # -- Song Structure Tag (PSSI) ---------------------------------------------------------
 
-# FixMe: Implement reverse XOR mask to descramble values
-
 SongStructureEntry = Struct(
     "index" / Int16ub,
     "beat" / Int16ub,
@@ -221,11 +219,11 @@ SongStructureEntry = Struct(
 PSSI = Struct(
     "len_entry_bytes" /  Const(24, Int32ub),
     "len_entries" / Int16ub,
-    "mood" / Bytes(2),
+    "mood" / Int16ub,
     "u1" / Bytes(6),
-    "end_beat" / Bytes(2),
+    "end_beat" / Int16ub,
     "u2" / Bytes(2),
-    "bank" / Bytes(1),
+    "bank" / Int8ub,
     "u3" / Bytes(1),
     "entries" / Array(this.len_entries, SongStructureEntry),
 )
