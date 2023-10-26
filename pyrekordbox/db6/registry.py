@@ -316,7 +316,7 @@ class RekordboxAgentRegistry:
                     if not isinstance(instances, list):
                         instances = [instances]
                     for instance in instances:
-                        if hasattr(instance, "rb_local_usn") and op != "delete":
+                        if hasattr(instance, "rb_local_usn"):
                             instance.rb_local_usn = usn
             reg.int_1 = usn
 
