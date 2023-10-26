@@ -20,14 +20,15 @@
 
 ### Improvements/Bug Fixes
 
+- **don't raise error if key is in cache**  
+  This fixes an issue when using the database handler for Rekordbox>6.6.5 with the cached key.
 - **de-obfuscate PSSI tag data on exported ANLZ files**  
   The PSSI tag data of ANLZ files that rekordbox 6 *exports* is garbled with an XOR mask.
   If the first few known fields of the PSSI tag are not valid values this indicates a garbled tag
   and the data is de-obfuscated. 
   Thank you [@troyhacks](https://github.com/troyhacks) for the de-obfuscation.
 - **add disabled context manager to the RBv6 `RekordboxAgentRegistry`**  
-- **only re-enable RBV6 USN tracking if it was enabled**  
-- **don't raise error if key is in config**  
+- **only re-enable RBV6 USN tracking if it was enabled**
 
 ### Documentation
 
