@@ -273,6 +273,7 @@ def _get_rb_config(
         # Applitcation dirname is given, only extract version from it
         # `major_version` is compared to the version string
         rb_version = application_dirname.replace("rekordbox", "").strip()
+        rb_version = rb_version.replace(".app", "")
         if not rb_version.startswith(str(major_version)):
             raise ValueError(
                 f"Major version is {major_version}, but the supplied application "
@@ -293,6 +294,7 @@ def _get_rb_config(
             name = p.name
             if name.startswith("rekordbox"):
                 ver_str = name.replace("rekordbox", "").strip()
+                ver_str = ver_str.replace(".app", "")
                 if ver_str.startswith(str(major_version)):
                     v = packaging.version.parse(ver_str)
                     versions.append(v)
