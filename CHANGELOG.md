@@ -1,8 +1,8 @@
 # What's New
 
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.2.2"></a>
+## [0.2.2] - 2023-10-26
 
 ### New Features
 
@@ -466,7 +466,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.2.1...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.2.2...HEAD
+[0.2.2]: https://github.com/dylanljones/pyrekordbox/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/dylanljones/pyrekordbox/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/dylanljones/pyrekordbox/compare/0.1.8...0.2.0
 [0.1.8]: https://github.com/dylanljones/pyrekordbox/compare/0.1.7...0.1.8
