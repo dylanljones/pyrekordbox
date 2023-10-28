@@ -1,5 +1,19 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **drop Python 3.7 support**  
+  Python 3.7 reached its end of lifetime in June 2023.
+- **raise ImportError if RBv6 db is locked and sqlcipher is not available**  
+  Pyrekordbox falls back to `sqlite3` if `sqlcipher3` is not available.
+  This can lead to errors if the RBv6 database is locked and the user does not have 
+  `sqlcipher3` installed.
+- **don't pass deleted RBv6 instance to USN callback**  
+  This sometimes raised an `ObjectDeletedError`
+
 
 <a name="0.2.2"></a>
 ## [0.2.2] - 2023-10-26
