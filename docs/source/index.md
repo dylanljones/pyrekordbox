@@ -90,7 +90,7 @@ PyPI <https://pypi.org/project/pyrekordbox/>
 [tests-badge]: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=master&label=tests&logo=github&style=flat
 [codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
 [python-badge]: https://img.shields.io/pypi/pyversions/pyrekordbox?style=flat
-[python-badge+]: https://img.shields.io/badge/python-3.7+-blue.svg
+[python-badge+]: https://img.shields.io/badge/python-3.8+-blue.svg
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
