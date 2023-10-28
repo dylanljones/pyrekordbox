@@ -4,6 +4,7 @@
 
 import logging
 from contextlib import contextmanager
+from sqlalchemy.orm.exc import ObjectDeletedError
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,12 @@ class RekordboxAgentRegistry:
             The table entry instance.
         """
         if cls.__enabled__:
-            logger.debug("On delete: %s", instance)
+            try:
+                s = str(instance)
+                logger.debug("On delete: %s", s)
+            except ObjectDeletedError:
+                instance = []
+
             cls.__update_sequence__.append((instance, "delete", "", ""))
 
     @classmethod
