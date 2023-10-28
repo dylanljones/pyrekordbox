@@ -23,8 +23,12 @@ from . import tables
 
 try:
     from sqlcipher3 import dbapi2 as sqlite3  # noqa
+
+    _sqlcipher_available = True
 except ImportError:
     import sqlite3
+
+    _sqlcipher_available = False
 
 MAX_VERSION = packaging.version.parse("6.6.5")
 
@@ -207,6 +211,10 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"File '{path}' does not exist!")
         # Open database
         if unlock:
+            if not _sqlcipher_available:
+                raise ImportError(
+                    "Could not unlock database: 'sqlcipher3' package not found"
+                )
             if "dp" in rb6_config:
                 key = rb6_config["dp"]
             if not key:
