@@ -274,11 +274,6 @@ def _get_rb_config(
         # `major_version` is compared to the version string
         rb_version = application_dirname.replace("rekordbox", "").strip()
         rb_version = rb_version.replace(".app", "")
-        if not rb_version.startswith(str(major_version)):
-            raise ValueError(
-                f"Major version is {major_version}, but the supplied application "
-                f"dirname is '{application_dirname}'"
-            )
         rb_prog_dir = pioneer_install_dir / application_dirname
         if not rb_prog_dir.exists():
             raise InvalidApplicationDirname(
