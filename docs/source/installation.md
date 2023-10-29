@@ -216,8 +216,8 @@ You can also build [sqlcipher3] against an amalgamation on MacOS.
 
 3. **Copy amalgamation files to the `sqlcipher3` directory**
 
-   Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5
-   to the root of the ``sqlcipher3`` directory from step 6.
+   Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 1
+   to the root of the ``sqlcipher3`` directory from step 2.
 
 
 4. **Build using the amalgamation**
