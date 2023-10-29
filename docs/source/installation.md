@@ -87,7 +87,10 @@ against an amalgamation of the SQLite3 source code.
 
 5. **Download / compile the SQLCipher 3 amalgamation files**
 
-   Pre-built SQLCipher 3 amalgamation files can be downloaded from [this repo](https://github.com/geekbrother/sqlcipher-amalgamation).
+   Pre-built SQLCipher amalgamation files can be downloaded from [this repo][amalgamation]:
+   ````shell
+   git clone https://github.com/geekbrother/sqlcipher-amalgamation
+   ````
    To compile the amalgamation files on your own, follow [this tutorial](http://www.jerryrw.com/howtocompile.php).
 
 
@@ -197,7 +200,10 @@ You can also build [sqlcipher3] against an amalgamation on MacOS.
 
 1. **Download / compile the SQLCipher amalgamation files**
 
-   Pre-built SQLCipher amalgamation files can be downloaded from [this repo](https://github.com/geekbrother/sqlcipher-amalgamation).
+   Pre-built SQLCipher amalgamation files can be downloaded from [this repo][amalgamation]:
+   ````shell
+   git clone https://github.com/geekbrother/sqlcipher-amalgamation
+   ````
    You can also build the amalagamtion files on your own.
 
 
@@ -259,6 +265,7 @@ c.execute("PRAGMA key='password'")
 [VS]: https://visualstudio.microsoft.com/de/vs/community/
 [OpenSSL]: https://slproweb.com/products/Win32OpenSSL.html
 [sqlcipher3]: https://github.com/coleifer/sqlcipher3
+[amalgamation]: https://github.com/geekbrother/sqlcipher-amalgamation
 [Pypi]: https://pypi.org/project/pyrekordbox/
 [GitHub]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
