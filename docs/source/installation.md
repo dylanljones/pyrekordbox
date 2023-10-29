@@ -223,6 +223,22 @@ You can also build [sqlcipher3] against an amalgamation on MacOS.
     python setup.py install
     ````
 
+The steps above can be automated using the CLI of ``pyrekordbox``
+````shell
+> python3 -m pyrekordbox install-sqlcipher --help
+usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
+
+  -h, --help            show this help message and exit
+  -t TMPDIR, --tmpdir TMPDIR
+                        Path for storing temporary data (default: '.tmp')
+  -l CRYPTOLIB, --cryptolib CRYPTOLIB
+                        The name of the OpenSSl crypto libary (default: 'libcrypto.lib')
+  -b, --buildonly       Don't install sqlcipher3, only build the amalgamation
+````
+
+```{note}
+The `CRYPTOLIB` argument is only used on Windows
+```
 
 
 ### Using SQLCipher

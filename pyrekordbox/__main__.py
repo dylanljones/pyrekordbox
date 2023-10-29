@@ -91,10 +91,6 @@ def install_pysqlcipher(
     install=True,
     cleanup=True,
 ):
-    if sys.platform != "win32":
-        print("Not on Windows, aborting...")
-        return
-
     tmpdir = Path(tmpdir)
     # Download pysqlcipher3 and prepare amalgamation build
     with WorkingDir(tmpdir):
