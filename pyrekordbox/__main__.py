@@ -99,7 +99,7 @@ def install_pysqlcipher(
         amalgamation_src = amalgamation_dir / "src"
 
         prepare_pysqlcipher(pysqlcipher_dir, amalgamation_src)
-        if os.getenv("OPENSSL_LIBNAME") is None:
+        if sys.platform == "win32" and os.getenv("OPENSSL_LIBNAME") is None:
             print("No OPENSSL_LIBNAME environment variable found, updating `setup.py`!")
             patch_pysqlcipher_setup(pysqlcipher_dir, crypto_lib)
 
