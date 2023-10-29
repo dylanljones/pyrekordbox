@@ -93,7 +93,7 @@ against an amalgamation of the SQLite3 source code.
 
 6. **Clone [sqlcipher3] into any directory**
 
-   ````commandline
+   ````shell
    git clone https://github.com/coleifer/sqlcipher3
    ````
 
@@ -117,25 +117,20 @@ against an amalgamation of the SQLite3 source code.
    ````
 
 
-9. **Build using the amalgamation**
+9. **Build using the amalgamation and install**
 
     ``cd`` into the ``sqlcipher3`` directory and run
-    ````commandline
+    ````shell
     python setup.py build_static build
-    ````
-
-
-10. **Install ``sqlcipher3``**
-
-    ````commandline
     python setup.py install
     ````
+
 
 You now should have a working ``sqlcipher3`` installation! The directory of the
 cloned ``sqlcipher3`` repo can be deleted after installing the package.
 
-Steps 5-10 can be automated using the CLI of ``pyrekordbox``:
-````commandline
+Steps 5-9 can be automated using the CLI of ``pyrekordbox``:
+````shell
 > python3 -m pyrekordbox install-sqlcipher --help
 usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 
@@ -152,7 +147,7 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 - **Microsoft Visual C++ error**
 
   If you are getting an error like
-  ````commandline
+  ````shell
   error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools"``
   ````
   and have Visual Studio installed, you might not have all the necessary C/C++ components.
@@ -160,11 +155,11 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 - **LINK error**
 
   If you are getting an error like
-  ````commandline
+  ````shell
   LINK : fatal error LNK1158: cannot run 'rc.exe'
   ````
   or
-  ````commandline
+  ````shell
   LINK : fatal error LNK1327: failure during running rc.exe
   ````
   make sure all the necessary C/C++ components are installed and that you have selected
@@ -209,7 +204,7 @@ You can also build [sqlcipher3] against an amalgamation on MacOS.
 
 2. **Clone [sqlcipher3] into any directory**
 
-   ````commandline
+   ````shell
    git clone https://github.com/coleifer/sqlcipher3
    ````
 
@@ -220,18 +215,14 @@ You can also build [sqlcipher3] against an amalgamation on MacOS.
    to the root of the ``sqlcipher3`` directory from step 2.
 
 
-4. **Build using the amalgamation**
+4. **Build using the amalgamation and install**
 
     ``cd`` into the ``sqlcipher3`` directory and run
-    ````commandline
+    ````shell
     python setup.py build_static build
-    ````
-
-5. **Install ``sqlcipher3``**
-
-    ````commandline
     python setup.py install
     ````
+
 
 
 ### Using SQLCipher
