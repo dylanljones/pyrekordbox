@@ -105,6 +105,10 @@ against an amalgamation of the SQLite3 source code.
 
    Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5
    to the root of the ``sqlcipher3`` directory from step 6.
+   ````shell
+   Copy-Item -Path 'sqlcipher-amalgamation/src/sqlite3.c' -Destination "sqlcipher3/"
+   Copy-Item -Path 'sqlcipher-amalgamation/src/sqlite3.h' -Destination "sqlcipher3/"
+   ````
 
 
 8. **Modify the ``sqlcipher3/setup.py`` script (optional)**
@@ -218,7 +222,9 @@ You can also build [sqlcipher3] against an amalgamation on MacOS.
 
    Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 1
    to the root of the ``sqlcipher3`` directory from step 2.
-
+   ````shell
+   cp sqlcipher-amalgamation/src/sqlite3.[ch] sqlcipher3/
+   ````
 
 4. **Build using the amalgamation and install**
 
