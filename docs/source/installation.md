@@ -32,6 +32,7 @@ a statically linked amalgamation of the SQLite3 source code.
 
 ### Windows
 
+#### SQLCipher Amalagamation
 
 The easiest method to install SQLCipher on Windows is to build [sqlcipher3]
 against an amalgamation of the SQLite3 source code.
@@ -146,7 +147,7 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
   -b, --buildonly       Don't install sqlcipher3, only build the amalgamation
 ````
 
-#### Troubleshooting
+##### Troubleshooting
 
 - **Microsoft Visual C++ error**
 
@@ -173,7 +174,10 @@ usage: pyrekordbox install-sqlcipher [-h] [-t TMPDIR] [-l CRYPTOLIB] [-q] [-b]
 
 ### MacOS
 
-For MacOS follow these steps:
+
+#### System SQLCipher
+
+For building [sqlcipher3] against the system SQLCipher installation on MacOS follow these steps:
 
 1) Install [Homebrew](https://brew.sh) if you do not have it on your machine.
 2) Install SQLCipher with `brew install SQLCipher`.
@@ -186,16 +190,48 @@ SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_
 ```
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
 
+````{note}
 If you are having issues building sqlcipher on M1 Macs you might have to add some symlinks:
 ```shell
 ln -s /opt/homebrew/lib/libsqlcipher.a /usr/local/lib/libsqlcipher.a
 ln -s /opt/homebrew/include/sqlcipher /usr/local/include/sqlcipher
 ```
+````
+#### SQLCipher Amalagamation
 
-```{hint}
 You can also build [sqlcipher3] against an amalgamation on MacOS.
-Follow the steps 5-10 as described above for Windows.
-```
+
+1. **Download / compile the SQLCipher amalgamation files**
+
+   Pre-built SQLCipher amalgamation files can be downloaded from [this repo](https://github.com/geekbrother/sqlcipher-amalgamation).
+   You can also build the amalagamtion files on your own.
+
+
+2. **Clone [sqlcipher3] into any directory**
+
+   ````commandline
+   git clone https://github.com/coleifer/sqlcipher3
+   ````
+
+
+3. **Copy amalgamation files to the `sqlcipher3` directory**
+
+   Copy files ``sqlite3.c`` and ``sqlite3.h`` from the amalgamation directory from step 5
+   to the root of the ``sqlcipher3`` directory from step 6.
+
+
+4. **Build using the amalgamation**
+
+    ``cd`` into the ``sqlcipher3`` directory and run
+    ````commandline
+    python setup.py build_static build
+    ````
+
+5. **Install ``sqlcipher3``**
+
+    ````commandline
+    python setup.py install
+    ````
 
 
 ### Using SQLCipher
