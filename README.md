@@ -52,7 +52,7 @@ platform-dependent and can not be installed via ``pip``.
 #### Windows
 
 SQLCipher can be used by building the libary against an amalgamation with [sqlcipher3].
-For a detailed instruction, see [INSTALLATION].
+For a detailed instruction, see the [installation guide][installation].
 
 #### MacOS
 
@@ -68,7 +68,8 @@ SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_
 SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
 ```
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
-If you are having issues installing [sqlcipher3] on M1 Macs please refer to [INSTALLATION].
+If you are having issues installing [sqlcipher3] on M1 Macs please refer to the
+[installation guide][installation].
 
 
 ## 🚀 Quick-Start
@@ -316,7 +317,7 @@ the CI setup since it requires a working Rekordbox installation.
 [discussions]: https://github.com/dylanljones/pyrekordbox/discussions
 [CONTRIBUTING]: https://github.com/dylanljones/pyrekordbox/blob/master/CONTRIBUTING.md
 [CHANGELOG]: https://github.com/dylanljones/pyrekordbox/blob/master/CHANGELOG.md
-[INSTALLATION]: https://github.com/dylanljones/pyrekordbox/blob/master/INSTALLATION.md
+[installation]: https://pyrekordbox.readthedocs.io/en/latest/installation.html
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
