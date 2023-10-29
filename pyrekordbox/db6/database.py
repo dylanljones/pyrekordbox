@@ -12,7 +12,6 @@ from sqlalchemy import create_engine, or_, event, MetaData
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.sqltypes import DateTime, String
-import packaging.version
 from ..utils import get_rekordbox_pid
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
@@ -30,21 +29,15 @@ except ImportError:
 
     _sqlcipher_available = False
 
-MAX_VERSION = packaging.version.parse("6.6.5")
+MAX_VERSION = "6.6.5"
 
 logger = logging.getLogger(__name__)
 
 rb6_config = get_config("rekordbox6")
 
 
-class IncompatibleVersionError(Exception):
-    def __init__(self, rb_version):
-        super().__init__(
-            f"Incompatible rekordbox 6 version\n"
-            f"Your are using rekordbox {rb_version} but the key extraction only works "
-            f"for versions lower than {MAX_VERSION}.\n"
-            "Please use the `key` parameter to manually provide the database key."
-        )
+class NoCachedKey(Exception):
+    pass
 
 
 def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
@@ -113,13 +106,16 @@ def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
 
     if unlock:
         if not key:
-            ver = packaging.version.parse(rb6_config["version"])
-            if ver >= MAX_VERSION:
-                raise IncompatibleVersionError(rb6_config["version"])
             try:
                 key = rb6_config["dp"]
             except KeyError:
-                raise ValueError("Could not unlock database: No key found")
+                raise NoCachedKey(
+                    "Could not unlock database: No key found\n"
+                    f"If you are using Rekordbox>{MAX_VERSION} the key can not be "
+                    f"extracted automatically!\n"
+                    "Please use the CLI of pyrekordbox to download the key or "
+                    "use the `key` parameter to manually provide the database key."
+                )
             logger.info("Key: %s", key)
         # Unlock database
         con.execute(f"PRAGMA key='{key}'")
@@ -215,14 +211,17 @@ class Rekordbox6Database:
                 raise ImportError(
                     "Could not unlock database: 'sqlcipher3' package not found"
                 )
-            if "dp" in rb6_config:
-                key = rb6_config["dp"]
             if not key:
-                ver = packaging.version.parse(rb6_config["version"])
-                if ver >= MAX_VERSION:
-                    raise IncompatibleVersionError(rb6_config["version"])
-                else:
-                    raise ValueError("Could not unlock database: No key found")
+                try:
+                    key = rb6_config["dp"]
+                except KeyError:
+                    raise NoCachedKey(
+                        "Could not unlock database: No key found\n"
+                        f"If you are using Rekordbox>{MAX_VERSION} the key cannot be "
+                        f"extracted automatically!\n"
+                        "Please use the CLI of pyrekordbox to download the key or "
+                        "use the `key` parameter to manually provide it."
+                    )
             logger.info("Key: %s", key)
             # Unlock database and create engine
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"

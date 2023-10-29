@@ -223,9 +223,10 @@ def read_rekordbox6_asar(rb6_install_dir: Union[str, Path]) -> str:
         location = rb6_install_dir / "rekordboxAgent-win32-x64" / "resources"
         encoding = "ANSI"
     elif sys.platform == "darwin":
+        if not str(rb6_install_dir).endswith(".app"):
+            rb6_install_dir = rb6_install_dir / "rekordbox.app"
         location = (
             rb6_install_dir
-            / "rekordbox.app"
             / "Contents"
             / "MacOS"
             / "rekordboxAgent.app"
@@ -242,6 +243,14 @@ def read_rekordbox6_asar(rb6_install_dir: Union[str, Path]) -> str:
     with open(path, "rb") as fh:
         data = fh.read().decode(encoding)
     return data
+
+
+def _extract_version(name, major_version):
+    name = name.replace(".app", "")  # Needed for MacOS
+    ver_str = name.replace("rekordbox", "").strip()
+    if not ver_str:
+        ver_str = str(major_version)
+    return ver_str
 
 
 def _get_rb_config(
@@ -272,38 +281,38 @@ def _get_rb_config(
     if application_dirname:
         # Applitcation dirname is given, only extract version from it
         # `major_version` is compared to the version string
-        rb_version = application_dirname.replace("rekordbox", "").strip()
-        rb_version = rb_version.replace(".app", "")
         rb_prog_dir = pioneer_install_dir / application_dirname
         if not rb_prog_dir.exists():
             raise InvalidApplicationDirname(
                 f"The supplied application dirname '{application_dirname}' does not "
                 f"exist in '{pioneer_install_dir}'"
             )
+        rb_version = _extract_version(application_dirname, major_version)
     else:
         # Get latest Rekordbox installation directory for major release `major_version`
 
         # Find all 'V.x.x' version strings in dir names
-        versions = list()
+        installations = {}
         for p in pioneer_install_dir.iterdir():
             name = p.name
             if name.startswith("rekordbox"):
-                ver_str = name.replace("rekordbox", "").strip()
-                ver_str = ver_str.replace(".app", "")
+                ver_str = _extract_version(name, major_version)
                 if ver_str.startswith(str(major_version)):
-                    v = packaging.version.parse(ver_str)
-                    versions.append(v)
+                    version = packaging.version.parse(ver_str)
+                    installations[version] = name
         # Get latest 'V.x.x' version string and assure there is one
-        versions.sort()  # key=lambda s: list(map(int, s.split("."))))
+        versions = list(installations.keys())
+        versions.sort()
         try:
-            rb_version = str(versions[-1])
+            version = versions[-1]
         except IndexError:
             raise FileNotFoundError(
                 f"No Rekordbox {major_version} folder found in installation "
                 f"directory '{pioneer_install_dir}'"
             )
         # Name of the Rekordbox application directory in `pioneer_install_dir`
-        rb_prog_dir = pioneer_install_dir / f"rekordbox {rb_version}"
+        rb_version = str(versions[-1])
+        rb_prog_dir = pioneer_install_dir / installations[version]
 
     # Check installation directory
     if not rb_prog_dir.exists():
