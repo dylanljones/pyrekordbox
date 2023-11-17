@@ -75,42 +75,39 @@ write_to = "pyrekordbox/_version.py"
 git_describe_command = "git describe --dirty --tags --long --match * --first-parent"
 
 
-# -- Black -----------------------------------------------------------------------------
+# -- Ruff ------------------------------------------------------------------------------
 
-[tool.black]
-line-length = 88
-include = '\.pyi?$'
-exclude = "__init__.py|__main__.py|_version.py"
-force-exclude = """
-/(
-    anlz/structs.py |
-    mysettings/structs.py
-)\
-"""
-
-
-# -- Linting ---------------------------------------------------------------------------
-
-[tool.flake8]
-max-line-length = 88
-ignore = ["D203"]
-extend-ignore = ["E203", "W503"]
-per-file-ignores = ["__init__.py:F401"]
+[tool.ruff]
 exclude = [
     ".git",
     ".idea",
     "__pycache__",
     "build",
     "dist",
+    ".ruff_cache",
     "*/structs.py",
     "*/_version.py",
     "docs/*",
 ]
+line-length = 88
+indent-width = 4
 
-[tool.pydocstyle]
-add_ignore = [
-    "D105",  # ignore undocumented dunder methods like ``__str__`
+[tool.ruff.lint]
+select = ["E", "F", "W"]  # Enable Pyflakes (`F`) and pycodestyle (`E`) codes by default.
+ignore = [
+    "E203",  # Whitespace before ':'
 ]
+fixable = ["ALL"]  # Allow fix for all enabled rules (when `--fix`) is provided.
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"*__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 
 # -- Coverage --------------------------------------------------------------------------

@@ -9,7 +9,7 @@
 [![Python][python-badge+]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
-[![style: black][black-badge]][black-link]
+[![style: ruff][ruff-badge]][ruff-link]
 
 > **Disclaimer**: This project is **not** affiliated with Pioneer Corp. or its related companies
 in any way and has been written independently! Pyrekordbox is licensed under the
@@ -292,12 +292,15 @@ the CI setup since it requires a working Rekordbox installation.
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
+[ruff-badge]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
 [codecov-badge]: https://codecov.io/gh/dylanljones/pyrekordbox/branch/master/graph/badge.svg?token=5Z2KVGL7N3
+
 
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
 [black-link]: https://github.com/psf/black
+[ruff-link]: https://github.com/astral-sh/ruff
 [lgtm-link]: https://lgtm.com/projects/g/dylanljones/pyrekordbox/context:python
 [codecov-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/master
 [codecov-dev-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/dev

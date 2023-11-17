@@ -12,14 +12,11 @@ repos:
           - id: check-toml
           - id: check-yaml
 
-    - repo: https://github.com/psf/black
-      rev: 23.10.0
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.1.5
       hooks:
-        - id: black
-          args: [ --safe ]
-
-    - repo: https://github.com/PyCQA/flake8
-      rev: 6.1.0
-      hooks:
-          - id: flake8
-            additional_dependencies: [Flake8-pyproject]
+        # Run the linter.
+        - id: ruff
+          args: [ --fix ]
+        # Run the formatter.
+        - id: ruff-format
