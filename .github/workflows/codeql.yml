@@ -9,8 +9,33 @@ on:
     - cron: "4 11 * * 1"
 
 jobs:
+
+  code-change:
+    runs-on: ubuntu-latest
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          paths_ignore: '[
+          "docs/**",
+          ".github/**",
+          ".resources/**",
+          "logos/**",
+          "README.md",
+          "CHANGELOG.md",
+          "CONTRIBUTING.md",
+          ".pre-commit-config.yaml",
+          ".readthedocs.yaml",
+          "pyproject.toml"
+          ]'
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+
+
   analyze:
     name: Analyze
+    needs: code-change
+    if: ${{ needs.code-change.outputs.should_skip != 'true'}}
     runs-on: ubuntu-latest
     permissions:
       actions: read

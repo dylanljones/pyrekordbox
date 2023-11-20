@@ -47,7 +47,7 @@ jobs:
         other-os: [true]
 
     runs-on: ${{ matrix.os }}
-    continue-on-error: true  # don't cancel due to OS specific failures
+    continue-on-error: false  # don't cancel due to OS specific failures
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
