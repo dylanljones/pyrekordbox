@@ -8,9 +8,9 @@ the CI setup since it requires a working Rekordbox installation.
 
 ## Pre-commit Hooks
 
-We are using the [pre-commit framework] to automatically run  some checks and
-the [Black code formatter] at commit time. This ensures that every commit fulfills
-the basic requirements to be mergeable and follows the coding style of the project.
+We are using the [pre-commit framework] to automatically run a linter and code formatter
+at commit time. This ensures that every commit fulfills the basic requirements to be
+mergeable and follows the coding style of the project.
 
 The pre-commit hooks can be installed via
 ````sh
@@ -88,5 +88,4 @@ Similarly, a Deprecation section should start with "DEPRECATED: " followed by a 
 [issue]: https://github.com/dylanljones/pyrekordbox/issues
 [pulls]: https://github.com/dylanljones/pyrekordbox/pulls
 [pre-commit framework]: https://pre-commit.com/
-[Black code formatter]: https://github.com/psf/black
 [Angular commit message]: https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format

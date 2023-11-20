@@ -11,7 +11,6 @@ sphinx-quickstart on Thu Apr  7 15:06:50 2022.
 [![Python][python-badge+]][pypi-link]
 [![Platform][platform-badge]][pypi-link]
 [![license: MIT][license-badge]][license-link]
-[![style: black][black-badge]][black-link]
 
 ```{admonition} Disclaimer
 This project is not affiliated with Pioneer Corp. or its related companies
@@ -95,12 +94,10 @@ PyPI <https://pypi.org/project/pyrekordbox/>
 [platform-badge]: https://img.shields.io/badge/platform-win%20%7C%20osx-blue?style=flat
 [pypi-badge]: https://img.shields.io/pypi/v/pyrekordbox?style=flat
 [license-badge]: https://img.shields.io/pypi/l/pyrekordbox?color=lightgrey
-[black-badge]: https://img.shields.io/badge/code%20style-black-000000?style=flat
 
 [pypi-link]: https://pypi.org/project/pyrekordbox/
 [license-link]: https://github.com/dylanljones/pyrekordbox/blob/master/LICENSE
 [tests-link]: https://github.com/dylanljones/pyrekordbox/actions/workflows/tests.yml
-[black-link]: https://github.com/psf/black
 [codecov-link]: https://app.codecov.io/gh/dylanljones/pyrekordbox/tree/master
 
 [issue]: https://github.com/dylanljones/pyrekordbox/issues/64
