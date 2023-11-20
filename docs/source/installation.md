@@ -20,7 +20,7 @@ $ pip install .
 ```
 
 
-## Dependencies
+## Installing SQLCipher
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
 Pyrekordbox makes no attempt to download/install SQLCipher, as it is a
@@ -259,12 +259,6 @@ conn = sqlite3.connect('test.db')
 c = conn.cursor()
 c.execute("PRAGMA key='password'")
 ````
-
-
-## References:
-
-- [https://stackoverflow.com/questions/33618565/how-to-build-sql-cipher-python-binding-for-windows](https://stackoverflow.com/questions/33618565/how-to-build-sql-cipher-python-binding-for-windows)
-- [https://github.com/Monogi/pysqlcipher3_install_win10](https://github.com/Monogi/pysqlcipher3_install_win10)
 
 
 

@@ -45,6 +45,7 @@ caption: User Guide
 
 quickstart
 installation
+key
 tutorial/index
 api
 ```
