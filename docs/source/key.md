@@ -93,7 +93,11 @@ On MacOS, the key can be extracted using the [RekordLocksmith] tool:
 
 4. Run RekordLocksmith:
    - Use the terminal to navigate to the folder containing `rekordlocksmith.py`.
-   - Run the script using the command shown in the Usage section above.
+   - Run the script:
+     ````shell
+     python3 rekordlocksmith.py /Applications/rekordbox\ 6/rekordbox.app/Contents/MacOS/rekordbox
+     ````
+     The tool will output the database key to the terminal and save it to a file named `rekordbox_db_pass.txt` in the current directory.
 
 
 [x64dbg]: https://x64dbg.com/
