@@ -5,7 +5,7 @@
 import os
 import pytest
 from pyrekordbox import RekordboxXml
-from pyrekordbox.xml import Tempo, PositionMark, XmlDuplicateError
+from pyrekordbox.rbxml import Tempo, PositionMark, XmlDuplicateError
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
 XML5 = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
