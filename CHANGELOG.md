@@ -9,6 +9,8 @@
   There were columns missing in the `update_content_path` method. 
   These changes make the file paths consistent. 
   Thank you [@ben-hearn-sb](https://github.com/ben-hearn-sb) for the help!
+- **rename the `xml` module to `rbxml` to prevent conflict with builtin.**  
+  Note that the old module name `xml` is deprecated and will be removed in version `0.4.0`.
 
 ### Documentation
 
