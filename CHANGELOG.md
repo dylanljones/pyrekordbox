@@ -1,5 +1,20 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **also change `OrgFolderPath` and `FileNameL` in `update_content_path` ([#104](https://github.com/dylanljones/pyrekordbox/issues/104))**  
+  There were columns missing in the `update_content_path` method. 
+  These changes make the file paths consistent. 
+  Thank you [@ben-hearn-sb](https://github.com/ben-hearn-sb) for the help!
+
+### Documentation
+
+- **add Rekordbox6 database key extraction alternatives**  
+
+
 <a name="0.2.3"></a>
 ## [0.2.3] - 2023-11-17
 
