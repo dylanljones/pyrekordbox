@@ -101,7 +101,7 @@ between two databases.
 Pyrekordbox can read and write Rekordbox XML databases.
 
 ````python
-from pyrekordbox.xml import RekordboxXml
+from pyrekordbox.rbxml import RekordboxXml
 
 xml = RekordboxXml("database.xml")
 
