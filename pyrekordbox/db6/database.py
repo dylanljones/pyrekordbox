@@ -222,6 +222,11 @@ class Rekordbox6Database:
                         "Please use the CLI of pyrekordbox to download the key or "
                         "use the `key` parameter to manually provide it."
                     )
+            else:
+                # Check if key looks like a valid key
+                if not key.startswith("402fd"):
+                    raise ValueError("The provided database key doesn't look valid!")
+
             logger.info("Key: %s", key)
             # Unlock database and create engine
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
