@@ -5,6 +5,9 @@
 
 ### Improvements/Bug Fixes
 
+- **check if RBv6 db key seems valid ([#105](https://github.com/dylanljones/pyrekordbox/issues/105))**
+  Check the key if it is passed manually to the db handler and raise an exception 
+  if it doesn't look valid. Only the first few characters are checked.
 - **also change `OrgFolderPath` and `FileNameL` in `update_content_path` ([#104](https://github.com/dylanljones/pyrekordbox/issues/104))**  
   There were columns missing in the `update_content_path` method. 
   These changes make the file paths consistent. 
