@@ -5,6 +5,8 @@
 
 ### Improvements/Bug Fixes
 
+- **The `bank` field of PSSI ANLZ tag can also have a value of 0 ([#108](https://github.com/dylanljones/pyrekordbox/issues/108))**  
+  This fixes an issue where the XOR mask was applied to un-garbled PSSI tags.
 - **check if RBv6 db key seems valid ([#105](https://github.com/dylanljones/pyrekordbox/issues/105))**  
   Check the key if it is passed manually to the db handler and raise an exception 
   if it doesn't look valid. Only the first few characters are checked.
