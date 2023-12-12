@@ -51,11 +51,11 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
       run: |
-        twine upload --repository pyrekordbox --repository testpypi dist/*
+        twine upload --repository testpypi dist/*
 
     - name: Publish distribution 📦 to PyPI
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
       run: |
-        twine upload --repository pyrekordbox dist/*
+        twine upload dist/*
