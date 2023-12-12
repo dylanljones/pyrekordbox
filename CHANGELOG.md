@@ -1,7 +1,9 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.3.0"></a>
+## [0.3.0] - 2023-12-12
+
+This release fixes bugs and imrpoves error handling.
 
 ### Improvements/Bug Fixes
 
@@ -502,7 +504,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.2.3...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/dylanljones/pyrekordbox/compare/0.2.3...0.3.0
 [0.2.3]: https://github.com/dylanljones/pyrekordbox/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/dylanljones/pyrekordbox/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/dylanljones/pyrekordbox/compare/0.2.0...0.2.1
