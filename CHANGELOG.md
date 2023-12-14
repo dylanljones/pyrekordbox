@@ -1,5 +1,16 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **use association proxies in `DjmdContent` table**  
+  This makes it possible to filter queries using these associations, 
+  for example `DjmdContent.ArtistName`
+- **add Playlist type enums and attributes**  
+
+
 <a name="0.3.0"></a>
 ## [0.3.0] - 2023-12-12
 
