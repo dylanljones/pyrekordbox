@@ -12,6 +12,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, Text, Float
 from sqlalchemy import ForeignKey, TypeDecorator
 from sqlalchemy.orm import DeclarativeBase, relationship, backref, mapped_column, Mapped
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.inspection import inspect
 from .registry import RekordboxAgentRegistry
 
@@ -709,81 +710,28 @@ class DjmdContent(Base, StatsFull):
     Composer = relationship("DjmdArtist", foreign_keys=ComposerID)
     """The composer entry of the track (links to :class:`DjmdArtist`)."""
 
+    ArtistName = association_proxy("Artist", "Name")
+    """The name of the artist (:class:`DjmdArtist`) of the track."""
+    AlbumName = association_proxy("Album", "Name")
+    """The name of the album (:class:`DjmdAlbum`) of the track."""
+    GenreName = association_proxy("Genre", "Name")
+    """The name of the genre (:class:`DjmdArtist`) of the track."""
+    RemixerName = association_proxy("Remixer", "Name")
+    """The name of the remixer (:class:`DjmdArtist`) of the track."""
+    LabelName = association_proxy("Label", "Name")
+    """The name of the label (:class:`DjmdLabel`) of the track."""
+    OrgArtistName = association_proxy("OrgArtist", "Name")
+    """The name of the original artist (:class:`DjmdArtist`) of the track."""
+    KeyName = association_proxy("Key", "ScaleName")
+    """The name of the key (:class:`DjmdKey`) of the track."""
+    ColorName = association_proxy("Color", "Commnt")
+    """The name of the color (:class:`DjmdColor`) of the track."""
+    ComposerName = association_proxy("Composer", "Name")
+    """The name of the composer (:class:`DjmdArtist`) of the track."""
+
     def __repr__(self):
         s = f"{self.ID: <10} Title={self.Title}"
         return f"<{self.__class__.__name__}({s})>"
-
-    @property
-    def ArtistName(self) -> str:
-        """The name of the artist (:class:`DjmdArtist`) of the track."""
-        try:
-            return self.Artist.Name
-        except AttributeError:
-            return ""
-
-    @property
-    def AlbumName(self) -> str:
-        """The name of the album (:class:`DjmdAlbum`) of the track."""
-        try:
-            return self.Album.Name
-        except AttributeError:
-            return ""
-
-    @property
-    def GenreName(self) -> str:
-        """The name of the genre (:class:`DjmdArtist`) of the track."""
-        try:
-            return self.Genre.Name
-        except AttributeError:
-            return ""
-
-    @property
-    def RemixerName(self) -> str:
-        """The name of the remixer (:class:`DjmdArtist`) of the track."""
-        try:
-            return self.Remixer.Name
-        except AttributeError:
-            return ""
-
-    @property
-    def LabelName(self) -> str:
-        """The name of the label (:class:`DjmdLabel`) of the track."""
-        try:
-            return self.Label.Name
-        except AttributeError:
-            return ""
-
-    @property
-    def OrgArtistName(self) -> str:
-        """The name of the original artist (:class:`DjmdArtist`) of the track."""
-        try:
-            return self.OrgArtist.Name
-        except AttributeError:
-            return ""
-
-    @property
-    def KeyName(self) -> str:
-        """The name of the key (:class:`DjmdKey`) of the track."""
-        try:
-            return self.Key.ScaleName
-        except AttributeError:
-            return ""
-
-    @property
-    def ColorName(self) -> str:
-        """The name of the color (:class:`DjmdColor`) of the track."""
-        try:
-            return self.Color.Commnt
-        except AttributeError:
-            return ""
-
-    @property
-    def ComposerName(self) -> str:
-        """The name of the composer (:class:`DjmdArtist`) of the track."""
-        try:
-            return self.Composer.Name
-        except AttributeError:
-            return ""
 
 
 class DjmdCue(Base, StatsFull):
