@@ -7,6 +7,7 @@
 import math
 import struct
 import numpy as np
+from enum import IntEnum
 from datetime import datetime
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, Text, Float
 from sqlalchemy import ForeignKey, TypeDecorator
@@ -15,6 +16,7 @@ from sqlalchemy.inspection import inspect
 from .registry import RekordboxAgentRegistry
 
 __all__ = [
+    "PlaylistType",
     "StatsTime",
     "StatsFull",
     "AgentRegistry",
@@ -86,6 +88,12 @@ class DateTime(TypeDecorator):
                 dt = datetime.fromisoformat(datestr)
             return dt
         return None
+
+
+class PlaylistType(IntEnum):
+    PLAYLIST = 0
+    FOLDER = 1
+    SMART_PLAYLIST = 4
 
 
 # -- Base- and Mixin classes -----------------------------------------------------------
@@ -1275,6 +1283,18 @@ class DjmdPlaylist(Base, StatsFull):
     """The child playlists of the playlist (links to :class:`DjmdPlaylist`).
     Backrefs to the parent playlist via :attr:`Parent`.
     """
+
+    @property
+    def is_playlist(self):
+        return self.Attribute == PlaylistType.PLAYLIST
+
+    @property
+    def is_folder(self):
+        return self.Attribute == PlaylistType.FOLDER
+
+    @property
+    def is_smart_playlist(self):
+        return self.Attribute == PlaylistType.SMART_PLAYLIST
 
     def __repr__(self):
         s = f"{self.ID: <2} Name={self.Name}"
