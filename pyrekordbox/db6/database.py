@@ -1991,7 +1991,7 @@ class Rekordbox6Database:
             a list of dicts.
         """
         data = dict()
-        for table_name in tables.__all__:
+        for table_name in tables.TABLES:
             if table_name.startswith("Stats") or table_name == "Base":
                 continue
             if verbose:

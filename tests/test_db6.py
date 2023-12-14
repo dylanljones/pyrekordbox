@@ -1101,9 +1101,7 @@ def test_copy_unlocked():
 
     db2 = Rekordbox6Database(UNLOCKED_OUT, unlock=False)
     # Check everything got copied
-    for name in tables.__all__:
-        if name.startswith("Stats") or name == "Base":
-            continue
+    for name in tables.TABLES:
         table = getattr(tables, name)
         for row in db.query(table):
             data = row.to_dict()
