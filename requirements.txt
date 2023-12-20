@@ -11,3 +11,4 @@ psutil>=5.9.0
 setuptools>=61.0.0
 setuptools-scm[toml]>=4
 sqlalchemy>=2.0.0
+frida-tools

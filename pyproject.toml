@@ -36,6 +36,7 @@ dependencies = [
     "packaging",
     "psutil>=5.9.0",
     "sqlalchemy>=2.0.0",
+    "frida-tools",
 ]
 
 [project.optional-dependencies]
@@ -93,7 +94,12 @@ line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-select = ["E", "F", "W"]  # Enable Pyflakes (`F`) and pycodestyle (`E`) codes by default.
+select = [
+    "F", # flake8
+    "E", # pycodestyle Errors
+    "W", # pycodestyle Warnings
+    # "I", # isort
+]
 ignore = [
     "E203",  # Whitespace before ':'
 ]
@@ -102,6 +108,10 @@ unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
 "*__init__.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+# length-sort = true
 
 [tool.ruff.format]
 quote-style = "double"
