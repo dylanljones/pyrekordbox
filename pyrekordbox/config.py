@@ -524,7 +524,11 @@ def _get_rb6_config(
                     logger.warning(f"Could not find Rekordbox executable: {executable}")
                 else:
                     extractor = KeyExtractor(executable)
-                    dp = extractor.run()
+                    try:
+                        dp = extractor.run()
+                    except Exception as e:
+                        logger.warning(f"`KeyExtractor` failed: {e}")
+
         if dp:
             write_db6_key_cache(dp)
         else:
