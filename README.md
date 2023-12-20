@@ -139,12 +139,9 @@ So far only a few tables support adding or deleting entries:
 - ``DjmdPlaylist``: Playlists/Playlist Folders
 - ``DjmdSongPlaylist``: Songs in a playlist
 
-Starting from Rekordbox version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file
-contents, breaking the key extraction (see [this discussion](https://github.com/dylanljones/pyrekordbox/discussions/97) for more details).
-If you are using a later version of Rekorbox and have no cached key from a previous
-version, the database can not be unlocked automatically.
-The command line interface of ``pyrekordbox`` provides a command for downloading
-the key from known sources and writing it to the cache file:
+If the automatic key extraction fails the command line interface of ``pyrekordbox``
+provides a command for downloading the key from known sources and writing it to the
+cache file:
 ````shell
 python -m pyrekordbox download-key
 ````

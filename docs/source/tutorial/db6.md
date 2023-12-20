@@ -16,15 +16,14 @@ from pyrekordbox import Rekordbox6Database
 db = Rekordbox6Database()
 ````
 
-If you are using Rekorbox v6.6.5 or later and have no cached key from a previous
-Rekordbox version, the database can not be unlocked automatically.
-However, the command line interface of ``pyrekordbox`` provides a command for downloading
-the key from known sources and writing it to the cache file:
+If the automatic key extraction fails the command line interface of ``pyrekordbox``
+provides a command for downloading the key from known sources and writing it to the
+cache file:
 ````shell
 python -m pyrekordbox download-key
 ````
 Once the key is cached the database can be opened without providing the key.
-if you obtained the key from another source, you can also pass it to the database handler
+If you obtained the key from another source, you can also pass it to the database handler
 ````python
 db = Rekordbox6Database(key="<insert key here>")
 ````

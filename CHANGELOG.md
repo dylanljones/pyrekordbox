@@ -3,6 +3,12 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+
+- **add DB key extraction method for newer Rekordbox versions ([#97](https://github.com/dylanljones/pyrekordbox/issues/97)).**  
+  The key can now also be extracted with newer Rekordbox versions.
+  `frida` is used to inject code to intercept the key when the DB is opened.
+
 ### Improvements/Bug Fixes
 
 - **use association proxies in `DjmdContent` table**  
