@@ -1,9 +1,8 @@
 # Database key
 
-If you are using Rekordbox v6.6.5 or later and have no cached key from a previous
-Rekordbox version, the database can not be unlocked automatically.
-However, the command line interface of ``pyrekordbox`` provides a command for downloading
-the key from known sources and writing it to the cache file:
+If the automatic key extraction fails the command line interface of ``pyrekordbox``
+provides a command for downloading the key from known sources and writing it to the
+cache file:
 ````shell
 python -m pyrekordbox download-key
 ````
