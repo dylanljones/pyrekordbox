@@ -521,11 +521,10 @@ def _get_rb6_config(
                     executable = Path("")
 
                 if not executable.exists():
-                    raise FileNotFoundError(
-                        f"Could not find Rekordbox executable: {executable}"
-                    )
-                extractor = KeyExtractor(executable)
-                dp = extractor.run()
+                    logger.warning(f"Could not find Rekordbox executable: {executable}")
+                else:
+                    extractor = KeyExtractor(executable)
+                    dp = extractor.run()
         if dp:
             write_db6_key_cache(dp)
         else:
