@@ -11,6 +11,9 @@
 
 ### Improvements/Bug Fixes
 
+- **populate configuration just-in-time**  
+  Previously the config was populated when importing `pyrekordbox`. 
+  Now the config is updated the first time it is used.
 - **use association proxies in `DjmdContent` table**  
   This makes it possible to filter queries using these associations, 
   for example `DjmdContent.ArtistName`
