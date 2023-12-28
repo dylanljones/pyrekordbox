@@ -4,7 +4,13 @@
 ## [Unreleased]
 
 ### New Features
-
+- **add method to return the contents of a playlist in the RBv6 db directly**  
+  The database can now be queried directly for the contents contained in a playlist. 
+  This works for regular playlists as well as for smart playlists.
+  The full `DjmdContent` instances of specific columns can be returned.
+- **add RBv6 smart playlist handler**  
+  Add a handler for the smart playlists of Rekordbox. The conditions are stored as an 
+  XML string. The smart playlist handler supports parsing and writing the XML string.
 - **add DB key extraction method for newer Rekordbox versions ([#97](https://github.com/dylanljones/pyrekordbox/issues/97)).**  
   The key can now also be extracted with newer Rekordbox versions.
   `frida` is used to inject code to intercept the key when the DB is opened.
