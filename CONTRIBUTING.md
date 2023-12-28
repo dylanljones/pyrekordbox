@@ -22,7 +22,7 @@ $ pre-commit install
 A format influenced by [Angular commit message].
 
 ```text
-<type>: <subject>
+<type>(<scope>): <subject>
 <BLANK LINE>
 <body>
 <BLANK LINE>
@@ -43,6 +43,18 @@ Must be one of the following:
 - **test:** Adding missing tests or correcting existing tests
 - **update** Other configurations updates
 - **auto** Mostly used by automatic commits (for example from GitHub workflows)
+
+### Scope (optional)
+
+The scope should specify the affected part of the project.
+The following is a list of possible scopes:
+
+- **config**: Configuration handling
+- **xml**: Rekordbox XML database handling
+- **db**: Rekordbox v6 database handling
+- **anlz**: ANLZ file handling
+- **mysettings**: MySettings file handling
+
 
 ### Subject
 
