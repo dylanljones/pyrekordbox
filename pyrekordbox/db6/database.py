@@ -12,7 +12,7 @@ from sqlalchemy import create_engine, or_, event, MetaData
 from sqlalchemy.orm import Session, Query
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.sqltypes import DateTime, String
-from ..utils import get_rekordbox_pid
+from ..utils import get_rekordbox_pid, warn_deprecated
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
@@ -89,6 +89,7 @@ def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
     >>> from sqlcipher3 import dbapi2  # noqa
     >>> db = open_rekordbox_database("path/to/master_copy.db", sql_driver=dbapi2)
     """
+    warn_deprecated("open_rekordbox_database", remove_in="0.4.0")
     rb6_config = get_config("rekordbox6")
 
     if not path:
