@@ -1,7 +1,7 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="0.3.1"></a>
+## [0.3.1] - 2023-12-28
 
 ### New Features
 - **add method to return the contents of a playlist in the RBv6 db directly**  
@@ -530,7 +530,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.3.1...HEAD
+[0.3.1]: https://github.com/dylanljones/pyrekordbox/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/dylanljones/pyrekordbox/compare/0.2.3...0.3.0
 [0.2.3]: https://github.com/dylanljones/pyrekordbox/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/dylanljones/pyrekordbox/compare/0.2.1...0.2.2
