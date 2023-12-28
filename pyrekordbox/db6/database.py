@@ -9,7 +9,7 @@ from uuid import uuid4
 from pathlib import Path
 from typing import Optional
 from sqlalchemy import create_engine, or_, event, MetaData
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.sqltypes import DateTime, String
 from ..utils import get_rekordbox_pid
@@ -18,6 +18,7 @@ from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
 from .aux_files import MasterPlaylistXml
 from .tables import DjmdContent
+from .smart_playlist import SmartList
 from . import tables
 
 try:
@@ -674,6 +675,79 @@ class Rekordbox6Database:
         """Creates a filtered query for the ``DjmdSongPlaylist`` table."""
         query = self.query(tables.DjmdSongPlaylist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
+
+    def get_playlist_contents(self, playlist, *entities) -> Query:
+        """Return the contents of a regular or smart playlist.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist instance. Can either be a :class:`DjmdPlaylist`
+            object or a playlist ID.
+        *entities : Base
+            The table objects for which the query is created. If no entities
+            are given, the query will return the :class:`DjmdContent` objects.
+
+        Returns
+        -------
+        query : sqlalchemy.orm.query.Query
+            The SQLAlchemy ``Query`` object. The query contains the content instances
+            or the selected columns if ``entities`` are given.
+
+        Examples
+        --------
+        Return the content instances in the playlist
+
+        >>> db = Rekordbox6Database()
+        >>> pl = db.get_playlist(Name="My Playlist").one()
+        >>> db.get_playlist_contents(pl).all()
+        [<DjmdContent(12345678   Title=Title1)>, <DjmdContent(23456789   Title=Title2)>]
+
+        Return only the content IDs
+
+        >>> db.get_playlist_contents(pl, DjmdContent.ID).all()
+        [('12345678',), ('23456789',)]
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        if playlist.is_folder:
+            raise ValueError(f"Playlist {playlist} is a playlist folder.")
+
+        if not entities:
+            entities = [
+                DjmdContent,
+            ]
+
+        if playlist.is_smart_playlist:
+            smartlist = SmartList()
+            smartlist.parse(playlist.SmartList)
+            filter_clause = smartlist.filter_clause()
+        else:
+            items = list()
+            for song in playlist.Songs:
+                items.append(DjmdContent.ID == song.ContentID)
+            filter_clause = or_(*items)
+
+        return self.query(*entities).filter(filter_clause)
+
+    def get_smartlist_content(self, playlist):
+        """Creates a filtered query for the contents in smart palylists.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist instance. Can either be a :class:`DjmdPlaylist`
+            object or a playlist ID.
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        if not playlist.is_smart_playlist:
+            raise ValueError(f"Playlist {playlist} is not a smart playlist.")
+
+        smartlist = SmartList()
+        smartlist.parse(playlist.SmartList)
+        clause_list = smartlist.filter_clause()
+        return self.query(DjmdContent).filter(clause_list)
 
     def get_property(self, **kwargs):
         """Creates a filtered query for the ``DjmdProperty`` table."""
