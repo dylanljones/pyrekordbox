@@ -3,6 +3,9 @@
 <a name="0.3.1"></a>
 ## [0.3.1] - 2023-12-28
 
+This release improves the Rekordbox v6 database key extraction and 
+adds a new handler for smart playlists.
+
 ### New Features
 - **add method to return the contents of a playlist in the RBv6 db directly**  
   The database can now be queried directly for the contents contained in a playlist. 
