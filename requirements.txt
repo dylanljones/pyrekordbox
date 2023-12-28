@@ -12,3 +12,4 @@ setuptools>=61.0.0
 setuptools-scm[toml]>=4
 sqlalchemy>=2.0.0
 frida-tools
+python-dateutil

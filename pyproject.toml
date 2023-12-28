@@ -37,6 +37,7 @@ dependencies = [
     "psutil>=5.9.0",
     "sqlalchemy>=2.0.0",
     "frida-tools",
+    "python-dateutil",
 ]
 
 [project.optional-dependencies]
