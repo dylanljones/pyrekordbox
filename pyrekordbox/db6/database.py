@@ -722,7 +722,7 @@ class Rekordbox6Database:
         if playlist.is_smart_playlist:
             smartlist = SmartList()
             smartlist.parse(playlist.SmartList)
-            filter_clause = smartlist.filter_clause()
+            filter_clause = smartlist.filter_clause(self)
         else:
             items = list()
             for song in playlist.Songs:
@@ -730,25 +730,6 @@ class Rekordbox6Database:
             filter_clause = or_(*items)
 
         return self.query(*entities).filter(filter_clause)
-
-    def get_smartlist_content(self, playlist):
-        """Creates a filtered query for the contents in smart palylists.
-
-        Parameters
-        ----------
-        playlist : DjmdPlaylist or int or str
-            The playlist instance. Can either be a :class:`DjmdPlaylist`
-            object or a playlist ID.
-        """
-        if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
-        if not playlist.is_smart_playlist:
-            raise ValueError(f"Playlist {playlist} is not a smart playlist.")
-
-        smartlist = SmartList()
-        smartlist.parse(playlist.SmartList)
-        clause_list = smartlist.filter_clause()
-        return self.query(DjmdContent).filter(clause_list)
 
     def get_property(self, **kwargs):
         """Creates a filtered query for the ``DjmdProperty`` table."""

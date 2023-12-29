@@ -3,16 +3,16 @@
 # Date:   2023-12-13
 
 import xml.etree.cElementTree as xml
-from enum import IntEnum
+from enum import StrEnum, IntEnum
 from typing import List, Union
 from datetime import datetime
 from dataclasses import dataclass
 
-from sqlalchemy import or_, and_, not_
+from sqlalchemy import or_, and_, not_, select
 from sqlalchemy.sql.elements import BooleanClauseList
 from dateutil.relativedelta import relativedelta  # noqa
 
-from .tables import DjmdContent
+from .tables import DjmdContent, DjmdSongMyTag, DjmdMyTag
 
 __all__ = [
     "LogicalOperator",
@@ -39,6 +39,32 @@ class Operator(IntEnum):
     NOT_CONTAINS = 9
     STARTS_WITH = 10
     ENDS_WITH = 11
+
+
+class Property(StrEnum):
+    ARTIST = "artist"
+    ALBUM = "album"
+    ALBUM_ARTIST = "albumartist"
+    ORIGINAL_ARTIST = "originalartist"
+    BPM = "bpm"
+    GROUPING = "grouping"
+    COMMENTS = "comments"
+    PRODUCER = "producer"
+    STOCK_DATE = "stockdate"
+    DATE_CREATED = "datecreated"
+    COUNTER = "counter"
+    FILENAME = "filename"
+    GENRE = "genre"
+    KEY = "key"
+    LABEL = "label"
+    MIX_NAME = "mixname"
+    MYTAG = "mytag"
+    RATING = "rating"
+    DATE_RELEASED = "datereleased"
+    REMIXED_BY = "remixedby"
+    DURATION = "duration"
+    NAME = "name"
+    YEAR = "year"
 
 
 STR_OPS = [
@@ -146,7 +172,10 @@ class Condition:
 
     def __post_init__(self):
         if self.property not in VALID_OPS:
-            raise ValueError(f"Invalid property: '{self.property}'")
+            raise ValueError(
+                f"Invalid property: '{self.property}'! "
+                f"Supported properties: {list(PROPERTY_MAP.keys())}"
+            )
 
         valid_ops = VALID_OPS[self.property]
         if self.operator not in valid_ops:
@@ -259,75 +288,97 @@ class SmartList:
         cond = Condition(prop, operator, unit, value_left, value_right)
         self.conditions.append(cond)
 
-    def filter_clause(self) -> BooleanClauseList:
+    def filter_clause(self, db) -> BooleanClauseList:
         """Return a SQLAlchemy filter clause matching the content of the smart playlist.
+
+        Parameters
+        ----------
+        db : Rekorbox6Database
+            The database instance. This is required for chained conditions (like MyTag).
 
         Returns
         -------
         BooleanClauseList
             A filter list macthing the contents of the smart playlist.
         """
-        conditions = self.conditions
         logical_op = and_ if self.logical_operator == LogicalOperator.ALL else or_
-        cond = conditions[0]
-
-        colum_name = PROPERTY_MAP[cond.property]
 
         comps = list()
-        for cond in conditions:
+        for cond in self.conditions:
+            colum_name = PROPERTY_MAP[cond.property]
             val_left, val_right = _get_condition_values(cond)
 
-            if cond.operator == Operator.EQUAL:
-                comp = getattr(DjmdContent, colum_name) == val_left
+            if colum_name == "MyTag":
+                # MyTag is a special case, as it requires a subquery to get
+                # the MyTagID from the MyTag name, and then another subquery
+                # to get the ContentID from the MyTagID.
+                sub_query = db.query(DjmdMyTag.ID).filter(DjmdMyTag.Name == val_left)
+                sub_query = db.query(DjmdSongMyTag.ContentID).filter(
+                    DjmdSongMyTag.MyTagID.in_(select(sub_query.scalar_subquery()))
+                )
+                if cond.operator == Operator.CONTAINS:
+                    comp = DjmdContent.ID.in_(select(sub_query.subquery()))
 
-            elif cond.operator == Operator.NOT_EQUAL:
-                comp = getattr(DjmdContent, colum_name) != val_left
+                elif cond.operator == Operator.NOT_CONTAINS:
+                    comp = DjmdContent.ID.notin_(select(sub_query.subquery()))
 
-            elif cond.operator == Operator.GREATER:
-                comp = getattr(DjmdContent, colum_name) > val_left
-
-            elif cond.operator == Operator.LESS:
-                comp = getattr(DjmdContent, colum_name) < val_left
-
-            elif cond.operator == Operator.IN_RANGE:
-                comp = getattr(DjmdContent, colum_name).between(val_left, val_right)
-
-            elif cond.operator == Operator.CONTAINS:
-                comp = getattr(DjmdContent, colum_name).contains(val_left)
-
-            elif cond.operator == Operator.NOT_CONTAINS:
-                comp = not_(getattr(DjmdContent, colum_name).contains(val_left))
-
-            elif cond.operator == Operator.STARTS_WITH:
-                comp = getattr(DjmdContent, colum_name).startswith(val_left)
-
-            elif cond.operator == Operator.ENDS_WITH:
-                comp = getattr(DjmdContent, colum_name).endswith(val_left)
-
-            elif cond.operator == Operator.IN_LAST:
-                now = datetime.now()
-                if cond.unit == "day":
-                    t0 = now - relativedelta(days=val_left)
-                    comp = getattr(DjmdContent, colum_name) > t0
-                elif cond.unit == "month":
-                    t0 = now - relativedelta(months=val_left)
-                    comp = getattr(DjmdContent, colum_name).month > t0
                 else:
-                    raise ValueError(f"Unknown unit '{cond.unit}'")
-
-            elif cond.operator == Operator.NOT_IN_LAST:
-                now = datetime.now()
-                if cond.unit == "day":
-                    t0 = now - relativedelta(days=val_left)
-                    comp = getattr(DjmdContent, colum_name) < t0
-                elif cond.unit == "month":
-                    t0 = now - relativedelta(months=val_left)
-                    comp = getattr(DjmdContent, colum_name).month < t0
-                else:
-                    raise ValueError(f"Unknown unit '{cond.unit}'")
+                    raise ValueError(
+                        f"Operator '{cond.operator}' is not supported for MyTag"
+                    )
 
             else:
-                raise ValueError(f"Unknown operator '{cond.operator}'")
+                if cond.operator == Operator.EQUAL:
+                    comp = getattr(DjmdContent, colum_name) == val_left
+
+                elif cond.operator == Operator.NOT_EQUAL:
+                    comp = getattr(DjmdContent, colum_name) != val_left
+
+                elif cond.operator == Operator.GREATER:
+                    comp = getattr(DjmdContent, colum_name) > val_left
+
+                elif cond.operator == Operator.LESS:
+                    comp = getattr(DjmdContent, colum_name) < val_left
+
+                elif cond.operator == Operator.IN_RANGE:
+                    comp = getattr(DjmdContent, colum_name).between(val_left, val_right)
+
+                elif cond.operator == Operator.CONTAINS:
+                    comp = getattr(DjmdContent, colum_name).contains(val_left)
+
+                elif cond.operator == Operator.NOT_CONTAINS:
+                    comp = not_(getattr(DjmdContent, colum_name).contains(val_left))
+
+                elif cond.operator == Operator.STARTS_WITH:
+                    comp = getattr(DjmdContent, colum_name).startswith(val_left)
+
+                elif cond.operator == Operator.ENDS_WITH:
+                    comp = getattr(DjmdContent, colum_name).endswith(val_left)
+
+                elif cond.operator == Operator.IN_LAST:
+                    now = datetime.now()
+                    if cond.unit == "day":
+                        t0 = now - relativedelta(days=val_left)
+                        comp = getattr(DjmdContent, colum_name) > t0
+                    elif cond.unit == "month":
+                        t0 = now - relativedelta(months=val_left)
+                        comp = getattr(DjmdContent, colum_name).month > t0
+                    else:
+                        raise ValueError(f"Unknown unit '{cond.unit}'")
+
+                elif cond.operator == Operator.NOT_IN_LAST:
+                    now = datetime.now()
+                    if cond.unit == "day":
+                        t0 = now - relativedelta(days=val_left)
+                        comp = getattr(DjmdContent, colum_name) < t0
+                    elif cond.unit == "month":
+                        t0 = now - relativedelta(months=val_left)
+                        comp = getattr(DjmdContent, colum_name).month < t0
+                    else:
+                        raise ValueError(f"Unknown unit '{cond.unit}'")
+
+                else:
+                    raise ValueError(f"Unknown operator '{cond.operator}'")
 
             comps.append(comp)
         return logical_op(*comps)
