@@ -6,6 +6,11 @@
   This will set the ID in the smart list to the newly created playlist ID before generating the XML string
 
 ### Improvements/Bug Fixes
+- **db:** **add missing relationships in `DjmdContent`**  
+  Affected tables and corresponding relationships:
+  - `DjmdCue`: `Cues`
+  - `DjmdActiveCensor`: `ActiveCensors`
+  - `DjmdMixerParam`: `MixerParams`
 - **db:** **add My-Tag names association to the `DjmdContent` table**  
   It is now possible to get a list of the corresponding My-tag names from the `DjmdContent` instance.
 - **db:** **add relationship between `DjmdContent` and `DjmdSongMyTag`**  
