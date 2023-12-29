@@ -137,7 +137,11 @@ Some fields are stored as references to other tables, for example the artist of 
 Check the [documentation][db6-doc] of the corresponding object for more information.
 So far only a few tables support adding or deleting entries:
 - ``DjmdPlaylist``: Playlists/Playlist Folders
-- ``DjmdSongPlaylist``: Songs in a playlist
+- ``DjmdSongPlaylist``: Songs in a playlist#
+- ``DjmdAlbum``: Albums
+- ``DjmdArtist``: Artists
+- ``DjmdGenre``: Genres
+- ``DjmdLabel``: Labels
 
 If the automatic key extraction fails the command line interface of ``pyrekordbox``
 provides a command for downloading the key from known sources and writing it to the

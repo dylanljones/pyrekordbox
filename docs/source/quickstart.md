@@ -72,7 +72,11 @@ Some fields are stored as references to other tables, for example the artist of 
 Check the [documentation](#db6-format) of the corresponding object for more information.
 So far only a few tables support adding or deleting entries:
 - ``DjmdPlaylist``: Playlists/Playlist Folders
-- ``DjmdSongPlaylist``: Songs in a playlist
+- ``DjmdSongPlaylist``: Songs in a playlist#
+- ``DjmdAlbum``: Albums
+- ``DjmdArtist``: Artists
+- ``DjmdGenre``: Genres
+- ``DjmdLabel``: Labels
 
 ````{important}
 Starting from Rekordbox version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file
