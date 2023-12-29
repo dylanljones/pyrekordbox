@@ -455,7 +455,9 @@ class DjmdActiveCensor(Base, StatsFull):
     ContentUUID: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The UUID of the :class:`DjmdContent` entry this censor belongs to."""
 
-    Content = relationship("DjmdContent")
+    Content = relationship(
+        "DjmdContent", foreign_keys=ContentID, back_populates="ActiveCensors"
+    )
     """The content entry this censor belongs to (links to :class:`DjmdContent`)."""
 
 
@@ -757,6 +759,14 @@ class DjmdContent(Base, StatsFull):
     """The album artist entry of the track (links to :class:`DjmdArtist`)."""
     MyTags = relationship("DjmdSongMyTag", back_populates="Content")
     """The my tags of the track (links to :class:`DjmdSongMyTag`)."""
+    Cues = relationship(
+        "DjmdCue", foreign_keys="DjmdCue.ContentID", back_populates="Content"
+    )
+    """The cues of the track (links to :class:`DjmdCue`)."""
+    ActiveCensors = relationship("DjmdActiveCensor", back_populates="Content")
+    """The active censors of the track (links to :class:`DjmdActiveCensor`)."""
+    MixerParams = relationship("DjmdMixerParam", back_populates="Content")
+    """The mixer parameters of the track (links to :class:`DjmdMixerParam`)."""
 
     ArtistName = association_proxy("Artist", "Name")
     """The name of the artist (:class:`DjmdArtist`) of the track."""
@@ -841,8 +851,16 @@ class DjmdCue(Base, StatsFull):
     )
     """The UUID of the content (:class:`DjmdContent`) containing the cue point."""
 
-    Content = relationship("DjmdContent", foreign_keys=ContentID)
+    Content = relationship("DjmdContent", foreign_keys=ContentID, back_populates="Cues")
     """The content entry of the cue point (links to :class:`DjmdContent`)."""
+
+    @property
+    def is_memory_cue(self):
+        return self.Kind == 0
+
+    @property
+    def is_hot_cue(self):
+        return self.Kind > 0
 
 
 class DjmdDevice(Base, StatsFull):
@@ -1125,7 +1143,7 @@ class DjmdMixerParam(Base, StatsFull):
     PeakLow: Mapped[int] = mapped_column(Integer, default=None)
     """The low peak of the mixer parameter."""
 
-    Content = relationship("DjmdContent")
+    Content = relationship("DjmdContent", back_populates="MixerParams")
     """The content this mixer parameters belong to (links to :class:`DjmdContent`)."""
 
     @staticmethod
