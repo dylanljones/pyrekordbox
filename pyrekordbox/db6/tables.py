@@ -486,6 +486,8 @@ class DjmdAlbum(Base, StatsFull):
 
     AlbumArtist = relationship("DjmdArtist")
     """The artist entry of the artist of this album (links to :class:`DjmdArtist`)."""
+    AlbumArtistName = association_proxy("AlbumArtist", "Name")
+    """The name of the album artist (:class:`DjmdArtist`) of the track."""
 
     def __repr__(self):
         s = f"{self.ID: <10} Name={self.Name}"
@@ -751,6 +753,8 @@ class DjmdContent(Base, StatsFull):
     """The color entry of the track (links to :class:`DjmdColor`)."""
     Composer = relationship("DjmdArtist", foreign_keys=ComposerID)
     """The composer entry of the track (links to :class:`DjmdArtist`)."""
+    AlbumArtist = association_proxy("Album", "AlbumArtist")
+    """The album artist entry of the track (links to :class:`DjmdArtist`)."""
 
     ArtistName = association_proxy("Artist", "Name")
     """The name of the artist (:class:`DjmdArtist`) of the track."""
@@ -770,6 +774,8 @@ class DjmdContent(Base, StatsFull):
     """The name of the color (:class:`DjmdColor`) of the track."""
     ComposerName = association_proxy("Composer", "Name")
     """The name of the composer (:class:`DjmdArtist`) of the track."""
+    AlbumArtistName = association_proxy("Album", "AlbumArtistName")
+    """The name of the album artist (:class:`DjmdArtist`) of the track."""
 
     def __repr__(self):
         s = f"{self.ID: <10} Title={self.Title}"
