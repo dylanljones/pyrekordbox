@@ -1,5 +1,8 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
 This release fixes smart-playlist related bugs and improves the 
 database table relationships.
 
