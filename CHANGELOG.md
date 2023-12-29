@@ -19,6 +19,10 @@
   It is now possible to get the album artist instance or name directly from the `DjmdContent` instance.
 - **db:** **fix smart list filter bugs ([#110](https://github.com/dylanljones/pyrekordbox/discussions/110))**  
 
+### Documentation
+
+- **db:** **fix `Kind` notes in `DjmdCue` table**  
+
 
 <a name="0.3.1"></a>
 ## [0.3.1] - 2023-12-28
