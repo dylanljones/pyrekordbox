@@ -755,6 +755,8 @@ class DjmdContent(Base, StatsFull):
     """The composer entry of the track (links to :class:`DjmdArtist`)."""
     AlbumArtist = association_proxy("Album", "AlbumArtist")
     """The album artist entry of the track (links to :class:`DjmdArtist`)."""
+    MyTags = relationship("DjmdSongMyTag", back_populates="Content")
+    """The my tags of the track (links to :class:`DjmdSongMyTag`)."""
 
     ArtistName = association_proxy("Artist", "Name")
     """The name of the artist (:class:`DjmdArtist`) of the track."""
@@ -1235,8 +1237,11 @@ class DjmdSongMyTag(Base, StatsFull):
 
     MyTag = relationship("DjmdMyTag", back_populates="MyTags")
     """The My-Tag list this item belongs to (links to :class:`DjmdMyTag`)."""
-    Content = relationship("DjmdContent")
+    Content = relationship("DjmdContent", back_populates="MyTags")
     """The content this item belongs to (links to :class:`DjmdContent`)."""
+
+    MyTagName = association_proxy("MyTag", "Name")
+    """The name of the My-Tag item (:class:`DjmdMyTag`)."""
 
 
 class DjmdPlaylist(Base, StatsFull):
