@@ -3,7 +3,7 @@
 # Date:   2023-12-13
 
 import xml.etree.cElementTree as xml
-from enum import StrEnum, IntEnum
+from enum import Enum, IntEnum
 from typing import List, Union
 from datetime import datetime
 from dataclasses import dataclass
@@ -41,7 +41,7 @@ class Operator(IntEnum):
     ENDS_WITH = 11
 
 
-class Property(StrEnum):
+class Property(Enum):
     ARTIST = "artist"
     ALBUM = "album"
     ALBUM_ARTIST = "albumartist"
