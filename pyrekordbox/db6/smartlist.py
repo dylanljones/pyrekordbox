@@ -9,11 +9,11 @@ from typing import List, Union
 from datetime import datetime
 from dataclasses import dataclass
 
-from sqlalchemy import or_, and_, not_, select
+from sqlalchemy import or_, and_, not_
 from sqlalchemy.sql.elements import BooleanClauseList
 from dateutil.relativedelta import relativedelta  # noqa
 
-from .tables import DjmdContent, DjmdSongMyTag, DjmdMyTag
+from .tables import DjmdContent
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ PROPERTY_COLUMN_MAP = {
     Property.KEY: "KeyName",
     Property.LABEL: "LabelName",
     # Property.MIX_NAME don't know what this maps to
-    # Property.MYTAG is handled separately
+    Property.MYTAG: "MyTagNames",
     Property.RATING: "Rating",
     Property.DATE_RELEASED: "ReleaseDate",
     Property.REMIXED_BY: "RemixerName",
@@ -293,13 +293,8 @@ class SmartList:
         cond = Condition(prop, int(operator), unit, value_left, value_right)
         self.conditions.append(cond)
 
-    def filter_clause(self, db) -> BooleanClauseList:
+    def filter_clause(self) -> BooleanClauseList:
         """Return a SQLAlchemy filter clause matching the content of the smart playlist.
-
-        Parameters
-        ----------
-        db : Rekorbox6Database
-            The database instance. This is required for chained conditions (like MyTag).
 
         Returns
         -------
@@ -355,24 +350,6 @@ class SmartList:
                         raise ValueError(f"Unknown unit '{cond.unit}'")
                 else:
                     raise ValueError(f"Unknown operator '{cond.operator}'")
-                comps.append(comp)
-
-            elif cond.property == Property.MYTAG:
-                # MyTag is a special case, as it requires a subquery to get
-                # the MyTagID from the MyTag name, and then another subquery
-                # to get the ContentID from the MyTagID.
-                sub_query = db.query(DjmdMyTag.ID).filter(DjmdMyTag.Name == val_left)
-                sub_query = db.query(DjmdSongMyTag.ContentID).filter(
-                    DjmdSongMyTag.MyTagID.in_(select(sub_query.scalar_subquery()))
-                )
-                if cond.operator == Operator.CONTAINS:
-                    comp = DjmdContent.ID.in_(select(sub_query.subquery()))
-                elif cond.operator == Operator.NOT_CONTAINS:
-                    comp = DjmdContent.ID.notin_(select(sub_query.subquery()))
-                else:
-                    raise ValueError(
-                        f"Operator '{cond.operator}' is not supported for MyTag"
-                    )
                 comps.append(comp)
 
             else:

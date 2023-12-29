@@ -778,6 +778,8 @@ class DjmdContent(Base, StatsFull):
     """The name of the composer (:class:`DjmdArtist`) of the track."""
     AlbumArtistName = association_proxy("Album", "AlbumArtistName")
     """The name of the album artist (:class:`DjmdArtist`) of the track."""
+    MyTagNames = association_proxy("MyTags", "MyTagName")
+    """The names of the my tags (:class:`DjmdSongMyTag`) of the track."""
 
     def __repr__(self):
         s = f"{self.ID: <10} Title={self.Title}"

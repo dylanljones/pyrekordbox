@@ -722,7 +722,7 @@ class Rekordbox6Database:
         if playlist.is_smart_playlist:
             smartlist = SmartList()
             smartlist.parse(playlist.SmartList)
-            filter_clause = smartlist.filter_clause(self)
+            filter_clause = smartlist.filter_clause()
         else:
             sub_query = self.query(tables.DjmdSongPlaylist.ContentID).filter(
                 tables.DjmdSongPlaylist.PlaylistID == playlist.ID
