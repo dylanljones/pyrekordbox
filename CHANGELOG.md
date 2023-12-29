@@ -1,10 +1,16 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+### New Features
+
+- **db:** **Add method for creating smart playlists**  
+  This will set the ID in the smart list to the newly created playlist ID before generating the XML string
 
 ### Improvements/Bug Fixes
 
+- **db:** **add relationship between `DjmdContent` and `DjmdSongMyTag`**  
+  It is now possible to get the My-tag instances directly from the `DjmdContent` instance.
+- **db:** **add album artist association to the `DjmdAlbum` and `DjmdContent` tables**  
+  It is now possible to get the album artist instance or name directly from the `DjmdContent` instance.
 - **db:** **fix smart list filter bugs ([#110](https://github.com/dylanljones/pyrekordbox/discussions/110))**  
 
 
