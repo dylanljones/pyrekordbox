@@ -488,8 +488,8 @@ around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity 
      - The offset (bytes) in the file where the ending frame appears.
      - `0` if not a loop or VBR/ABR MPEG file
    * - `Kind`
-     - Type of cue point
-     - Cue= `0` , Fade-In= `1` , Fade-Out= `2` , Load= `3` , Loop= `4`
+     - Type and/or number of cue point
+     - `0` if memory cue, otherwise the number of Hot Cue
    * - `Color`
      - The color ID of the cue point
      - `-1` if no color
