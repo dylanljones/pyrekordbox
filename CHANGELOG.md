@@ -1,5 +1,13 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **db:** **fix smart list filter bugs ([#110](https://github.com/dylanljones/pyrekordbox/discussions/110))**  
+
+
 <a name="0.3.1"></a>
 ## [0.3.1] - 2023-12-28
 
@@ -14,7 +22,7 @@ adds a new handler for smart playlists.
 - **add RBv6 smart playlist handler**  
   Add a handler for the smart playlists of Rekordbox. The conditions are stored as an 
   XML string. The smart playlist handler supports parsing and writing the XML string.
-- **add DB key extraction method for newer Rekordbox versions ([#97](https://github.com/dylanljones/pyrekordbox/issues/97)).**  
+- **add DB key extraction method for newer Rekordbox versions ([#97](https://github.com/dylanljones/pyrekordbox/discussions/97)).**  
   The key can now also be extracted with newer Rekordbox versions.
   `frida` is used to inject code to intercept the key when the DB is opened.
 
