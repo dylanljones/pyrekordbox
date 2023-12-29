@@ -8,7 +8,7 @@ import secrets
 from uuid import uuid4
 from pathlib import Path
 from typing import Optional
-from sqlalchemy import create_engine, or_, event, MetaData
+from sqlalchemy import create_engine, or_, event, MetaData, select
 from sqlalchemy.orm import Session, Query
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.sqltypes import DateTime, String
@@ -17,8 +17,8 @@ from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
 from .registry import RekordboxAgentRegistry
 from .aux_files import MasterPlaylistXml
-from .tables import DjmdContent
-from .smart_playlist import SmartList
+from .tables import DjmdContent, PlaylistType
+from .smartlist import SmartList
 from . import tables
 
 try:
@@ -724,10 +724,10 @@ class Rekordbox6Database:
             smartlist.parse(playlist.SmartList)
             filter_clause = smartlist.filter_clause(self)
         else:
-            items = list()
-            for song in playlist.Songs:
-                items.append(DjmdContent.ID == song.ContentID)
-            filter_clause = or_(*items)
+            sub_query = self.query(tables.DjmdSongPlaylist.ContentID).filter(
+                tables.DjmdSongPlaylist.PlaylistID == playlist.ID
+            )
+            filter_clause = DjmdContent.ID.in_(select(sub_query.subquery()))
 
         return self.query(*entities).filter(filter_clause)
 
@@ -1110,7 +1110,14 @@ class Rekordbox6Database:
         table = tables.DjmdPlaylist
         id_ = str(self.generate_unused_id(table, is_28_bit=True))
         uuid = str(uuid4())
+        attribute = int(attribute)
         now = datetime.datetime.now()
+        if smart_list is not None:
+            # Set the playlist ID in the smart list and generate XML
+            smart_list.playlist_id = id_
+            smart_list_xml = smart_list.to_xml()
+        else:
+            smart_list_xml = None
 
         if parent is None:
             # If no parent is given, use root playlist
@@ -1150,7 +1157,7 @@ class Rekordbox6Database:
         logger.debug("Parent ID:   %s", parent_id)
         logger.debug("Seq:         %s", seq)
         logger.debug("Attribute:   %s", attribute)
-        logger.debug("Smart List:  %s", smart_list)
+        logger.debug("Smart List:  %s", smart_list_xml)
         logger.debug("Image Path:  %s", image_path)
 
         # Update seq numbers higher than the new seq number
@@ -1173,7 +1180,7 @@ class Rekordbox6Database:
             ImagePath=image_path,
             Attribute=attribute,
             ParentID=parent_id,
-            SmartList=smart_list,
+            SmartList=smart_list_xml,
             UUID=uuid,
             created_at=now,
             updated_at=now,
@@ -1234,7 +1241,9 @@ class Rekordbox6Database:
         '123456'
         """
         logger.info("Creating playlist %s", name)
-        return self._create_playlist(name, seq, image_path, parent, attribute=0)
+        return self._create_playlist(
+            name, seq, image_path, parent, attribute=PlaylistType.PLAYLIST
+        )
 
     def create_playlist_folder(self, name, parent=None, seq=None, image_path=None):
         """Creates a new playlist folder in the database.
@@ -1274,7 +1283,56 @@ class Rekordbox6Database:
         '123456'
         """
         logger.info("Creating playlist folder %s", name)
-        return self._create_playlist(name, seq, image_path, parent, attribute=1)
+        return self._create_playlist(
+            name, seq, image_path, parent, attribute=PlaylistType.FOLDER
+        )
+
+    def create_smart_playlist(
+        self, name, smart_list: SmartList, parent=None, seq=None, image_path=None
+    ):
+        """Creates a new smart playlist in the database.
+
+        Parameters
+        ----------
+        name : str
+            The name of the new smart playlist.
+        smart_list : SmartList
+            The smart list conditions to use for the new playlist.
+        parent : DjmdPlaylist or int or str, optional
+            The parent playlist of the new playlist. If not given, the playlist will be
+            added to the root playlist. Can either be a :class:`DjmdPlaylist` object or
+            a playlist ID.
+        seq : int, optional
+            The sequence number of the new playlist. If not given, the playlist will be
+            added at the end of the parent playlist.
+        image_path : str, optional
+            The path to the image file of the new playlist.
+
+        Returns
+        -------
+        playlist : DjmdPlaylist
+            The newly created playlist.
+
+        Examples
+        --------
+        Create a new smart list which we will use for the new smart playlist:
+
+        >>> smart = SmartList(logical_operator=1)  # ALL conditions must be met
+        >>> smart.add_condition("genre", operator=1, value_left="House")  # is House
+
+        Create a new smart playlist in the root playlist:
+        >>> db = Rekordbox6Database()
+        >>> pl = db.create_smart_playlist("My Smart Playlist", smart)
+        >>> pl.ID
+        '123456789'
+
+        >>> pl.SmartList[:72]
+        '<NODE Id="123456789" LogicalOperator="1" AutomaticUpdate="1"><CONDITION '
+        """
+        logger.info("Creating smart playlist %s", name)
+        return self._create_playlist(
+            name, seq, image_path, parent, smart_list, PlaylistType.SMART_PLAYLIST
+        )
 
     def delete_playlist(self, playlist):
         """Deletes a playlist or playlist folder from the database.

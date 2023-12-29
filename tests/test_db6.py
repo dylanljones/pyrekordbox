@@ -11,6 +11,7 @@ import tempfile
 from sqlalchemy.orm.query import Query
 from pyrekordbox import Rekordbox6Database, open_rekordbox_database
 from pyrekordbox.db6 import tables
+from pyrekordbox.db6.smartlist import SmartList, LogicalOperator, Operator, Property
 
 TEST_ROOT = Path(__file__).parent.parent / ".testdata"
 LOCKED = TEST_ROOT / "rekordbox 6" / "master_locked.db"
@@ -582,6 +583,39 @@ def test_create_playlist_folder(db):
     assert _check_playlist_xml(db)
 
 
+def test_create_smart_playlist(db):
+    seqs = [pl.Seq for pl in db.get_playlist()]
+    assert max(seqs) == 2
+    old_usn = db.get_local_usn()
+
+    # Create smart list
+    smart = SmartList(LogicalOperator.ALL)
+    smart.add_condition(Property.ARTIST, Operator.EQUAL, "Loopmasters")
+
+    # create smart playlist from smart list
+    pl = db.create_smart_playlist("Smart playlist", smart)
+    pid = pl.ID
+    db.commit()
+
+    # Check if playlist was created correctly
+    pl = db.get_playlist(ID=pid)
+    assert pl.Name == "Smart playlist"
+    assert pl.Seq == 3
+    assert pl.Attribute == 4
+    assert pl.Songs == []
+    assert pl.ParentID == "root"
+    assert pl.Children == []
+
+    # Check USN is correct (+1 for creating, +1 for renaming)
+    assert pl.rb_local_usn == old_usn + 2
+    assert db.get_local_usn() == old_usn + 2
+
+    # Check if playlist was added to xml
+    plxml = db.playlist_xml.get(pl.ID)
+    assert plxml is not None
+    assert _check_playlist_xml(db)
+
+
 def test_delete_playlist_empty_end(db):
     # Create playlist structure
     folder = db.create_playlist_folder("folder")
@@ -996,6 +1030,50 @@ def test_rename_playlist(db):
     assert pl.rb_local_usn == usn_old + 1
 
     assert _check_playlist_xml(db)
+
+
+def test_get_playlist_contents(db):
+    # Create playlist and add content
+    pl = db.create_playlist("Test playlist")
+    db.add_to_playlist(pl, CID1)
+    db.add_to_playlist(pl, CID2)
+    db.commit()
+
+    # Get playlist contents
+    contents = db.get_playlist_contents(pl).all()
+    assert len(contents) == 2
+    assert {c.ID for c in contents} == {str(CID1), str(CID2)}
+
+
+def test_get_playlist_contents_smart(db):
+    # Singe condition
+    smart = SmartList(LogicalOperator.ALL)
+    smart.add_condition(Property.ARTIST, Operator.EQUAL, "Loopmasters")
+    pl = db.create_smart_playlist("Smart playlist", smart)
+    db.commit()
+    contents = db.get_playlist_contents(pl).all()
+    assert len(contents) == 2
+    assert {c.ID for c in contents} == {str(CID1), str(CID2)}
+
+    # All conditions
+    smart = SmartList(LogicalOperator.ALL)
+    smart.add_condition(Property.ARTIST, Operator.EQUAL, "Loopmasters")
+    smart.add_condition(Property.NAME, Operator.EQUAL, "Demo Track 1")
+    pl = db.create_smart_playlist("Smart playlist", smart)
+    db.commit()
+    contents = db.get_playlist_contents(pl).all()
+    assert len(contents) == 1
+    assert {c.ID for c in contents} == {str(CID1)}
+
+    # Any conditions
+    smart = SmartList(LogicalOperator.ANY)
+    smart.add_condition(Property.ARTIST, Operator.EQUAL, "Loopmasters")
+    smart.add_condition(Property.NAME, Operator.EQUAL, "HORN")
+    pl = db.create_smart_playlist("Smart playlist", smart)
+    db.commit()
+    contents = db.get_playlist_contents(pl).all()
+    assert len(contents) == 3
+    assert {c.ID for c in contents} == {str(CID1), str(CID2), str(CID3)}
 
 
 def test_add_album(db):

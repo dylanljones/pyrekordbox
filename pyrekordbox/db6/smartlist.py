@@ -2,6 +2,7 @@
 # Author: Dylan Jones
 # Date:   2023-12-13
 
+import logging
 import xml.etree.cElementTree as xml
 from enum import Enum, IntEnum
 from typing import List, Union
@@ -14,8 +15,11 @@ from dateutil.relativedelta import relativedelta  # noqa
 
 from .tables import DjmdContent, DjmdSongMyTag, DjmdMyTag
 
+logger = logging.getLogger(__name__)
+
 __all__ = [
     "LogicalOperator",
+    "Property",
     "Operator",
     "Condition",
     "SmartList",
@@ -41,33 +45,33 @@ class Operator(IntEnum):
     ENDS_WITH = 11
 
 
-class Property(Enum):
+class Property(str, Enum):
     ARTIST = "artist"
     ALBUM = "album"
-    ALBUM_ARTIST = "albumartist"
-    ORIGINAL_ARTIST = "originalartist"
+    ALBUM_ARTIST = "albumArtist"
+    ORIGINAL_ARTIST = "originalArtist"
     BPM = "bpm"
     GROUPING = "grouping"
     COMMENTS = "comments"
     PRODUCER = "producer"
-    STOCK_DATE = "stockdate"
-    DATE_CREATED = "datecreated"
+    STOCK_DATE = "stockDate"
+    DATE_CREATED = "dateCreated"
     COUNTER = "counter"
-    FILENAME = "filename"
+    FILENAME = "fileName"
     GENRE = "genre"
     KEY = "key"
     LABEL = "label"
-    MIX_NAME = "mixname"
-    MYTAG = "mytag"
+    MIX_NAME = "mixName"
+    MYTAG = "myTag"
     RATING = "rating"
-    DATE_RELEASED = "datereleased"
-    REMIXED_BY = "remixedby"
+    DATE_RELEASED = "dateReleased"
+    REMIXED_BY = "remixedBy"
     DURATION = "duration"
     NAME = "name"
     YEAR = "year"
 
 
-STR_OPS = [
+_STR_OPS = [
     Operator.EQUAL,
     Operator.NOT_EQUAL,
     Operator.CONTAINS,
@@ -76,7 +80,7 @@ STR_OPS = [
     Operator.ENDS_WITH,
 ]
 
-NUM_OPS = [
+_NUM_OPS = [
     Operator.EQUAL,
     Operator.NOT_EQUAL,
     Operator.GREATER,
@@ -84,7 +88,7 @@ NUM_OPS = [
     Operator.IN_RANGE,
 ]
 
-DATE_OPS = [
+_DATE_OPS = [
     Operator.EQUAL,
     Operator.NOT_EQUAL,
     Operator.GREATER,
@@ -94,70 +98,72 @@ DATE_OPS = [
     Operator.NOT_IN_LAST,
 ]
 
-
-PROPERTY_MAP = {
-    "artist": "ArtistName",
-    "album": "AlbumName",
-    "albumArtist": "AlbumArtist",
-    "originalArtist": "OrgArtist",
-    "bpm": "BPM",
-    "grouping": "ColorID",
-    "comments": "Commnt",
-    "producer": "ComposerName",
-    "stockDate": "StockDate",
-    "dateCreated": "created_at",
-    "counter": "DJPlayCount",
-    "fileName": "FileNameL",
-    "genre": "GenreName",
-    "key": "Key",
-    "label": "LabelName",
-    "mixName": "",
-    "myTag": "myTag",
-    "rating": "Rating",
-    "dateReleased": "ReleaseDate",
-    "remixedBy": "RemixerName",
-    "duration": "Length",
-    "name": "Title",
-    "year": "ReleaseYear",
+# Defines the valid operators for each property
+VALID_OPS = {
+    Property.ARTIST: _STR_OPS,
+    Property.ALBUM: _STR_OPS,
+    Property.ALBUM_ARTIST: _STR_OPS,
+    Property.ORIGINAL_ARTIST: _STR_OPS,
+    Property.BPM: _NUM_OPS,
+    Property.GROUPING: [Operator.EQUAL, Operator.NOT_EQUAL],
+    Property.COMMENTS: _STR_OPS,
+    Property.PRODUCER: _STR_OPS,
+    Property.STOCK_DATE: _DATE_OPS,
+    Property.DATE_CREATED: _DATE_OPS,
+    Property.COUNTER: _NUM_OPS,
+    Property.FILENAME: _STR_OPS,
+    Property.GENRE: _STR_OPS,
+    Property.KEY: _STR_OPS,
+    Property.LABEL: _STR_OPS,
+    Property.MIX_NAME: _STR_OPS,
+    Property.MYTAG: [Operator.CONTAINS, Operator.NOT_CONTAINS],
+    Property.RATING: _NUM_OPS,
+    Property.DATE_RELEASED: _DATE_OPS,
+    Property.REMIXED_BY: _STR_OPS,
+    Property.DURATION: _NUM_OPS,
+    Property.NAME: _STR_OPS,
+    Property.YEAR: _NUM_OPS,
 }
 
-
-VALID_OPS = {
-    "artist": STR_OPS,
-    "album": STR_OPS,
-    "albumArtist": STR_OPS,
-    "originalArtist": STR_OPS,
-    "bpm": NUM_OPS,
-    "grouping": [Operator.EQUAL, Operator.NOT_EQUAL],
-    "comments": STR_OPS,
-    "producer": STR_OPS,
-    "stockDate": DATE_OPS,
-    "dateCreated": DATE_OPS,
-    "counter": NUM_OPS,
-    "fileName": STR_OPS,
-    "genre": STR_OPS,
-    "key": STR_OPS,
-    "label": STR_OPS,
-    "mixName": STR_OPS,
-    "myTag": [Operator.CONTAINS, Operator.NOT_CONTAINS],
-    "rating": NUM_OPS,
-    "dateReleased": DATE_OPS,
-    "remixedBy": STR_OPS,
-    "duration": NUM_OPS,
-    "name": STR_OPS,
-    "year": NUM_OPS,
+# Defines the column names in the DB for properties that are directly mapped
+PROPERTY_COLUMN_MAP = {
+    Property.ARTIST: "ArtistName",
+    Property.ALBUM: "AlbumName",
+    Property.ALBUM_ARTIST: "AlbumArtistName",
+    Property.ORIGINAL_ARTIST: "OrgArtistName",
+    Property.BPM: "BPM",
+    Property.GROUPING: "ColorID",
+    Property.COMMENTS: "Commnt",
+    Property.PRODUCER: "ComposerName",
+    Property.STOCK_DATE: "StockDate",
+    Property.DATE_CREATED: "created_at",
+    Property.COUNTER: "DJPlayCount",
+    Property.FILENAME: "FileNameL",
+    Property.GENRE: "GenreName",
+    Property.KEY: "KeyName",
+    Property.LABEL: "LabelName",
+    # Property.MIX_NAME don't know what this maps to
+    # Property.MYTAG is handled separately
+    Property.RATING: "Rating",
+    Property.DATE_RELEASED: "ReleaseDate",
+    Property.REMIXED_BY: "RemixerName",
+    Property.DURATION: "Length",
+    Property.NAME: "Title",
+    Property.YEAR: "ReleaseYear",
 }
 
 TYPE_CONVERSION = {
-    "bpm": int,
-    "stockDate": lambda x: datetime.strptime(x, "%Y-%m-%d"),
-    "dateCreated": lambda x: datetime.strptime(x, "%Y-%m-%d"),
-    "counter": int,
-    "rating": int,
-    "dateReleased": lambda x: datetime.strptime(x, "%Y-%m-%d"),
-    "duration": int,
-    "year": int,
+    Property.BPM: int,
+    Property.STOCK_DATE: lambda x: datetime.strptime(x, "%Y-%m-%d"),
+    Property.DATE_CREATED: lambda x: datetime.strptime(x, "%Y-%m-%d"),
+    Property.COUNTER: int,
+    Property.RATING: int,
+    Property.DATE_RELEASED: lambda x: datetime.strptime(x, "%Y-%m-%d"),
+    Property.DURATION: int,
+    Property.YEAR: int,
 }
+
+PROPERTIES = [str(p.value) for p in list(Property)]  # noqa
 
 
 @dataclass
@@ -171,10 +177,10 @@ class Condition:
     value_right: Union[str, int]
 
     def __post_init__(self):
-        if self.property not in VALID_OPS:
+        if self.property not in PROPERTIES:
             raise ValueError(
                 f"Invalid property: '{self.property}'! "
-                f"Supported properties: {list(PROPERTY_MAP.keys())}"
+                f"Supported properties: {PROPERTIES}"
             )
 
         valid_ops = VALID_OPS[self.property]
@@ -213,13 +219,10 @@ class SmartList:
     """Rekordbox smart playlist XML handler."""
 
     def __init__(
-        self,
-        playlist_id: Union[int, str] = None,
-        logical_operator: int = None,
-        auto_update: int = 1,
+        self, logical_operator: int = LogicalOperator.ALL, auto_update: int = 1
     ):
-        self.playlist_id: Union[int, str] = playlist_id
-        self.logical_operator: int = logical_operator
+        self.playlist_id: Union[int, str] = ""
+        self.logical_operator: int = int(logical_operator)
         self.auto_update: int = auto_update
         self.conditions: List[Condition] = list()
 
@@ -285,7 +288,9 @@ class SmartList:
         unit : str, optional
             The unit to use, by default "".
         """
-        cond = Condition(prop, operator, unit, value_left, value_right)
+        if isinstance(prop, Property):
+            prop = str(prop.value)
+        cond = Condition(prop, int(operator), unit, value_left, value_right)
         self.conditions.append(cond)
 
     def filter_clause(self, db) -> BooleanClauseList:
@@ -305,56 +310,29 @@ class SmartList:
 
         comps = list()
         for cond in self.conditions:
-            colum_name = PROPERTY_MAP[cond.property]
             val_left, val_right = _get_condition_values(cond)
 
-            if colum_name == "MyTag":
-                # MyTag is a special case, as it requires a subquery to get
-                # the MyTagID from the MyTag name, and then another subquery
-                # to get the ContentID from the MyTagID.
-                sub_query = db.query(DjmdMyTag.ID).filter(DjmdMyTag.Name == val_left)
-                sub_query = db.query(DjmdSongMyTag.ContentID).filter(
-                    DjmdSongMyTag.MyTagID.in_(select(sub_query.scalar_subquery()))
-                )
-                if cond.operator == Operator.CONTAINS:
-                    comp = DjmdContent.ID.in_(select(sub_query.subquery()))
+            if cond.property in PROPERTY_COLUMN_MAP:
+                colum_name = PROPERTY_COLUMN_MAP[cond.property]
 
-                elif cond.operator == Operator.NOT_CONTAINS:
-                    comp = DjmdContent.ID.notin_(select(sub_query.subquery()))
-
-                else:
-                    raise ValueError(
-                        f"Operator '{cond.operator}' is not supported for MyTag"
-                    )
-
-            else:
                 if cond.operator == Operator.EQUAL:
                     comp = getattr(DjmdContent, colum_name) == val_left
-
                 elif cond.operator == Operator.NOT_EQUAL:
                     comp = getattr(DjmdContent, colum_name) != val_left
-
                 elif cond.operator == Operator.GREATER:
                     comp = getattr(DjmdContent, colum_name) > val_left
-
                 elif cond.operator == Operator.LESS:
                     comp = getattr(DjmdContent, colum_name) < val_left
-
                 elif cond.operator == Operator.IN_RANGE:
                     comp = getattr(DjmdContent, colum_name).between(val_left, val_right)
-
                 elif cond.operator == Operator.CONTAINS:
                     comp = getattr(DjmdContent, colum_name).contains(val_left)
-
                 elif cond.operator == Operator.NOT_CONTAINS:
                     comp = not_(getattr(DjmdContent, colum_name).contains(val_left))
-
                 elif cond.operator == Operator.STARTS_WITH:
                     comp = getattr(DjmdContent, colum_name).startswith(val_left)
-
                 elif cond.operator == Operator.ENDS_WITH:
                     comp = getattr(DjmdContent, colum_name).endswith(val_left)
-
                 elif cond.operator == Operator.IN_LAST:
                     now = datetime.now()
                     if cond.unit == "day":
@@ -365,7 +343,6 @@ class SmartList:
                         comp = getattr(DjmdContent, colum_name).month > t0
                     else:
                         raise ValueError(f"Unknown unit '{cond.unit}'")
-
                 elif cond.operator == Operator.NOT_IN_LAST:
                     now = datetime.now()
                     if cond.unit == "day":
@@ -376,9 +353,29 @@ class SmartList:
                         comp = getattr(DjmdContent, colum_name).month < t0
                     else:
                         raise ValueError(f"Unknown unit '{cond.unit}'")
-
                 else:
                     raise ValueError(f"Unknown operator '{cond.operator}'")
+                comps.append(comp)
 
-            comps.append(comp)
+            elif cond.property == Property.MYTAG:
+                # MyTag is a special case, as it requires a subquery to get
+                # the MyTagID from the MyTag name, and then another subquery
+                # to get the ContentID from the MyTagID.
+                sub_query = db.query(DjmdMyTag.ID).filter(DjmdMyTag.Name == val_left)
+                sub_query = db.query(DjmdSongMyTag.ContentID).filter(
+                    DjmdSongMyTag.MyTagID.in_(select(sub_query.scalar_subquery()))
+                )
+                if cond.operator == Operator.CONTAINS:
+                    comp = DjmdContent.ID.in_(select(sub_query.subquery()))
+                elif cond.operator == Operator.NOT_CONTAINS:
+                    comp = DjmdContent.ID.notin_(select(sub_query.subquery()))
+                else:
+                    raise ValueError(
+                        f"Operator '{cond.operator}' is not supported for MyTag"
+                    )
+                comps.append(comp)
+
+            else:
+                logger.warning(f"Unsupported property '{cond.property}'")
+
         return logical_op(*comps)
