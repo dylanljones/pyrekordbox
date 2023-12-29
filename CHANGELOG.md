@@ -1,5 +1,8 @@
 # What's New
 
+This release fixes smart-playlist related bugs and improves the 
+database table relationships.
+
 ### New Features
 
 - **db:** **Add method for creating smart playlists**  
@@ -7,14 +10,13 @@
 
 ### Improvements/Bug Fixes
 - **db:** **add missing relationships in `DjmdContent`**  
-  Affected tables and corresponding relationships:
+  Linked tables and corresponding relationships:
   - `DjmdCue`: `Cues`
+  - `DjmdSongMyTag`: `MyTags`
   - `DjmdActiveCensor`: `ActiveCensors`
   - `DjmdMixerParam`: `MixerParams`
 - **db:** **add My-Tag names association to the `DjmdContent` table**  
   It is now possible to get a list of the corresponding My-tag names from the `DjmdContent` instance.
-- **db:** **add relationship between `DjmdContent` and `DjmdSongMyTag`**  
-  It is now possible to get the My-tag instances directly from the `DjmdContent` instance.
 - **db:** **add album artist association to the `DjmdAlbum` and `DjmdContent` tables**  
   It is now possible to get the album artist instance or name directly from the `DjmdContent` instance.
 - **db:** **fix smart list filter bugs ([#110](https://github.com/dylanljones/pyrekordbox/discussions/110))**  
