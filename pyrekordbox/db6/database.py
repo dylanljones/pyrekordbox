@@ -7,7 +7,7 @@ import datetime
 import secrets
 from uuid import uuid4
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 from sqlalchemy import create_engine, or_, event, MetaData, select
 from sqlalchemy.orm import Session, Query
 from sqlalchemy.exc import NoResultFound
@@ -1867,7 +1867,9 @@ class Rekordbox6Database:
         self.flush()
         return label
 
-    def clone_cue(self, cue, kind: int):
+    def clone_cue(
+        self, cue: Union[int, str, tables.DjmdCue], kind: int
+    ) -> tables.DjmdCue:
         """Convert a cue from memory to hotcue or vice-versa and keep the old cue.
 
         Parameters
@@ -1969,7 +1971,9 @@ class Rekordbox6Database:
         self.flush()
         return new_cue
 
-    def convert_cue(self, cue, kind: int):
+    def convert_cue(
+        self, cue: Union[int, str, tables.DjmdCue], kind: int
+    ) -> tables.DjmdCue:
         """Convert a cue from memory to hotcue or vice-versa and delete the old cue.
 
         Parameters
@@ -2030,6 +2034,118 @@ class Rekordbox6Database:
         new_cue = self.clone_cue(cue, kind)
         # Delete old cue
         self.delete(cue)
+        self.flush()
+        return new_cue
+
+    def add_cue(
+        self,
+        content: Union[int, str, DjmdContent],
+        in_msec: int,
+        out_msec: int = None,
+        kind: int = 0,
+        color: int = -1,
+        color_table_index: int = None,
+        active_loop: int = None,
+        comment: str = None,
+        beat_loop_size: int = None,
+        cue_microsec: int = None,
+        in_point_seek_info: str = None,
+        out_point_seek_info: str = None,
+    ) -> tables.DjmdCue:
+        """Create a new cue point of a track.
+
+        Parameters
+        ----------
+        content : int or str or DjmdContent
+            The track to add the cue point to. Can either be a :class:`DjmdContent`
+            object or ID.
+        in_msec : int
+            The position of the cue point in milliseconds.
+        out_msec : int, optional
+            The position of the out point in milliseconds if cue is a loop.
+            The default is None.
+        kind : int, optional
+            The kind of the cue point. Must be in the range [0, 8].
+            Memory cue points have kind 0, hot-cue points have kind in [1, 8].
+            The default is 0 (memory cue).
+        color : int, optional
+            The color of the cue point. Must be in the range [0, 9].
+            The default is -1, which means that the color is not set.
+        color_table_index : int, optional
+            The index of the color in the color table. Must be in the range [0, 9].
+            The default is None, which means that the color is not set.
+        active_loop : int, optional
+            The active loop of the cue point. The default is None.
+        comment : str, optional
+            The comment of the cue point. The default is None.
+        beat_loop_size : int, optional
+            The beat loop size of the cue point. The default is None.
+        cue_microsec : int, optional
+            The cue microsecond of the cue point. The default is None.
+        in_point_seek_info : str, optional
+            The in point seek info of the cue point. The default is None.
+        out_point_seek_info : str, optional
+            The out point seek info of the cue point. The default is None.
+
+        Returns
+        -------
+        new_cue : DjmdCue
+            The newly created cue point.
+        """
+        if isinstance(content, (int, str)):
+            content = self.get_content(ID=content)
+
+        if kind < 0 or kind > 8:
+            raise ValueError(f"Invalid hot-cue kind {kind}")
+
+        cid = content.ID
+        # Check if hot-cue already exists
+        if kind > 0:
+            query = self.query(tables.DjmdCue).filter_by(ContentID=cid, Kind=kind)
+            if query.count() > 0:
+                raise ValueError(
+                    f"Hot-cue of kind {kind} already exists for content {cid}"
+                )
+
+        in_msec = int(in_msec)
+        in_frame = int(in_msec * 0.15)  # 1 frame = 1/150 s = 0.15 ms
+
+        if out_msec is None:
+            out_msec, out_frame = -1, 0
+        else:
+            out_msec = int(out_msec)
+            out_frame = int(out_msec * 0.15)  # 1 frame = 1/150 s = 0.15 ms
+
+        # TODO: ABR/VBR support
+        in_mpeg_frame = 0
+        in_mpeg_abs = 0
+        out_mpeg_frame = 0
+        out_mpeg_abs = 0
+
+        id_ = self.generate_unused_id(tables.DjmdCue)
+        new_cue = tables.DjmdCue.create(
+            ID=id_,
+            ContentID=cid,
+            InMsec=in_msec,
+            InFrame=in_frame,
+            InMpegFrame=in_mpeg_frame,
+            InMpegAbs=in_mpeg_abs,
+            OutMsec=out_msec,
+            OutFrame=out_frame,
+            OutMpegFrame=out_mpeg_frame,
+            OutMpegAbs=out_mpeg_abs,
+            Kind=kind,
+            Color=color,
+            ColorTableIndex=color_table_index,
+            ActiveLoop=active_loop,
+            Comment=comment,
+            BeatLoopSize=beat_loop_size,
+            CueMicrosec=cue_microsec,
+            InPointSeekInfo=in_point_seek_info,
+            OutPointSeekInfo=out_point_seek_info,
+            UUID=content.UUID,
+        )
+        self.add(new_cue)
         self.flush()
         return new_cue
 
