@@ -1867,6 +1867,172 @@ class Rekordbox6Database:
         self.flush()
         return label
 
+    def clone_cue(self, cue, kind: int):
+        """Convert a cue from memory to hotcue or vice-versa and keep the old cue.
+
+        Parameters
+        ----------
+        cue : int or str or DjmdCue
+            The cue point to convert. Can either be a :class:`DjmdCue` object or ID.
+        kind: int
+            The kind of the new cue point. Must be in the range [0, 8].
+            Memory cue points have kind 0, hot-cue points have kind in [1, 8].
+            If the cue point is already of the desired kind, an error is raised.
+
+        Returns
+        -------
+        new_cue : DjmdCue
+            The newly created cue point.
+
+        Raises
+        ------
+        ValueError : If the cue point is already of the desired kind.
+
+        Examples
+        --------
+        Convert a memory cue to the hot-cue 'A' (kind=1):
+
+        >>> db = Rekordbox6Database()
+        >>> content = db.get_content(ID=123456789)
+        >>> len(content.Cues)
+        1
+
+        >>> old_cue = content.Cues[0]
+        >>> old_cue.Kind
+        0
+
+        >>> new_cue = db.clone_cue(old_cue, kind=1)
+        >>> new_cue.Kind
+        1
+
+        The old cue point is still present:
+
+        >>> len(content.Cues)
+        2
+
+        Convert a hot-cue to memory cue (kind=0):
+
+        >>> db = Rekordbox6Database()
+        >>> content = db.get_content(ID=234567891)
+        >>> old_cue = content.Cues[0]
+        >>> old_cue.Kind
+        1
+
+        >>> new_cue = db.clone_cue(old_cue, kind=0)
+        >>> new_cue.Kind
+        0
+        """
+        if isinstance(cue, (int, str)):
+            cue = self.get_cue(ID=cue)
+
+        if kind < 0 or kind > 8:
+            raise ValueError(f"Invalid hot-cue kind {kind}")
+        if cue.Kind == 0 and kind == 0:
+            raise ValueError("Cue point is already a memory cue")
+        elif cue.Kind > 0 and kind > 0:
+            raise ValueError("Cue point is already a hot-cue")
+
+        cid = cue.ContentID
+        # Check if hot-cue already exists
+        if kind > 0:
+            query = self.query(tables.DjmdCue).filter_by(ContentID=cid, Kind=kind)
+            if query.count() > 0:
+                raise ValueError(
+                    f"Hot-cue of kind {kind} already exists for content {cid}"
+                )
+
+        # Clone cue and update kind
+        id_ = self.generate_unused_id(tables.DjmdCue)
+        new_cue = tables.DjmdCue.create(
+            ID=id_,
+            ContentID=cid,
+            InMsec=cue.InMsec,
+            InFrame=cue.InFrame,
+            InMpegFrame=cue.InMpegFrame,
+            InMpegAbs=cue.InMpegAbs,
+            OutMsec=cue.OutMsec,
+            OutFrame=cue.OutFrame,
+            OutMpegFrame=cue.OutMpegFrame,
+            OutMpegAbs=cue.OutMpegAbs,
+            Kind=kind,
+            Color=cue.Color,
+            ColorTableIndex=cue.ColorTableIndex,
+            ActiveLoop=cue.ActiveLoop,
+            Comment=cue.Comment,
+            BeatLoopSize=cue.BeatLoopSize,
+            CueMicrosec=cue.CueMicrosec,
+            InPointSeekInfo=cue.InPointSeekInfo,
+            OutPointSeekInfo=cue.OutPointSeekInfo,
+            UUID=cue.UUID,
+        )
+        self.add(new_cue)
+        self.flush()
+        return new_cue
+
+    def convert_cue(self, cue, kind: int):
+        """Convert a cue from memory to hotcue or vice-versa and delete the old cue.
+
+        Parameters
+        ----------
+        cue : int or str or DjmdCue
+            The cue point to convert. Can either be a :class:`DjmdCue` object or ID.
+        kind: int
+            The kind of the new cue point. Must be in the range [0, 8].
+            Memory cue points have kind 0, hot-cue points have kind in [1, 8].
+            If the cue point is already of the desired kind, an error is raised.
+
+        Returns
+        -------
+        new_cue : DjmdCue
+            The newly created cue point.
+
+        Raises
+        ------
+        ValueError : If the cue point is already of the desired kind.
+
+        Examples
+        --------
+        Convert a memory cue to the hot-cue 'A' (kind=1):
+
+        >>> db = Rekordbox6Database()
+        >>> content = db.get_content(ID=123456789)
+        >>> len(content.Cues)
+        1
+
+        >>> old_cue = content.Cues[0]
+        >>> old_cue.Kind
+        0
+
+        >>> new_cue = db.convert_cue(old_cue, kind=1)
+        >>> new_cue.Kind
+        1
+
+        The old cue point is deleted:
+
+        >>> len(content.Cues)
+        1
+
+        Convert a hot-cue to memory cue (kind=0):
+
+        >>> db = Rekordbox6Database()
+        >>> content = db.get_content(ID=234567891)
+        >>> old_cue = content.Cues[0]
+        >>> old_cue.Kind
+        1
+
+        >>> new_cue = db.convert_cue(old_cue, kind=0)
+        >>> new_cue.Kind
+        0
+        """
+        if isinstance(cue, (int, str)):
+            cue = self.get_cue(ID=cue)
+        # Clone cue
+        new_cue = self.clone_cue(cue, kind)
+        # Delete old cue
+        self.delete(cue)
+        self.flush()
+        return new_cue
+
     # ----------------------------------------------------------------------------------
 
     def get_mysetting_paths(self):
