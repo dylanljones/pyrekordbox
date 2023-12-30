@@ -29,8 +29,8 @@ database table relationships.
 - **db:** **fix `Kind` notes in `DjmdCue` table**  
 
 
-<a name="0.3.1"></a>
-## [0.3.1] - 2023-12-28
+<a name="v0.3.1"></a>
+## [v0.3.1] - 2023-12-28
 
 This release improves the Rekordbox v6 database key extraction and 
 adds a new handler for smart playlists.
@@ -562,8 +562,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/0.3.1...HEAD
-[0.3.1]: https://github.com/dylanljones/pyrekordbox/compare/0.3.0...0.3.1
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.3.1...HEAD
+[v0.3.1]: https://github.com/dylanljones/pyrekordbox/compare/0.3.0...v0.3.1
 [0.3.0]: https://github.com/dylanljones/pyrekordbox/compare/0.2.3...0.3.0
 [0.2.3]: https://github.com/dylanljones/pyrekordbox/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/dylanljones/pyrekordbox/compare/0.2.1...0.2.2
