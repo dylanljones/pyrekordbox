@@ -143,7 +143,7 @@ PROPERTY_COLUMN_MAP = {
     Property.KEY: "KeyName",
     Property.LABEL: "LabelName",
     # Property.MIX_NAME don't know what this maps to
-    Property.MYTAG: "MyTagNames",
+    Property.MYTAG: "MyTagIDs",
     Property.RATING: "Rating",
     Property.DATE_RELEASED: "ReleaseDate",
     Property.REMIXED_BY: "RemixerName",
@@ -195,6 +195,16 @@ class Condition:
                 raise ValueError(f"Operator '{self.operator}' requires `value_right`")
 
 
+def left_bitshift(x: int, nbit: int = 32) -> int:
+    """Left shifts an N bit integer with sign change."""
+    return x - 2**nbit
+
+
+def right_bitshift(x: int, nbit: int = 32) -> int:
+    """Right shifts an N bit integer with sign change."""
+    return x + 2**nbit
+
+
 def _get_condition_values(cond):
     val_left = cond.value_left
     val_right = cond.value_right
@@ -212,6 +222,10 @@ def _get_condition_values(cond):
                 val_right = func(val_right)
             except ValueError:
                 pass
+
+    if val_left == "":
+        val_left = None
+
     return val_left, val_right
 
 
@@ -219,7 +233,7 @@ class SmartList:
     """Rekordbox smart playlist XML handler."""
 
     def __init__(
-        self, logical_operator: int = LogicalOperator.ALL, auto_update: int = 1
+        self, logical_operator: int = LogicalOperator.ALL, auto_update: int = 0
     ):
         self.playlist_id: Union[int, str] = ""
         self.logical_operator: int = int(logical_operator)
@@ -241,7 +255,7 @@ class SmartList:
             )
             conditions.append(condition)
 
-        self.playlist_id = int(root.attrib["Id"])
+        self.playlist_id = str(right_bitshift(int(root.attrib["Id"])))
         self.logical_operator = int(root.attrib["LogicalOperator"])
         self.auto_update = int(root.attrib["AutomaticUpdate"])
         self.conditions = conditions
@@ -249,7 +263,7 @@ class SmartList:
     def to_xml(self) -> str:
         """Convert the smart playlist conditions to XML."""
         attrib = {
-            "Id": str(self.playlist_id),
+            "Id": str(left_bitshift(int(self.playlist_id))),
             "LogicalOperator": str(self.logical_operator),
             "AutomaticUpdate": str(self.auto_update),
         }
@@ -309,6 +323,8 @@ class SmartList:
 
             if cond.property in PROPERTY_COLUMN_MAP:
                 colum_name = PROPERTY_COLUMN_MAP[cond.property]
+                if cond.property == Property.MYTAG:
+                    val_left = str(right_bitshift(int(val_left)))
 
                 if cond.operator == Operator.EQUAL:
                     comp = getattr(DjmdContent, colum_name) == val_left
