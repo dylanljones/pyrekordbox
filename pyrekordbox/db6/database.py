@@ -1701,13 +1701,16 @@ class Rekordbox6Database:
                 artist = self.get_artist(ID=artist)
             artist = artist.ID
 
+        id_ = self.generate_unused_id(tables.DjmdAlbum)
+        uuid = str(uuid4())
         album = tables.DjmdAlbum.create(
-            ID=self.generate_unused_id(tables.DjmdAlbum),
+            ID=id_,
             Name=name,
             AlbumArtistID=artist,
             ImagePath=image_path,
             Compilation=compilation,
             SearchStr=search_str,
+            UUID=str(uuid),
         )
         self.add(album)
         self.flush()
@@ -1764,7 +1767,10 @@ class Rekordbox6Database:
             raise ValueError(f"Artist '{name}' already exists in database")
 
         id_ = self.generate_unused_id(tables.DjmdArtist)
-        artist = tables.DjmdArtist.create(ID=id_, Name=name, SearchStr=search_str)
+        uuid = str(uuid4())
+        artist = tables.DjmdArtist.create(
+            ID=id_, Name=name, SearchStr=search_str, UUID=uuid
+        )
         self.add(artist)
         self.flush()
         return artist
@@ -1813,7 +1819,8 @@ class Rekordbox6Database:
             raise ValueError(f"Genre '{name}' already exists in database")
 
         id_ = self.generate_unused_id(tables.DjmdGenre)
-        genre = tables.DjmdGenre.create(ID=id_, Name=name)
+        uuid = str(uuid4())
+        genre = tables.DjmdGenre.create(ID=id_, Name=name, UUID=uuid)
         self.add(genre)
         self.flush()
         return genre
@@ -1862,7 +1869,8 @@ class Rekordbox6Database:
             raise ValueError(f"Label '{name}' already exists in database")
 
         id_ = self.generate_unused_id(tables.DjmdLabel)
-        label = tables.DjmdLabel.create(ID=id_, Name=name)
+        uuid = str(uuid4())
+        label = tables.DjmdLabel.create(ID=id_, Name=name, UUID=uuid)
         self.add(label)
         self.flush()
         return label
