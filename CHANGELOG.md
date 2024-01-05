@@ -1,7 +1,7 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="v0.3.2"></a>
+## [v0.3.2] - 2024-01-05
 
 This release fixes smart-playlist related bugs and improves the 
 database table relationships.
@@ -570,7 +570,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.3.2...HEAD
+[v0.3.2]: https://github.com/dylanljones/pyrekordbox/compare/v0.3.1...v0.3.2
 [v0.3.1]: https://github.com/dylanljones/pyrekordbox/compare/0.3.0...v0.3.1
 [0.3.0]: https://github.com/dylanljones/pyrekordbox/compare/0.2.3...0.3.0
 [0.2.3]: https://github.com/dylanljones/pyrekordbox/compare/0.2.2...0.2.3
