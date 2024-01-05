@@ -14,7 +14,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.sqltypes import DateTime, String
 from ..utils import get_rekordbox_pid, warn_deprecated
 from ..config import get_config
-from ..anlz import get_anlz_paths, read_anlz_files
+from ..anlz import get_anlz_paths, read_anlz_files, AnlzFile
 from .registry import RekordboxAgentRegistry
 from .aux_files import MasterPlaylistXml
 from .tables import DjmdContent, PlaylistType
@@ -1941,6 +1941,53 @@ class Rekordbox6Database:
         """
         root = self.get_anlz_dir(content)
         return read_anlz_files(root)
+
+    def get_anlz_path(self, content, type_):
+        """Returns the file path of an ANLZ analysis file of a track.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The content corresponding to a track in the Rekordbox v6 database.
+            If an integer is passed the database is queried for the ``DjmdContent``
+            entry.
+        type_ : str, optional
+            The type of the analysis file to return. Must be one of "DAT", "EXT" or
+            "EX2". "DAT" by default.
+
+        Returns
+        -------
+        anlz_path : Path or None
+            The file path of the analysis file for the content. If the file does not
+            exist, None is returned.
+        """
+        root = self.get_anlz_dir(content)
+        paths = get_anlz_paths(root)
+        return paths.get(type_.upper(), "")
+
+    def read_anlz_file(self, content, type_):
+        """Reads an ANLZ analysis file of a track.
+
+        Parameters
+        ----------
+        content : DjmdContent or int or str
+            The content corresponding to a track in the Rekordbox v6 database.
+            If an integer is passed the database is queried for the ``DjmdContent``
+            entry.
+        type_ : str, optional
+            The type of the analysis file to return. Must be one of "DAT", "EXT" or
+            "EX2". "DAT" by default.
+
+        Returns
+        -------
+        anlz_file : AnlzFile or None
+            The analysis file for the content. If the file does not exist, None is
+            returned.
+        """
+        path = self.get_anlz_path(content, type_)
+        if path:
+            return AnlzFile.parse_file(path)
+        return None
 
     def update_content_path(
         self, content, path, save=True, check_path=True, commit=True
