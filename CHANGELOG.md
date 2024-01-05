@@ -12,6 +12,13 @@ database table relationships.
   This will set the ID in the smart list to the newly created playlist ID before generating the XML string
 
 ### Improvements/Bug Fixes
+
+- **db:** **add missing UUID entries**  
+  The UUID was not set when creating the following db entries:
+  - album
+  - artist
+  - genre
+  - label
 - **db:** **add missing relationships in `DjmdContent`**  
   Linked tables and corresponding relationships:
   - `DjmdCue`: `Cues`
@@ -36,6 +43,7 @@ This release improves the Rekordbox v6 database key extraction and
 adds a new handler for smart playlists.
 
 ### New Features
+
 - **add method to return the contents of a playlist in the RBv6 db directly**  
   The database can now be queried directly for the contents contained in a playlist. 
   This works for regular playlists as well as for smart playlists.
