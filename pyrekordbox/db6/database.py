@@ -2123,6 +2123,7 @@ class Rekordbox6Database:
         out_mpeg_abs = 0
 
         id_ = self.generate_unused_id(tables.DjmdCue)
+        uuid = str(uuid4())
         new_cue = tables.DjmdCue.create(
             ID=id_,
             ContentID=cid,
@@ -2143,7 +2144,8 @@ class Rekordbox6Database:
             CueMicrosec=cue_microsec,
             InPointSeekInfo=in_point_seek_info,
             OutPointSeekInfo=out_point_seek_info,
-            UUID=content.UUID,
+            ContentUUID=content.UUID,
+            UUID=str(uuid),
         )
         self.add(new_cue)
         self.flush()
