@@ -7,10 +7,13 @@
 import os
 import warnings
 import psutil
+import urllib.parse
 from xml.dom import minidom
 import xml.etree.cElementTree as xml
 
 warnings.simplefilter("always", DeprecationWarning)
+
+XML_URL_PREFIX = "file://localhost/"
 
 
 def warn_deprecated(name, new_name="", hint="", remove_in=""):
@@ -119,6 +122,56 @@ def get_rekordbox_agent_pid(raise_exec=False):
     23456
     """
     return get_process_id("rekordboxAgent", raise_exec)
+
+
+def encode_xml_path(path):
+    r"""Encodes a file path as URI string for an XML file.
+
+    Parameters
+    ----------
+    path : str or Path
+        The file path to encode.
+
+    Returns
+    -------
+    url : str
+        The encoded file path as URI string.
+
+    Examples
+    --------
+    >>> s = r"C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3"  # noqa: W605
+    >>> encode_xml_path(s)
+    file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3
+
+    """
+    url_path = urllib.parse.quote(str(path), safe=":/\\")
+    url = XML_URL_PREFIX + url_path.replace("\\", "/")
+    return url
+
+
+def decode_xml_path(url):
+    r"""Decodes an as URI string encoded file path from an XML file.
+
+    Parameters
+    ----------
+    url : str
+        The encoded file path to decode.
+
+    Returns
+    -------
+    path : str
+        The decoded file path.
+
+    Examples
+    --------
+    >>> s = r"file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3"
+    >>> decode_xml_path(s)
+    C:\Music\PioneerDJ\Demo Tracks\Demo Track 1.mp3  # noqa: W605
+
+    """
+    path = urllib.parse.unquote(url)
+    path = path.replace(XML_URL_PREFIX, "")
+    return os.path.normpath(path)
 
 
 def pretty_xml(element, indent=None, encoding="utf-8"):
