@@ -5,58 +5,126 @@
 import os
 import secrets
 from datetime import datetime
-from abc import abstractmethod
+from abc import ABC
 from collections import OrderedDict
 from collections.abc import MutableMapping
 import xml.etree.cElementTree as xml
-from .utils import encode_xml_path, decode_xml_path
+from .utils import XmlFile, encode_xml_path, decode_xml_path
+
+DOCTYPE_LINE = (
+    '<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" '
+    '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+)
 
 DATE_FRMT = "%Y-%m-%dT%H:%M:%S%z"
 
-VALID_VALUE_TAGS = "string", "integer", "date", "true", "false", "dict", "array", "data"
-PATH_VALUES = "Music Folder", "Location"
+INT_TYPE = "integer"
+STR_TYPE = "string"
+DATE_TYPE = "date"
 
 TYPES = {
-    str: "string",
-    int: "integer",
-    datetime: "date",
+    str: STR_TYPE,
+    int: INT_TYPE,
+    datetime: DATE_TYPE,
 }
 DTYPE_GETTERS = {
-    "string": str,
-    "integer": int,
-    "date": lambda s: datetime.strptime(s, DATE_FRMT),
+    STR_TYPE: str,
+    INT_TYPE: int,
+    DATE_TYPE: lambda s: datetime.strptime(s, DATE_FRMT),
 }
 DTYPE_SETTERS = {
-    "date": lambda d: d.strftime(DATE_FRMT),
+    DATE_TYPE: lambda d: d.strftime(DATE_FRMT),
 }
 
 
-def _iter_dict_element_contents(element):
-    n_childs = len(element)
-    for i in range(0, n_childs, 2):
-        key_element = element[i]
-        value_element = element[i + 1]
-        assert key_element.tag == "key"
-        assert value_element.tag in VALID_VALUE_TAGS
-        yield key_element, value_element
+class XmlDuplicateError(Exception):
+    """Raised when a track already exists in the XML database."""
+
+    def __init__(self, key_type, key):
+        super().__init__(f"XML database already contains a track with {key_type}={key}")
 
 
-def _parse_value(key_element, value_element):
-    dtype = value_element.tag
-    if dtype == "true":
-        value = True
-    elif dtype == "false":
-        value = False
-    elif dtype == "data":
-        value = value_element.text
-    else:
-        value = DTYPE_GETTERS[dtype](value_element.text)
-    if key_element.text in PATH_VALUES:
-        value = decode_xml_path(value)
-    return value
+class XmlAttributeKeyError(Exception):
+    def __init__(self, cls, key, attributes):
+        super().__init__(
+            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
+        )
 
 
-def _generate_persistent_id(existing_ids):
+def _dict_item_string(key_element, value_element, encoding="utf-8"):
+    key_str = xml.tostring(key_element, encoding=encoding)
+    val_str = xml.tostring(value_element, encoding=encoding)
+    return (key_str + val_str).decode().rstrip("\n\t")
+
+
+def itunes_xml_string(root, indent=None):
+    if indent is None:
+        indent = "\t"
+    indent2 = 2 * indent
+    indent3 = 3 * indent
+    indent4 = 4 * indent
+    indent5 = 5 * indent
+
+    s = '<?xml version="1.0" encoding="UTF-8"?>\n' + DOCTYPE_LINE + "\n"
+    s += '<plist version="1.0">\n<dict>\n'
+
+    main_dict = root.find("dict")
+    tracks_dict, playlists_arr = None, None
+    music_folder = None, None
+
+    # Main dict
+    for key, val in zip(main_dict[::2], main_dict[1::2]):
+        if key.text == "Tracks":
+            tracks_dict = val
+        elif key.text == "Playlists":
+            playlists_arr = val
+        elif key.text == "Music Folder":
+            music_folder = key, val
+        else:
+            s += indent + _dict_item_string(key, val) + "\n"
+
+    # Tracks
+    s += indent + "<key>Tracks</key>\n" + indent + "<dict>\n"
+    for key, val in zip(tracks_dict[::2], tracks_dict[1::2]):
+        track_id = key.text
+        s += indent2 + f"<key>{track_id}</key>\n"
+        s += indent2 + "<dict>\n"
+        for k, v in zip(val[::2], val[1::2]):
+            s += indent3 + _dict_item_string(k, v) + "\n"
+        s += indent2 + "</dict>\n"
+    s += indent + "</dict>\n"
+
+    # Playlists
+    s += indent + "<key>Playlists</key>\n" + indent + "<array>\n"
+    for playlist in playlists_arr:
+        s += indent2 + "<dict>\n"
+        # Info
+        arr = None
+        for key, val in zip(playlist[::2], playlist[1::2]):
+            if key.text == "Playlist Items":
+                arr = val
+            else:
+                s += indent3 + _dict_item_string(key, val) + "\n"
+        # Playlist items
+        s += indent3 + "<key>Playlist Items</key>\n"
+        s += indent3 + "<array>\n"
+        for item in arr:
+            s += indent4 + "<dict>\n"
+            s += indent5 + _dict_item_string(item[0], item[1]) + "\n"
+            s += indent4 + "</dict>\n"
+        s += indent3 + "</array>\n" + indent2 + "</dict>\n"
+
+    s += indent + "</array>\n"
+
+    # Music folder at end
+    s += indent + _dict_item_string(*music_folder) + "\n"
+    s += "</dict>\n</plist>\n"
+    return s
+
+
+def _generate_persistent_id(existing_ids: set = None):
+    if existing_ids is None:
+        existing_ids = set()
     max_tries = 10_000
     for _ in range(max_tries):
         persist_id = secrets.token_hex(8).upper()
@@ -65,104 +133,45 @@ def _generate_persistent_id(existing_ids):
     raise RuntimeError("Could not generate unique persistent ID.")
 
 
-class KeyValueElement:
-    """Represents a key-value pair in an iTunes XML file."""
+class ItunesXmlElement(MutableMapping, ABC):
+    """Base class for Track and Playlist items."""
 
-    def __init__(
-        self,
-        parent=None,
-        key=None,
-        dtype=None,
-        value=None,
-        key_element=None,
-        value_element=None,
-    ):
-        if parent is not None:
-            key_element = xml.SubElement(parent, "key")
-            key_element.text = key
-            value_element = xml.SubElement(parent, dtype)
-            if value is not None:
-                value_element.text = str(value)
-        self._key_element = key_element
-        self._value_element = value_element
-
-    @classmethod
-    def integer(cls, parent, key, value):
-        return cls(parent=parent, key=key, dtype="integer", value=value)
-
-    @classmethod
-    def string(cls, parent, key, value):
-        return cls(parent=parent, key=key, dtype="string", value=value)
-
-    @classmethod
-    def date(cls, parent, key, value):
-        valstr = DTYPE_SETTERS["date"](value)
-        return cls(parent=parent, key=key, dtype="date", value=valstr)
-
-    @classmethod
-    def bool(cls, parent, key, value):
-        return cls(parent=parent, key=key, dtype="true" if value else "false")
-
-    @property
-    def key(self):
-        return self._key_element.text
-
-    @property
-    def value(self):
-        return _parse_value(self._key_element, self._value_element)
-
-    @value.setter
-    def value(self, value):
-        self._value_element.text = str(value)
-
-    def tostring(self, encoding="utf-8"):
-        key_str = xml.tostring(self._key_element, encoding=encoding)
-        val_str = xml.tostring(self._value_element, encoding=encoding)
-        return (key_str + val_str).decode().rstrip("\n\t")
-
-
-class ItunesXmlElement(MutableMapping):
     ATTRIBS = []  # List of valid attribute names
     GETTERS = {}  # Dict of callbacks to apply when getting an attribute
     SETTERS = {}  # Dict of callbacks to apply when setting an attribute
 
-    def __init__(
-        self, parent_element, element=None, id_=None, persist_id=None, **kwargs
-    ):
-        self._parent_element = parent_element
-        self._data = OrderedDict()
-        if element is not None:
-            self._parse(element)
-        else:
-            self._init(parent_element, id_, persist_id, **kwargs)
-
-    @abstractmethod
-    def _parse(self, element):
-        pass
-
-    @abstractmethod
-    def _init(self, parent_element, id_, persist_id, **kwargs):
-        pass
+    def __init__(self, dict_element):
+        self._dict_element = dict_element
+        self._elements = OrderedDict()
 
     def get(self, key, default=None):
         if key not in self.ATTRIBS:
-            raise KeyError(key)
+            raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
 
-        item = self._data.get(key, None)
-        if item is None:
+        element = self._elements.get(key, None)
+        if element is None:
             return default
 
-        value = item.value
+        if element.tag == "true":
+            return True
+        elif element.tag == "false":
+            return False
+
+        value = element.text
         try:
             # Apply callback
             value = self.GETTERS[key](value)
         except KeyError:
-            pass
+            dtype = element.tag
+            func = DTYPE_GETTERS.get(dtype, None)
+            if func is not None:
+                value = func(value)
         return value
 
     def set(self, key, value):
         if key not in self.ATTRIBS:
-            raise KeyError(key)
+            raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
+
         if isinstance(value, bool):
             dtype = "true" if value else "false"
             value = None
@@ -172,25 +181,35 @@ class ItunesXmlElement(MutableMapping):
                 # Apply callback
                 value = self.SETTERS[key](value)
             except KeyError:
+                func = DTYPE_SETTERS.get(type(value), None)
+                if func is not None:
+                    value = func(value)
                 # Convert to str just in case
                 value = str(value)
 
-        item = self._data.get(key, None)
-        if item is None:
-            item = KeyValueElement(
-                self._parent_element, key=key, dtype=dtype, value=value
-            )
-            self._data[item.key] = item
+        element = self._elements.get(key, None)
+        if element is None:
+            xml.SubElement(self._dict_element, "key").text = key
+            element = xml.SubElement(self._dict_element, dtype)
+            if value is not None:
+                element.text = value
+            self._elements[key] = element
         else:
-            item.value = value
+            element.text = value
+            element.tag = dtype
+
+    def delete(self, key):
+        if key not in self.ATTRIBS:
+            raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
+        raise NotImplementedError()
 
     def __len__(self):
         """int: The number of attributes of the XML element."""
-        return len(self._data)
+        return len(self._elements)
 
     def __iter__(self):
         """Iterable: An iterator of the attribute keys of the XML element."""
-        return iter(self._data)
+        return iter(self._elements)
 
     def __getitem__(self, key):
         return self.get(key)
@@ -199,12 +218,10 @@ class ItunesXmlElement(MutableMapping):
         self.set(key, value)
 
     def __delitem__(self, key):
-        if key not in self.ATTRIBS:
-            raise KeyError(key)
-        del self._data[key]
+        self.delete(key)
 
     def to_dict(self):
-        return {k: self.get(k, None) for k, v in self._data.items()}
+        return {k: self.get(k, None) for k, v in self._elements.items()}
 
     def tostring(self, indent=""):
         pass
@@ -260,94 +277,57 @@ class Track(ItunesXmlElement):
         "File Folder Count",
         "Play Count",
     ]
-    SETTERS = {"Location": encode_xml_path}
+    GETTERS = {
+        "Location": decode_xml_path,
+    }
+    SETTERS = {
+        "Location": encode_xml_path,
+    }
 
-    def __init__(
-        self,
-        parent_element,
-        element=None,
-        id_=None,
-        persist_id=None,
-        location=None,
-        **kwargs,
-    ):
-        super().__init__(
-            parent_element, element, id_, persist_id, location=location, **kwargs
-        )
-
-    def _parse(self, element):
-        for key_el, value_el in _iter_dict_element_contents(element):
-            item = KeyValueElement(key_element=key_el, value_element=value_el)
-            self._data[item.key] = item
-
-    def _init(self, parent_element, id_, persist_id, **kwargs):
-        self.set("Track ID", id_)
-        self.set("Persistent ID", persist_id)
-        self.set("Location", kwargs.pop("location", None))
-        for key, value in kwargs.items():
-            self.set(key, value)
-
-    def tostring(self, indent=""):
-        lines = list()
-        trackid = self.get("Track ID")
-        lines.append(2 * indent + f"<key>{trackid}</key>")
-        lines.append(2 * indent + "<dict>")
-        for key, value in self._data.items():
-            lines.append(3 * indent + value.tostring())
-        lines.append(2 * indent + "</dict>")
-        return "\n".join(lines)
+    def __init__(self, key_element, dict_element):
+        self._key_element = key_element
+        super().__init__(dict_element)
+        for key, val in zip(self._dict_element[::2], self._dict_element[1::2]):
+            self._elements[key.text] = val
 
 
 class BasePlaylist(ItunesXmlElement):
-    def __init__(
-        self, parent_element, element=None, id_=None, persist_id=None, **kwargs
-    ):
-        self._contents = list()
-        super().__init__(parent_element, element, id_, persist_id, **kwargs)
+    def __init__(self, dict_element):
+        self._contents = OrderedDict()
+        self._array_element = None
+        super().__init__(dict_element)
+        for key, val in zip(self._dict_element[::2], self._dict_element[1::2]):
+            if key.text == "Playlist Items":
+                self._array_element = val
+            else:
+                self._elements[key.text] = val
+
+    def init(self):
+        xml.SubElement(self._dict_element, "key").text = "Playlist Items"
+        self._array_element = xml.SubElement(self._dict_element, "array")
 
     @property
-    def contents(self):
-        return self._contents
-
-    def _parse(self, element):
-        items = None
-        for key_el, value_el in _iter_dict_element_contents(element):
-            if key_el.text == "Playlist Items":
-                items = value_el
-            else:
-                item = KeyValueElement(key_element=key_el, value_element=value_el)
-                self._data[item.key] = item
-
-        if items is not None:
-            for item_dict in items:
-                key_el, value_el = item_dict
-                assert key_el.text == "Track ID"
-                self._contents.append(int(value_el.text))
+    def tracks(self):
+        return list(self._contents.values())
 
     def contains_track(self, track):
         return track["Track ID"] in self._contents
 
     def add_track(self, track):
-        self._contents.append(track["Track ID"])
+        id_ = track["Track ID"]
+        dict_element = xml.SubElement(self._array_element, "dict")
+        xml.SubElement(dict_element, "key").text = "Track ID"
+        xml.SubElement(dict_element, "integer").text = str(id_)
+        self._contents[id_] = dict_element
+
+    def remove_track(self, track):
+        id_ = track["Track ID"]
+        dict_element = self._contents.pop(id_)
+        self._array_element.remove(dict_element)
 
     def clear_tracks(self):
         self._contents.clear()
-
-    def tostring(self, indent=""):
-        lines = list()
-        lines.append(2 * indent + "<dict>")
-        for key, value in self._data.items():
-            lines.append(3 * indent + value.tostring())
-
-        lines.append(3 * indent + "<key>Playlist Items</key>")
-        lines.append(3 * indent + "<array>")
-        for id_ in self._contents:
-            lines.append(4 * indent + "<dict>")
-            lines.append(5 * indent + f"<key>Track ID</key><integer>{id_}</integer>")
-            lines.append(4 * indent + "</dict>")
-        lines.append(3 * indent + "</array>")
-        lines.append(2 * indent + "</dict>")
-        return "\n".join(lines)
+        self._array_element.clear()
 
 
 class MasterPlaylist(BasePlaylist):
@@ -359,17 +339,6 @@ class MasterPlaylist(BasePlaylist):
         "Visible",
         "Name",
     ]
-
-    def _init(self, parent_element, id_, persist_id, **kwargs):
-        xml.SubElement(parent_element, "key").text = str(id_)
-        xml.SubElement(parent_element, "dict")
-
-        self.set("Master", True)
-        self.set("Playlist ID", id_)
-        self.set("Playlist Persistent ID", persist_id)
-        self.set("All Items", True)
-        self.set("Visible", False)
-        self.set("Name", "Library")
 
 
 class Playlist(BasePlaylist):
@@ -390,68 +359,59 @@ class Playlist(BasePlaylist):
         "Podcasts",
     ]
 
-    def _init(self, parent_element, id_, persist_id, **kwargs):
-        self.set("Playlist ID", id_)
-        self.set("Playlist Persistent ID", persist_id)
-        for key, val in kwargs.items():
-            self.set(key, val)
 
-
-class ItunesXml:
+class ItunesXml(XmlFile):
     ROOT_TAG = "plist"
 
     def __init__(self, path=None, **kwargs):
-        self._root = None
+        # Main container elements
         self._tracks_dict = None
         self._playlists_arr = None
 
+        # Data in the XML file
         self._info = OrderedDict()
         self._tracks = OrderedDict()
         self._master_playlist = None
         self._playlists = OrderedDict()
 
+        # Used to check for duplicates
         self._track_ids = set()
         self._track_persist_ids = set()
         self._locations = set()
         self._playlist_ids = set()
         self._playlist_persist_ids = set()
 
-        if path is not None:
-            self._parse(path)
-        else:
-            self._init(**kwargs)
+        super().__init__(path, **kwargs)
 
     @property
-    def major_version(self):
-        return self._info["Major Version"].value
-
-    @property
-    def minor_version(self):
-        return self._info["Minor Version"].value
+    def version(self):
+        major = self._info["Major Version"].text
+        minor = self._info["Minor Version"].text
+        return f"{major}.{minor}"
 
     @property
     def application_version(self):
-        return self._info["Application Version"].value
+        return self._info["Application Version"].text
 
     @property
     def date(self):
-        return self._info["Date"].value
+        return datetime.strptime(self._info["Date"].text, DATE_FRMT)
 
     @property
     def features(self):
-        return self._info["Features"].value
+        return int(self._info["Features"].text)
 
     @property
     def show_content_ratings(self):
-        return self._info["Show Content Ratings"].value
+        return self._info["Show Content Ratings"].tag == "true"
 
     @property
     def library_persistent_id(self):
-        return self._info["Library Persistent ID"].value
+        return self._info["Library Persistent ID"].text
 
     @property
     def music_folder(self):
-        return self._info["Music Folder"].value
+        return decode_xml_path(self._info["Music Folder"].text)
 
     @property
     def tracks(self):
@@ -460,83 +420,6 @@ class ItunesXml:
     @property
     def playlists(self):
         return list(self._playlists.values())
-
-    def _parse(self, path):
-        tree = xml.parse(str(path))
-        self._root = tree.getroot()
-
-        # Parse info
-        plist_dict = self._root.find("dict")
-        for key_el, value_el in _iter_dict_element_contents(plist_dict):
-            if key_el.text == "Tracks":
-                self._tracks_dict = value_el
-            elif key_el.text == "Playlists":
-                self._playlists_arr = value_el
-            else:
-                keyval = KeyValueElement(key_element=key_el, value_element=value_el)
-                key = key_el.text
-                self._info[key] = keyval
-
-        # Parse tracks
-        for key_el, value_el in _iter_dict_element_contents(self._tracks_dict):
-            track_id = int(key_el.text)
-            track = Track(self._tracks_dict, element=value_el)
-            self._tracks[track_id] = track
-
-        # Parse playlists
-        master_pl = MasterPlaylist(self._playlists_arr, element=self._playlists_arr[0])
-        self._master_playlist = master_pl
-        for pl_dict in self._playlists_arr[1:]:
-            pl = Playlist(self._playlists_arr, element=pl_dict)
-            persist_id = pl["Playlist Persistent ID"]
-            self._playlists[persist_id] = pl
-
-        self._update_cache()
-
-    def _init(
-        self,
-        app_version="12.11.3.17",
-        date=None,
-        persist_id="E116CD8C3BA8AC5D",
-        music_folder="C:/Users/dylan/Music/iTunes/iTunes Media",
-    ):
-        if date is None:
-            date = datetime.now()
-
-        self._root = xml.Element(self.ROOT_TAG, attrib={"Version": "1.0"})
-        plist_dict = xml.SubElement(self._root, "dict")
-
-        # Info
-        item = KeyValueElement.integer(plist_dict, "Major Version", 1)
-        self._info[item.key] = item
-        item = KeyValueElement.integer(plist_dict, "Minor Version", 1)
-        self._info[item.key] = item
-        item = KeyValueElement.string(plist_dict, "Application Version", app_version)
-        self._info[item.key] = item
-        item = KeyValueElement.date(plist_dict, "Date", date)
-        self._info[item.key] = item
-        item = KeyValueElement.integer(plist_dict, "Features", 5)
-        self._info[item.key] = item
-        item = KeyValueElement.bool(plist_dict, "Show Content Ratings", True)
-        self._info[item.key] = item
-        item = KeyValueElement.string(plist_dict, "Library Persistent ID", persist_id)
-        self._info[item.key] = item
-        # Tracks dict
-        xml.SubElement(plist_dict, "key").text = "Tracks"
-        self._tracks_dict = xml.SubElement(plist_dict, "dict")
-        # Playlists array
-        xml.SubElement(plist_dict, "key").text = "Playlists"
-        self._playlists_arr = xml.SubElement(plist_dict, "array")
-        # Music folder
-        item = KeyValueElement.string(
-            plist_dict, "Music Folder", encode_xml_path(music_folder)
-        )
-        self._info[item.key] = item
-
-        persist_id = _generate_persistent_id(set())
-        self._master_playlist = MasterPlaylist(
-            self._playlists_arr, id_=1, persist_id=persist_id
-        )
 
     def _add_track_cache(self, track):
         """Add the TrackID and Location to the cache."""
@@ -578,106 +461,188 @@ class ItunesXml:
             if not self._master_playlist.contains_track(track):
                 self._master_playlist.add_track(track)
 
-    def get_track(self, track_id):
-        return self._tracks[track_id]
+    def _parse(self, path):
+        tree = xml.parse(str(path))
+        self._root = tree.getroot()
+
+        main_dict = self._root.find("dict")
+        for key, val in zip(main_dict[::2], main_dict[1::2]):
+            if key.text == "Tracks":
+                self._tracks_dict = val
+            elif key.text == "Playlists":
+                self._playlists_arr = val
+            else:
+                self._info[key.text] = val
+
+        # Parse tracks
+        for key, val in zip(self._tracks_dict[::2], self._tracks_dict[1::2]):
+            track = Track(key, val)
+            assert int(key.text) == int(track["Track ID"])
+            self._tracks[key.text] = track
+
+        # Parse playlists
+        self._master_playlist = MasterPlaylist(self._playlists_arr[0])
+        for pl_dict in self._playlists_arr[1:]:
+            pl = Playlist(pl_dict)
+            persist_id = pl["Playlist Persistent ID"]
+            self._playlists[persist_id] = pl
+
+        self._update_cache()
+
+    def _init(
+        self,
+        app_version="12.11.3.17",
+        date=None,
+        persist_id="E116CD8C3BA8AC5D",
+        music_folder="C:/Users/dylan/Music/iTunes/iTunes Media",
+    ):
+        if date is None:
+            date = datetime.now()
+
+        self._root = xml.Element(self.ROOT_TAG, attrib={"Version": "1.0"})
+        main_dict = xml.SubElement(self._root, "dict")
+
+        # Info
+        key = "Major Version"
+        xml.SubElement(main_dict, "key").text = key
+        item = xml.SubElement(main_dict, INT_TYPE)
+        item.text = "1"
+        self._info[key] = item
+
+        key = "Minor Version"
+        xml.SubElement(main_dict, "key").text = key
+        item = xml.SubElement(main_dict, INT_TYPE)
+        item.text = "1"
+        self._info[key] = item
+
+        key = "Application Version"
+        xml.SubElement(main_dict, "key").text = key
+        item = xml.SubElement(main_dict, STR_TYPE)
+        item.text = app_version
+        self._info[key] = item
+
+        key = "Date"
+        xml.SubElement(main_dict, "key").text = key
+        item = xml.SubElement(main_dict, DATE_TYPE)
+        item.text = date.strftime(DATE_FRMT) + "Z"
+        self._info[key] = item
+
+        key = "Features"
+        xml.SubElement(main_dict, "key").text = key
+        item = xml.SubElement(main_dict, INT_TYPE)
+        item.text = "5"
+        self._info[key] = item
+
+        key = "Show Content Ratings"
+        xml.SubElement(main_dict, "key").text = key
+        self._info[key] = xml.SubElement(main_dict, "true")
+
+        key = "Library Persistent ID"
+        xml.SubElement(main_dict, "key").text = key
+        item = xml.SubElement(main_dict, INT_TYPE)
+        item.text = persist_id
+        self._info[key] = item
+
+        # Tracks
+        xml.SubElement(main_dict, "key").text = "Tracks"
+        self._tracks_dict = xml.SubElement(main_dict, "dict")
+
+        # Playlists
+        xml.SubElement(main_dict, "key").text = "Playlists"
+        self._playlists_arr = xml.SubElement(main_dict, "array")
+
+        # Music folder
+        key = "Music Folder"
+        xml.SubElement(main_dict, "key").text = key
+        item = xml.SubElement(main_dict, STR_TYPE)
+        item.text = encode_xml_path(music_folder)
+        self._info[key] = item
+
+        # Add the master Playlist
+        id_ = 1
+        persist_id = _generate_persistent_id()
+        dict_element = xml.SubElement(self._playlists_arr, "dict")
+        playlist = MasterPlaylist(dict_element)
+        playlist.set("Master", True)
+        playlist.set("Playlist ID", id_)
+        playlist.set("Playlist Persistent ID", persist_id)
+        playlist.set("All Items", True)
+        playlist.set("Visible", False)
+        playlist.set("Name", "Library")
+        playlist.init()
+        self._master_playlist = playlist
 
     def add_track(self, location, **kwargs):
         id_ = max(self._tracks.keys()) + 1 if self._tracks else 1
         persist_id = _generate_persistent_id(self._track_persist_ids)
         if os.path.normpath(location) in self._locations:
-            raise ValueError(f"Track with Location {location} already in database")
+            raise XmlDuplicateError("Location", location)
         if id_ in self._track_ids:
-            raise ValueError(f"Track ID {id_} already in use")
+            raise XmlDuplicateError("Track ID", id_)
 
-        track = Track(
-            self._tracks_dict,
-            location=location,
-            id_=id_,
-            persist_id=persist_id,
-            **kwargs,
-        )
-        self._tracks[track["Track ID"]] = track
+        key_element = xml.SubElement(self._tracks_dict, "key")
+        key_element.text = str(id_)
+        dict_element = xml.SubElement(self._tracks_dict, "dict")
+
+        track = Track(key_element, dict_element)
+        track["Track ID"] = id_
+        track["Persistent ID"] = persist_id
+        track["Location"] = location
+        track.update(kwargs)
+
+        self._tracks[id_] = track
         self._add_track_cache(track)
         return track
+
+    def get_track(self, id_):
+        return self._tracks[id_]
+
+    def remove_track(self, id_):
+        track = self._tracks.pop(id_)
+        # noinspection PyProtectedMember
+        self._tracks_dict.remove(track._key_element)
+        # noinspection PyProtectedMember
+        self._tracks_dict.remove(track._dict_element)
+        self._remove_track_cache(track)
+
+    def add_playlist(self, name, parent=None, all_items=True, **kwargs):
+        id_ = max(self._playlists.keys()) + 1 if self._playlists else 2
+        persist_id = _generate_persistent_id(self._playlist_persist_ids)
+        if id_ in self._playlist_ids:
+            raise ValueError(f"Playlist ID {id_} already in use")
+        if persist_id in self._playlist_persist_ids:
+            raise ValueError(f"Playlist Persistent ID {persist_id} already in use")
+
+        dict_element = xml.SubElement(self._playlists_arr, "dict")
+        playlist = Playlist(dict_element)
+        playlist["Playlist ID"] = id_
+        if parent is not None:
+            playlist["Parent Persistent ID"] = parent["Playlist Persistent ID"]
+        playlist["Playlist Persistent ID"] = persist_id
+        playlist["All Items"] = all_items
+        playlist["Name"] = name
+        for key, val in kwargs.items():
+            playlist[key] = val
+        playlist.init()
+
+        self._playlists[persist_id] = playlist
+        self._add_playlist_cache(playlist)
+        return playlist
 
     def get_playlist(self, persist_id):
         return self._playlists[persist_id]
 
-    def add_playlist(self, name, parent=None, all_items=True, **kwargs):
-        id_ = max(self._playlists.keys()) + 1 if self._playlists else 1
-        persist_id = _generate_persistent_id(self._playlist_persist_ids)
-        if id_ in self._playlist_ids:
-            raise ValueError(f"Playlist ID {id_} already in use")
+    def remove_playlist(self, persist_id):
+        playlist = self._playlists.pop(persist_id)
+        # noinspection PyProtectedMember
+        self._tracks_dict.remove(playlist._dict_element)
+        self._remove_playlist_cache(playlist)
 
-        attribs = {
-            "Name": name,
-            "All Items": all_items,
-        }
-        if parent is not None:
-            attribs["Parent Persistent ID"] = parent["Playlist Persistent ID"]
-        attribs.update(kwargs)
-        pl = Playlist(self._playlists_arr, id_=id_, persist_id=persist_id, **attribs)
-        self._playlists[pl["Playlist ID"]] = pl
-        self._add_playlist_cache(pl)
-        return pl
-
-    def tostring(self, indent=None, char_replacements=None):
-        if not self.tracks:
-            raise ValueError("No tracks in library")
-        if char_replacements is None:
-            char_replacements = {"\u200b": ""}
-
+    def tostring(self, indent=None, itunes_format=True):
         self._update_master_playlist()
-
-        if indent is None:
-            indent = "\t"
-
-        lines = list()
-        lines.append('<?xml version="1.0" encoding="UTF-8"?>')
-        lines.append(
-            '<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" '
-            '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
-        )
-        lines.append('<plist version="1.0">')
-        lines.append("<dict>")
-        for info in self._info.values():
-            if info.key == "Music Folder":
-                continue
-            lines.append(indent + info.tostring())
-        # Tracks
-        lines.append(indent + "<key>Tracks</key>")
-        lines.append(indent + "<dict>")
-        for track in self.tracks:
-            lines.append(track.tostring(indent=indent))
-        lines.append(indent + "</dict>")
-        # Playlists
-        lines.append(indent + "<key>Playlists</key>")
-        lines.append(indent + "<array>")
-        lines.append(self._master_playlist.tostring(indent=indent))
-        for pl in self.playlists:
-            lines.append(pl.tostring(indent=indent))
-        lines.append(indent + "</array>")
-        # Music folder at end
-        lines.append(indent + self._info["Music Folder"].tostring())
-
-        lines.append("</dict>")
-        lines.append("</plist>")
-        string = "\n".join(lines)
-        for char, replacement in char_replacements.items():
-            string = string.replace(char, replacement)
-        return string
-
-    def save(self, path="", indent=None):
-        """Saves the contents to an XML file.
-
-        Parameters
-        ----------
-        path : str or Path, optional
-            The path for saving the XML file. The default is the original file.
-        indent : str, optional
-            The indentation used for formatting the XML element.
-            The default is 3 spaces.
-        """
-        data = self.tostring(indent).encode("utf-8")
-        with open(path, "wb") as fh:
-            fh.write(data)
+        if itunes_format:
+            return itunes_xml_string(self._root, indent)
+        else:
+            lines = super().tostring(indent).splitlines()
+            lines.insert(1, DOCTYPE_LINE)
+            return "\n".join(lines)

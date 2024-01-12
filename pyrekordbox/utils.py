@@ -213,3 +213,59 @@ def pretty_xml(element, indent=None, encoding="utf-8"):
     # Remove annoying empty lines
     string = "\n".join([line for line in string.splitlines() if line.strip()])
     return string
+
+
+class XmlFile:
+    def __init__(self, path=None, **kwargs):
+        self._root = None
+        self._path = path
+        if path is not None:
+            self._parse(path)
+        else:
+            self._init(**kwargs)
+
+    def _parse(self, path):
+        """Parse an existing XML file.
+
+        Parameters
+        ----------
+        path : str or Path
+            The path to the XML file to parse.
+        """
+        pass
+
+    def _init(self, **kwargs):
+        """Initialize a new XML file."""
+        pass
+
+    def tostring(self, indent=None):
+        """Returns the contents of the XML file as a string.
+
+        Parameters
+        ----------
+        indent : str, optional
+            The indentation used for formatting the XML file. The default is 3 spaces.
+
+        Returns
+        -------
+        s : str
+            The contents of the XML file
+        """
+        return pretty_xml(self._root, indent, encoding="utf-8")
+
+    def save(self, path="", indent=None):
+        """Saves the contents to an XML file.
+
+        Parameters
+        ----------
+        path : str or Path, optional
+            The path for saving the XML file. The default is the original file.
+        indent : str, optional
+            The indentation used for formatting the XML element.
+            The default is 3 spaces.
+        """
+        string = self.tostring(indent)
+        if not path:
+            path = self._path
+        with open(path, "w") as fh:
+            fh.write(string)

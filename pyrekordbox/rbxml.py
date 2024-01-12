@@ -10,7 +10,7 @@ from abc import abstractmethod
 from collections import abc
 import xml.etree.cElementTree as xml
 import bidict
-from .utils import pretty_xml, decode_xml_path, encode_xml_path
+from .utils import XmlFile, decode_xml_path, encode_xml_path
 
 logger = logging.getLogger(__name__)
 
@@ -824,7 +824,7 @@ class Node:
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences
-class RekordboxXml:
+class RekordboxXml(XmlFile):
     """Rekordbox XML database object.
 
     The XML database contains the tracks and playlists in the Rekordbox collection. By
@@ -859,7 +859,6 @@ class RekordboxXml:
     COLL_TAG = "COLLECTION"
 
     def __init__(self, path=None, name=None, version=None, company=None):
-        self._root = None
         self._product = None
         self._collection = None
         self._playlists = None
@@ -870,10 +869,7 @@ class RekordboxXml:
         self._locations = set()
         self._ids = set()
 
-        if path is not None:
-            self._parse(path)
-        else:
-            self._init(name, version, company)
+        super().__init__(path, name=name, version=version, company=company)
 
     @property
     def frmt_version(self):
@@ -1214,7 +1210,7 @@ class RekordboxXml:
                 f"Track count {num_tracks} does not match number of elements {n}"
             )
         # Generate XML string
-        return pretty_xml(self._root, indent, encoding="utf-8")
+        return super().tostring(indent)
 
     def save(self, path="", indent=None):
         """Saves the contents to an XML file.
