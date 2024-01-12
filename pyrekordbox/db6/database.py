@@ -1946,6 +1946,7 @@ class Rekordbox6Database:
 
         # Clone cue and update kind
         id_ = self.generate_unused_id(tables.DjmdCue)
+        uuid = str(uuid4())
         new_cue = tables.DjmdCue.create(
             ID=id_,
             ContentID=cid,
@@ -1966,7 +1967,8 @@ class Rekordbox6Database:
             CueMicrosec=cue.CueMicrosec,
             InPointSeekInfo=cue.InPointSeekInfo,
             OutPointSeekInfo=cue.OutPointSeekInfo,
-            UUID=cue.UUID,
+            ContentUUID=cue.ContentUUID,
+            UUID=uuid,
         )
         self.add(new_cue)
         self.flush()
