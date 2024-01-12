@@ -15,6 +15,7 @@ from sqlalchemy.sql.sqltypes import DateTime, String
 from ..utils import get_rekordbox_pid, warn_deprecated
 from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files
+from ..mp3 import load_mp3_frame_headers
 from .registry import RekordboxAgentRegistry
 from .aux_files import MasterPlaylistXml
 from .tables import DjmdContent, PlaylistType
@@ -2099,6 +2100,11 @@ class Rekordbox6Database:
             raise ValueError(f"Invalid hot-cue kind {kind}")
 
         cid = content.ID
+        # Check if audio-file exists
+        path = Path(content.FolderPath)
+        if not path.exists():
+            raise FileNotFoundError(f"File of content {content} does not exist")
+
         # Check if hot-cue already exists
         if kind > 0:
             query = self.query(tables.DjmdCue).filter_by(ContentID=cid, Kind=kind)
@@ -2116,11 +2122,31 @@ class Rekordbox6Database:
             out_msec = int(out_msec)
             out_frame = int(out_msec * 0.15)  # 1 frame = 1/150 s = 0.15 ms
 
-        # TODO: ABR/VBR support
-        in_mpeg_frame = 0
-        in_mpeg_abs = 0
-        out_mpeg_frame = 0
-        out_mpeg_abs = 0
+        in_mpeg_frame, in_mpeg_abs = 0, 0
+        out_mpeg_frame, out_mpeg_abs = 0, 0
+        # Check if file is a MP3 file and is ABR/VBR encoded
+        if content.FileType in (0, 1):
+            # Parse MPEG frames and extract frame times, positions and bitrate
+            frame_millis, frame_positions = list(), list()
+            frame_bit_rates = set()
+            t = 0
+            try:
+                frame_iter = load_mp3_frame_headers(path, backend="ffmpeg")
+            except FileNotFoundError:
+                # No Ffprobe found, fall back to Python implementation
+                frame_iter = load_mp3_frame_headers(path, backend="py")
+
+            for frame in frame_iter:
+                frame_bit_rates.add(frame.bit_rate)
+                frame_millis.append(t)
+                frame_positions.append(frame.pos)
+                t += int(frame.length * 1000)
+
+            # If more than one bitrate is found, the file is ABR/VBR encoded
+            vbr = len(frame_bit_rates) > 1
+            if vbr:
+                # TODO: Calculate ABR/VBR cue info
+                raise NotImplementedError("ABR/VBR MP3 files are not supported")
 
         id_ = self.generate_unused_id(tables.DjmdCue)
         uuid = str(uuid4())
