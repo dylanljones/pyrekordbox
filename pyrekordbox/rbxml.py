@@ -10,7 +10,13 @@ from abc import abstractmethod
 from collections import abc
 import xml.etree.cElementTree as xml
 import bidict
-from .utils import XmlFile, decode_xml_path, encode_xml_path
+from .utils import (
+    XmlFile,
+    XmlAttributeKeyError,
+    XmlDuplicateError,
+    decode_xml_path,
+    encode_xml_path,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,20 +33,6 @@ RATING_MAPPING = bidict.bidict(
     {"0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5}
 )
 NODE_KEYTYPE_MAPPING = bidict.bidict({"0": "TrackID", "1": "Location"})
-
-
-class XmlDuplicateError(Exception):
-    """Raised when a track already exists in the XML database."""
-
-    def __init__(self, key_type, key):
-        super().__init__(f"XML database already contains a track with {key_type}={key}")
-
-
-class XmlAttributeKeyError(Exception):
-    def __init__(self, cls, key, attributes):
-        super().__init__(
-            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
-        )
 
 
 class AbstractElement(abc.Mapping):

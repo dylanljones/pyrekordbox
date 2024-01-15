@@ -215,6 +215,22 @@ def pretty_xml(element, indent=None, encoding="utf-8"):
     return string
 
 
+class XmlDuplicateError(Exception):
+    """Raised when a track already exists in an XML database."""
+
+    def __init__(self, key_type, key):
+        super().__init__(f"XML database already contains a track with {key_type}={key}")
+
+
+class XmlAttributeKeyError(Exception):
+    """Raised for invalid attributes of an XML element."""
+
+    def __init__(self, cls, key, attributes):
+        super().__init__(
+            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
+        )
+
+
 class XmlFile:
     def __init__(self, path=None, **kwargs):
         self._root = None

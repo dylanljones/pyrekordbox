@@ -9,7 +9,14 @@ from abc import ABC
 from collections import OrderedDict
 from collections.abc import MutableMapping
 import xml.etree.cElementTree as xml
-from .utils import XmlFile, encode_xml_path, decode_xml_path
+import bidict
+from .utils import (
+    XmlFile,
+    XmlAttributeKeyError,
+    XmlDuplicateError,
+    decode_xml_path,
+    encode_xml_path,
+)
 
 DOCTYPE_LINE = (
     '<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" '
@@ -35,20 +42,6 @@ DTYPE_GETTERS = {
 DTYPE_SETTERS = {
     DATE_TYPE: lambda d: d.strftime(DATE_FRMT),
 }
-
-
-class XmlDuplicateError(Exception):
-    """Raised when a track already exists in the XML database."""
-
-    def __init__(self, key_type, key):
-        super().__init__(f"XML database already contains a track with {key_type}={key}")
-
-
-class XmlAttributeKeyError(Exception):
-    def __init__(self, cls, key, attributes):
-        super().__init__(
-            f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
-        )
 
 
 def _dict_item_string(key_element, value_element, encoding="utf-8"):
@@ -136,15 +129,35 @@ def _generate_persistent_id(existing_ids: set = None):
 class ItunesXmlElement(MutableMapping, ABC):
     """Base class for Track and Playlist items."""
 
-    ATTRIBS = []  # List of valid attribute names
-    GETTERS = {}  # Dict of callbacks to apply when getting an attribute
-    SETTERS = {}  # Dict of callbacks to apply when setting an attribute
+    ATTRIBS: list
+    """list[str]: List of all attribute keys of the XML element"""
+    ATTRIB_MAP = bidict.bidict()
+    """bidict[str, str]: Bidirectional map of attribute names
+
+    Used to unify the attribute names of the Itunes and Rekordbox XML format.
+    """
+    GETTERS = dict()
+    """dict[str, Callable]: Dictionary of attribute getter conversion methods.
+
+    See Also
+    --------
+    AbstractElement.get
+    """
+    SETTERS = dict()
+    """dict[str, Callable]: Dictionary of attribute setter conversion methods.
+
+    See Also
+    --------
+    AbstractElement.set
+    """
 
     def __init__(self, dict_element):
         self._dict_element = dict_element
         self._elements = OrderedDict()
 
     def get(self, key, default=None):
+        if key in self.ATTRIB_MAP:
+            key = self.ATTRIB_MAP[key]
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
 
@@ -169,6 +182,9 @@ class ItunesXmlElement(MutableMapping, ABC):
         return value
 
     def set(self, key, value):
+        if key in self.ATTRIB_MAP:
+            key = self.ATTRIB_MAP[key]
+
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
 
@@ -277,6 +293,22 @@ class Track(ItunesXmlElement):
         "File Folder Count",
         "Play Count",
     ]
+    ATTRIB_MAP = bidict.bidict(
+        {
+            "TrackID": "Track ID",
+            "TotalTime": "Total Time",
+            "DiscNumber": "Disc Number",
+            "TrackNumber": "Track Number",
+            "AverageBpm": "BPM",
+            "DateModified": "Date Modified",
+            "DateAdded": "Date Added",
+            "Bitrate": "Bit Rate",
+            "SampleRate": "Sample Rate",
+            "PlayCount": "Play Count",
+            "LastPlayed": "Play Date UTC",
+            "Label": "Work",
+        }
+    )
     GETTERS = {
         "Location": decode_xml_path,
     }
