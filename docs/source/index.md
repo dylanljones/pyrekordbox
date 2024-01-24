@@ -57,6 +57,7 @@ caption: File formats
 
 formats/db6
 formats/xml
+formats/itunes
 formats/anlz
 formats/mysetting
 ```
