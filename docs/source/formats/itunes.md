@@ -335,9 +335,9 @@ Playlists can have the following attributes:
      - string
      - Persistent ID of parent
      - required
-   * - All Items
+   * - Playlist Items
      - array
-     - Plalyist contains
+     - Items in the playlist
      -
    * - All Items
      - bool
