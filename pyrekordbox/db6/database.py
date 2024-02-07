@@ -2,8 +2,9 @@
 # Author: Dylan Jones
 # Date:   2023-08-13
 
-import logging
 import datetime
+import logging
+import os
 import secrets
 from uuid import uuid4
 from pathlib import Path
@@ -813,7 +814,9 @@ class Rekordbox6Database:
 
     # -- Database updates --------------------------------------------------------------
 
-    def generate_unused_id(self, table, is_28_bit: bool = True) -> int:
+    def generate_unused_id(
+        self, table, is_28_bit: bool = True, id_field_name: str = "ID"
+    ) -> int:
         """Generates an unused ID for the given table."""
         max_tries = 1000000
         for _ in range(max_tries):
@@ -825,7 +828,8 @@ class Rekordbox6Database:
             if id_ < 100:
                 continue
             # Check if ID is already used
-            query = self.query(table.ID).filter(table.ID == id_)
+            id_field = getattr(table, id_field_name)
+            query = self.query(id_field).filter(id_field == id_)
             used = self.query(query.exists()).scalar()
             if not used:
                 return id_
@@ -1874,6 +1878,70 @@ class Rekordbox6Database:
         self.add(label)
         self.flush()
         return label
+
+    def add_content(self, path):
+        """Adds a new track to the database.
+
+        Parameters
+        ----------
+        path : str
+            Absolute path to the music file to be added.
+
+        Returns
+        -------
+        content : DjmdContent
+            The newly created track.
+
+        Raises
+        ------
+        ValueError : If a track with the same path already exists in the database.
+
+        Examples
+        --------
+        Add a new track to the database:
+
+        >>> db = Rekordbox6Database()
+        >>> db.add_content(path="/Users/foo/Downloads/banger.mp3")
+        <DjmdContent(123456789 Title=None)>
+        """
+        query = self.query(tables.DjmdContent).filter_by(FolderPath=path)
+        if query.count() > 0:
+            raise ValueError(f"Track with path '{path}' already exists in database")
+
+        id_ = self.generate_unused_id(tables.DjmdContent)
+        file_id = self.generate_unused_id(
+            tables.DjmdContent, id_field_name="rb_file_id"
+        )
+        uuid = str(uuid4())
+        content_link = self.get_menu_items(Name="TRACK").one()
+        date_created = datetime.date.today()
+        device = self.get_device().first()
+        file_name_l = os.path.basename(path)
+        file_size = os.stat(path).st_size
+        now = datetime.datetime.now()
+
+        content = tables.DjmdContent.create(
+            ID=id_,
+            UUID=uuid,
+            ContentLink=content_link.rb_local_usn,
+            DateCreated=date_created,
+            DeliveryControl="on",
+            DeviceID=device.ID,
+            FileNameL=file_name_l,
+            FileSize=file_size,
+            FileType=1,
+            FolderPath=path,
+            HotCueAutoLoad="on",
+            MasterDBID=device.MasterDBID,
+            MasterSongID=id_,
+            StockDate=date_created,
+            created_at=now,
+            updated_at=now,
+            rb_file_id=file_id,
+        )
+        self.add(content)
+        self.flush()
+        return content
 
     # ----------------------------------------------------------------------------------
 
