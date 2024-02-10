@@ -1,5 +1,15 @@
 # What's New
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **db:** **fix missing proxy association in table dict**  
+  The association proxies were missing in the `to_dict` method.
+  The keys are now also cached.
+
+
 <a name="v0.3.2"></a>
 ## [v0.3.2] - 2024-01-05
 
