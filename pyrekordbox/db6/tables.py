@@ -146,6 +146,7 @@ class Base(DeclarativeBase):
     """Base class used to initialize the declarative base for all tables."""
 
     __tablename__: str
+    __keys__: list[str] = []
 
     @classmethod
     def create(cls, **kwargs):
@@ -164,13 +165,23 @@ class Base(DeclarativeBase):
         """Returns a list of all relationship names."""
         return [column.key for column in inspect(cls).relationships]  # noqa
 
+    @classmethod
+    def __get_keys__(cls):
+        """Get all attributes of the table."""
+        items = cls.__dict__.items()
+        keys = [k for k, v in items if not callable(v) and not k.startswith("_")]
+        return keys
+
+    @classmethod
+    def keys(cls):
+        """Returns a list of all column names including the relationships."""
+        if not cls.__keys__:  # Cache the keys
+            cls.__keys__ = cls.__get_keys__()
+        return cls.__keys__
+
     def __iter__(self):
         """Iterates over all columns and relationship names."""
-        insp = inspect(self.__class__)
-        for column in insp.c:
-            yield column.name
-        for column in insp.relationships:  # noqa
-            yield column.key
+        return iter(self.keys())
 
     def __len__(self):
         return sum(1 for _ in self.__iter__())
@@ -183,10 +194,6 @@ class Base(DeclarativeBase):
         if not key.startswith("_"):
             RekordboxAgentRegistry.on_update(self, key, value)
         super().__setattr__(key, value)
-
-    def keys(self):
-        """Returns a list of all column names including the relationships."""
-        return list(self.__iter__())
 
     def values(self):
         """Returns a list of all column values including the relationships."""
