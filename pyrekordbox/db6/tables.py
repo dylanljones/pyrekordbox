@@ -9,6 +9,7 @@ import struct
 import numpy as np
 from enum import IntEnum
 from datetime import datetime
+from typing import List
 from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, Text, Float
 from sqlalchemy import ForeignKey, TypeDecorator
 from sqlalchemy.orm import DeclarativeBase, relationship, backref, mapped_column, Mapped
@@ -146,7 +147,7 @@ class Base(DeclarativeBase):
     """Base class used to initialize the declarative base for all tables."""
 
     __tablename__: str
-    __keys__: list[str] = []
+    __keys__: List[str] = []
 
     @classmethod
     def create(cls, **kwargs):
