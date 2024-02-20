@@ -1879,13 +1879,17 @@ class Rekordbox6Database:
         self.flush()
         return label
 
-    def add_content(self, path):
+    def add_content(self, path, **kwargs):
         """Adds a new track to the database.
 
         Parameters
         ----------
         path : str
             Absolute path to the music file to be added.
+
+        **kwargs:
+            Keyword arguments passed to DjmdContent on creation. These arguments
+            should be a valid DjmdContent field.
 
         Returns
         -------
@@ -1901,8 +1905,8 @@ class Rekordbox6Database:
         Add a new track to the database:
 
         >>> db = Rekordbox6Database()
-        >>> db.add_content(path="/Users/foo/Downloads/banger.mp3")
-        <DjmdContent(123456789 Title=None)>
+        >>> db.add_content("/Users/foo/Downloads/banger.mp3", Title="Banger")
+        <DjmdContent(123456789 Title=Banger)>
         """
         query = self.query(tables.DjmdContent).filter_by(FolderPath=path)
         if query.count() > 0:
@@ -1938,6 +1942,7 @@ class Rekordbox6Database:
             created_at=now,
             updated_at=now,
             rb_file_id=file_id,
+            **kwargs,
         )
         self.add(content)
         self.flush()
