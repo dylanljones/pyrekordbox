@@ -1922,7 +1922,6 @@ class Rekordbox6Database:
         device = self.get_device().first()
         file_name_l = os.path.basename(path)
         file_size = os.stat(path).st_size
-        now = datetime.datetime.now()
 
         content = tables.DjmdContent.create(
             ID=id_,
@@ -1939,8 +1938,6 @@ class Rekordbox6Database:
             MasterDBID=device.MasterDBID,
             MasterSongID=id_,
             StockDate=date_created,
-            created_at=now,
-            updated_at=now,
             rb_file_id=file_id,
             **kwargs,
         )
