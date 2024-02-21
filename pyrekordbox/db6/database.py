@@ -4,7 +4,6 @@
 
 import datetime
 import logging
-import os
 import secrets
 from uuid import uuid4
 from pathlib import Path
@@ -1908,7 +1907,9 @@ class Rekordbox6Database:
         >>> db.add_content("/Users/foo/Downloads/banger.mp3", Title="Banger")
         <DjmdContent(123456789 Title=Banger)>
         """
-        query = self.query(tables.DjmdContent).filter_by(FolderPath=path)
+        path = Path(path)
+        path_string = str(path)
+        query = self.query(tables.DjmdContent).filter_by(FolderPath=path_string)
         if query.count() > 0:
             raise ValueError(f"Track with path '{path}' already exists in database")
 
@@ -1920,8 +1921,8 @@ class Rekordbox6Database:
         content_link = self.get_menu_items(Name="TRACK").one()
         date_created = datetime.date.today()
         device = self.get_device().first()
-        file_name_l = os.path.basename(path)
-        file_size = os.stat(path).st_size
+        file_name_l = path.name
+        file_size = path.stat().st_size
 
         content = tables.DjmdContent.create(
             ID=id_,
@@ -1933,7 +1934,7 @@ class Rekordbox6Database:
             FileNameL=file_name_l,
             FileSize=file_size,
             FileType=1,
-            FolderPath=path,
+            FolderPath=path_string,
             HotCueAutoLoad="on",
             MasterDBID=device.MasterDBID,
             MasterSongID=id_,
