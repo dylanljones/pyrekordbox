@@ -1929,7 +1929,6 @@ class Rekordbox6Database:
             UUID=uuid,
             ContentLink=content_link.rb_local_usn,
             DateCreated=date_created,
-            DeliveryControl="on",
             DeviceID=device.ID,
             FileNameL=file_name_l,
             FileSize=file_size,
