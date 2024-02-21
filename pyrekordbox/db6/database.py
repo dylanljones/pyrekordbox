@@ -17,7 +17,7 @@ from ..config import get_config
 from ..anlz import get_anlz_paths, read_anlz_files, AnlzFile
 from .registry import RekordboxAgentRegistry
 from .aux_files import MasterPlaylistXml
-from .tables import DjmdContent, PlaylistType
+from .tables import DjmdContent, FileType, PlaylistType
 from .smartlist import SmartList
 from . import tables
 
@@ -1898,6 +1898,7 @@ class Rekordbox6Database:
         Raises
         ------
         ValueError : If a track with the same path already exists in the database.
+        ValueError : If the file type is invalid.
 
         Examples
         --------
@@ -1924,6 +1925,12 @@ class Rekordbox6Database:
         file_name_l = path.name
         file_size = path.stat().st_size
 
+        file_type_string = path.suffix.lstrip(".").upper()
+        try:
+            file_type = getattr(FileType, file_type_string)
+        except ValueError:
+            raise ValueError(f"Invalid file type: {path.suffix}")
+
         content = tables.DjmdContent.create(
             ID=id_,
             UUID=uuid,
@@ -1932,7 +1939,7 @@ class Rekordbox6Database:
             DeviceID=device.ID,
             FileNameL=file_name_l,
             FileSize=file_size,
-            FileType=1,
+            FileType=file_type.value,
             FolderPath=path_string,
             HotCueAutoLoad="on",
             MasterDBID=device.MasterDBID,

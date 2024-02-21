@@ -139,6 +139,14 @@ class PlaylistType(IntEnum):
     SMART_PLAYLIST = 4
 
 
+class FileType(IntEnum):
+    MP3 = 1
+    M4A = 4
+    FLAC = 5
+    WAV = 11
+    AIFF = 12
+
+
 # -- Base- and Mixin classes -----------------------------------------------------------
 
 
