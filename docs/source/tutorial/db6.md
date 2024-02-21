@@ -160,6 +160,34 @@ song = playlist.Songs[0]
 db.remove_from_playlist(playlist, song)
 ````
 
+### Tracks
+
+New tracks can be added to your rekordbox collection by calling the `db.add_content()` method:
+
+```python
+track = db.add_content("/Users/deadmau5/Downloads/Banger.mp3")
+```
+
+This creates a new [DjmdContent] instance and adds it to the [djmdContent-table]. This
+track will appear in your rekordbox collection, but the track metadata (title, artist,
+etc.) will be blank. To load this data, simply right click the track and select the
+`Reload Tag` menu option. rekordbox will correctly populate the metadata, including
+creating any related table data for things like artist and album.
+
+The `db.add_content()` method accepts `**kwargs` which are passed on to the [DjmdContent]
+instance. You can use these keyword arguments if you want to populate some of the track
+metadata right away. However, things like [DjmdArtist] and [DjmdAlbum] are foreign keys to
+other tables, so make sure you create these objects first and pass the objects via kwargs,
+rather than passing plain strings. A plain string will work for `Title`, however.
+
+```python
+db.add_content("/Users/deadmau5/Downloads/Banger.mp3", Title="Banger")
+```
+
+Populating the [DjmdContent] metadata directly from the track file is not currently
+supported, but it will hopefully be included in a future release.
+
+
 ```{note}
 More coming soon!
 ```
