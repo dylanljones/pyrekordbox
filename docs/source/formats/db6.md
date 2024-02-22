@@ -302,8 +302,8 @@ corresponding ID.
      - Path to the tracks album artwork
      - The path is relative to the Rekordbox database root
    * - `MasterDBID`
-     - The master-ID of the track
-     - Not sure whats the difference to `ID`
+     - The database where the track is stored
+     - Links to `DBID` in the `DjmdProperty` table
    * - `MasterSongID`
      - The master-song-ID of the track
      - Not sure whats the difference to `ID` and `MasterDBID`
@@ -341,7 +341,7 @@ corresponding ID.
      - Date of file creation
      - Format: yyyy-mm-dd; ex.: 2010-08-21
    * - `ContentLink`
-     - ?
+     - Link to the `rb_local_usn` of `TRACK` in `DjmdMenuItems`?
      -
    * - `Tag`
      - My tag value
@@ -413,7 +413,7 @@ corresponding ID.
      - The Rekordbox ID of the file
      -
    * - `DeviceID`
-     - ?
+     - The ID of the DjmdDevice this track is stored on.
      -
    * - `rb_LocalFolderPath`
      - ?
