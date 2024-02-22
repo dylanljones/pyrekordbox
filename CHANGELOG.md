@@ -3,6 +3,12 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+
+- **db:** **add method for creating tracks**  
+  New tracks can now be created and added to the Rekordbox collection.
+  Note that the user still has to reload tags/analyze the newly added tracks in Rekordbox.
+
 ### Improvements/Bug Fixes
 
 - **db:** **fix missing proxy association in table dict**  
