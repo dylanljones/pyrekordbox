@@ -5,6 +5,7 @@
 import re
 from pathlib import Path
 from typing import Union
+
 from . import structs
 from .file import AnlzFile
 
@@ -77,7 +78,7 @@ def walk_anlz_dirs(root_dir: Union[str, Path]):
         The path of the root directory.
 
     Yields
-    -------
+    ------
     anlz_dir : str
         The path of a directory containing ANLZ files
     """
@@ -96,7 +97,7 @@ def walk_anlz_paths(root_dir: Union[str, Path]):
         The path of the root directory.
 
     Yields
-    -------
+    ------
     anlz_dir : str
         The path of a directory containing ANLZ files.
     anlz_files : Sequence of str

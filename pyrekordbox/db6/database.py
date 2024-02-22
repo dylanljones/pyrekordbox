@@ -5,21 +5,23 @@
 import datetime
 import logging
 import secrets
-from uuid import uuid4
 from pathlib import Path
 from typing import Optional
-from sqlalchemy import create_engine, or_, event, MetaData, select
-from sqlalchemy.orm import Session, Query
+from uuid import uuid4
+
+from sqlalchemy import MetaData, create_engine, event, or_, select
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Query, Session
 from sqlalchemy.sql.sqltypes import DateTime, String
-from ..utils import get_rekordbox_pid, warn_deprecated
+
+from ..anlz import AnlzFile, get_anlz_paths, read_anlz_files
 from ..config import get_config
-from ..anlz import get_anlz_paths, read_anlz_files, AnlzFile
-from .registry import RekordboxAgentRegistry
-from .aux_files import MasterPlaylistXml
-from .tables import DjmdContent, FileType, PlaylistType
-from .smartlist import SmartList
+from ..utils import get_rekordbox_pid, warn_deprecated
 from . import tables
+from .aux_files import MasterPlaylistXml
+from .registry import RekordboxAgentRegistry
+from .smartlist import SmartList
+from .tables import DjmdContent, FileType, PlaylistType
 
 try:
     from sqlcipher3 import dbapi2 as sqlite3  # noqa

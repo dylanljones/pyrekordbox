@@ -6,9 +6,10 @@
 
 import os
 import warnings
-import psutil
-from xml.dom import minidom
 import xml.etree.cElementTree as xml
+from xml.dom import minidom
+
+import psutil
 
 warnings.simplefilter("always", DeprecationWarning)
 
@@ -122,7 +123,7 @@ def get_rekordbox_agent_pid(raise_exec=False):
 
 
 def pretty_xml(element, indent=None, encoding="utf-8"):
-    """Generates a formatted string of an XML element.
+    r"""Generates a formatted string of an XML element.
 
     Parameters
     ----------

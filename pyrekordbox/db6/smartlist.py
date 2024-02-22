@@ -4,14 +4,14 @@
 
 import logging
 import xml.etree.cElementTree as xml
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum, IntEnum
 from typing import List, Union
-from datetime import datetime
-from dataclasses import dataclass
 
-from sqlalchemy import or_, and_, not_
-from sqlalchemy.sql.elements import BooleanClauseList
 from dateutil.relativedelta import relativedelta  # noqa
+from sqlalchemy import and_, not_, or_
+from sqlalchemy.sql.elements import BooleanClauseList
 
 from .tables import DjmdContent
 

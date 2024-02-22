@@ -6,15 +6,26 @@
 
 import math
 import struct
-import numpy as np
-from enum import IntEnum
 from datetime import datetime
+from enum import IntEnum
 from typing import List
-from sqlalchemy import Column, Integer, VARCHAR, BigInteger, SmallInteger, Text, Float
-from sqlalchemy import ForeignKey, TypeDecorator
-from sqlalchemy.orm import DeclarativeBase, relationship, backref, mapped_column, Mapped
+
+import numpy as np
+from sqlalchemy import (
+    VARCHAR,
+    BigInteger,
+    Column,
+    Float,
+    ForeignKey,
+    Integer,
+    SmallInteger,
+    Text,
+    TypeDecorator,
+)
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.inspection import inspect
+from sqlalchemy.orm import DeclarativeBase, Mapped, backref, mapped_column, relationship
+
 from .registry import RekordboxAgentRegistry
 
 __all__ = [

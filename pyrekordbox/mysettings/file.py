@@ -5,8 +5,10 @@
 """Rekordbox My-Setting file handlers."""
 
 import re
-from construct import Struct
 from collections.abc import MutableMapping
+
+from construct import Struct
+
 from . import structs
 
 # fmt: off

@@ -99,20 +99,45 @@ select = [
     "F", # flake8
     "E", # pycodestyle Errors
     "W", # pycodestyle Warnings
-    # "I", # isort
+    "I", # isort
+    "NPY", # Numpy
+    "N", # pep8-naming
+    "D", # pydocstyle
 ]
 ignore = [
     "E203",  # Whitespace before ':'
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D106", # Missing docstring in public nested class
+    "D107", # Missing docstring in __init__
+    "D401", # First line should be in imperative mood
+    "D403", # First word of the first line should be capitalized
+    "D404", # First word of the docstring should not be "This"
+    #"N802", # Function name should be lowercase
+    #"N803", # Argument name should be lowercase
+    "N813", # Camelcase imported as lowercase
+    #"N815", # Variable in class scope should not be mixedCase
+    "N818", # Exception name should be named with an Error suffix
 ]
 fixable = ["ALL"]  # Allow fix for all enabled rules (when `--fix`) is provided.
 unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
 "*__init__.py" = ["F401"]
+"rbxml.py" = ["N803"]
+"tables.py" = ["N802", "N815"]
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-# length-sort = true
+length-sort = false
 
 [tool.ruff.format]
 quote-style = "double"

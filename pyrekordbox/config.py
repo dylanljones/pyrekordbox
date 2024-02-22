@@ -363,7 +363,6 @@ def _get_rb5_config(
 
 def _extract_pw(pioneer_install_dir: Path) -> str:  # pragma: no cover
     """Extract the password for decrypting the Rekordbox 6 database key."""
-
     asar_data = read_rekordbox6_asar(pioneer_install_dir)
     match_result = re.search('pass: ".(.*?)"', asar_data)
     if match_result is None:

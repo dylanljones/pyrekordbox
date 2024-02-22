@@ -2,6 +2,8 @@
 # Author: Dylan Jones
 # Date:   2022-05-07
 
+from .database import Rekordbox6Database, open_rekordbox_database
+from .smartlist import SmartList
 from .tables import (
     AgentRegistry,
     CloudAgentRegistry,
@@ -41,5 +43,3 @@ from .tables import (
     SettingFile,
     UuidIDMap,
 )
-from .smartlist import SmartList
-from .database import Rekordbox6Database, open_rekordbox_database

@@ -4,7 +4,9 @@
 
 import logging
 from abc import ABC
+
 import numpy as np
+
 from . import structs
 
 logger = logging.getLogger(__name__)
@@ -439,7 +441,7 @@ class PWV5AnlzTag(AbstractAnlzTag):
     LEN_HEADER = 24
 
     def get(self):
-        """Parse the Waveform Color Detail Tag (PWV5)
+        """Parse the Waveform Color Detail Tag (PWV5).
 
         The format of the entries is:
 
