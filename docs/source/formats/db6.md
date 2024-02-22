@@ -270,7 +270,7 @@ corresponding ID.
      -
    * - `FileType`
      - Type of audio file
-     - mp3= `0` / `1` , m4a= `4` , wav= `11` , aiff= `12`
+     - mp3= `0` / `1` , m4a= `4` , flac= `5` , wav= `11` , aiff= `12`
    * - `Rating`
      - Rating of the track
      -
