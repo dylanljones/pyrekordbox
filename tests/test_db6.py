@@ -3,15 +3,17 @@
 # Date:   2023-02-01
 
 import os
-import pytest
-from pytest import mark
-from pathlib import Path
 import shutil
 import tempfile
+from pathlib import Path
+
+import pytest
+from pytest import mark
 from sqlalchemy.orm.query import Query
+
 from pyrekordbox import Rekordbox6Database, open_rekordbox_database
 from pyrekordbox.db6 import tables
-from pyrekordbox.db6.smartlist import SmartList, LogicalOperator, Operator, Property
+from pyrekordbox.db6.smartlist import LogicalOperator, Operator, Property, SmartList
 
 TEST_ROOT = Path(__file__).parent.parent / ".testdata"
 LOCKED = TEST_ROOT / "rekordbox 6" / "master_locked.db"

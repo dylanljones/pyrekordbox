@@ -3,9 +3,11 @@
 # Date:   2023-02-01
 
 import os
-import pytest
+
 import numpy as np
+import pytest
 from numpy.testing import assert_equal
+
 from pyrekordbox import anlz
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
