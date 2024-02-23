@@ -4,11 +4,12 @@
 
 import os
 import re
-import sys
 import shutil
+import sys
 import urllib.request
 from pathlib import Path
-from pyrekordbox.config import write_db6_key_cache, _cache_file
+
+from pyrekordbox.config import _cache_file, write_db6_key_cache
 
 KEY_SOURCES = [
     {

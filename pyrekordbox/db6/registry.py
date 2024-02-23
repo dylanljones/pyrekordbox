@@ -4,6 +4,7 @@
 
 import logging
 from contextlib import contextmanager
+
 from sqlalchemy.orm.exc import ObjectDeletedError
 
 logger = logging.getLogger(__name__)

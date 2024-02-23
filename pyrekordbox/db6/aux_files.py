@@ -2,9 +2,10 @@
 # Author: Dylan Jones
 # Date:   2023-09-10
 
-from pathlib import Path
-from datetime import datetime
 import xml.etree.cElementTree as xml
+from datetime import datetime
+from pathlib import Path
+
 from ..config import get_config
 from ..utils import pretty_xml
 

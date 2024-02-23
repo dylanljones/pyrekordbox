@@ -3,12 +3,14 @@
 # Date:   2022-10-25
 
 import os
+
 import pytest
+
 from pyrekordbox.mysettings import (
-    read_mysetting_file,
-    MySettingFile,
-    MySetting2File,
     DjmMySettingFile,
+    MySetting2File,
+    MySettingFile,
+    read_mysetting_file,
 )
 from pyrekordbox.mysettings.file import compute_checksum
 

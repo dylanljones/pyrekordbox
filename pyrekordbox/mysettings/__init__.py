@@ -4,14 +4,15 @@
 
 import re
 from pathlib import Path
+
 from . import structs
 from .file import (
     FILES,
-    SettingsFile,
-    MySettingFile,
-    MySetting2File,
-    DjmMySettingFile,
     DevSettingFile,
+    DjmMySettingFile,
+    MySetting2File,
+    MySettingFile,
+    SettingsFile,
 )
 
 RE_MYSETTING = re.compile(".*SETTING[0-9]?.DAT$")

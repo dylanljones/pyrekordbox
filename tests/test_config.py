@@ -2,10 +2,12 @@
 # Author: Dylan Jones
 # Date:   2023-10-02
 
-import pytest
 import json
 from pathlib import Path
-from pyrekordbox.config import update_config, get_config
+
+import pytest
+
+from pyrekordbox.config import get_config, update_config
 
 RB_SETTING = """<?xml version="1.0" encoding="UTF-8"?>
 <PROPERTIES><VALUE name="masterDbDirectory" val="{db_dir}"/></PROPERTIES>

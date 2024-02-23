@@ -7,10 +7,12 @@ r"""Rekordbox XML database file handler."""
 import logging
 import os.path
 import urllib.parse
+import xml.etree.cElementTree as xml
 from abc import abstractmethod
 from collections import abc
-import xml.etree.cElementTree as xml
+
 import bidict
+
 from .utils import pretty_xml
 
 logger = logging.getLogger(__name__)
@@ -658,7 +660,7 @@ class Node:
 
     @property
     def key_type(self):
-        """str: The type of key used by the playlist node"""
+        """str: The type of key used by the playlist node."""
         return NODE_KEYTYPE_MAPPING.get(self._element.attrib.get("KeyType"))
 
     @property
