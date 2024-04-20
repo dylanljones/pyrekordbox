@@ -20,4 +20,3 @@ logger.addHandler(sh)
 
 # Set logging level
 logger.setLevel(logging.WARNING)
-logging.root.setLevel(logging.NOTSET)
