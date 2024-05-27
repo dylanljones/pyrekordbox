@@ -8,6 +8,7 @@ import shutil
 import sys
 import urllib.request
 from pathlib import Path
+from subprocess import run, CalledProcessError
 
 from pyrekordbox.config import _cache_file, write_db6_key_cache
 
@@ -42,11 +43,63 @@ class WorkingDir:
         if self.path != self._prev:
             os.chdir(self._prev)
 
+def set_sqlcipher_paths():
+    result = run(["brew", "--prefix", "sqlcipher"], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
+    sqlcipher_path = result.stdout.strip()
+    
+    # Ensure OpenSSL paths
+    openssl_include_path = "/usr/local/opt/openssl/include"
+    openssl_lib_path = "/usr/local/opt/openssl/lib"
+    
+    os.environ["C_INCLUDE_PATH"] = f"{sqlcipher_path}/include:{openssl_include_path}"
+    os.environ["LIBRARY_PATH"] = f"{sqlcipher_path}/lib:{openssl_lib_path}"
+    os.environ["PKG_CONFIG_PATH"] = f"{sqlcipher_path}/lib/pkgconfig"
+    os.environ["CFLAGS"] = f"-I{sqlcipher_path}/include -I{openssl_include_path} -Wno-deprecated-declarations -Wno-unused-variable -Wno-unreachable-code -Wno-sign-compare"
+    os.environ["LDFLAGS"] = f"-L{sqlcipher_path}/lib -L{openssl_lib_path}"
+    
+    print(f"SQLCipher path: {sqlcipher_path}")
+    print(f"C_INCLUDE_PATH: {os.environ['C_INCLUDE_PATH']}")
+    print(f"LIBRARY_PATH: {os.environ['LIBRARY_PATH']}")
+    print(f"PKG_CONFIG_PATH: {os.environ['PKG_CONFIG_PATH']}")
+    print(f"CFLAGS: {os.environ['CFLAGS']}")
+    print(f"LDFLAGS: {os.environ['LDFLAGS']}")
+
+
+def create_symlinks():
+    result = run(["brew", "--prefix", "sqlcipher"], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
+    sqlcipher_path = result.stdout.strip()
+    symlink_dir = Path("/usr/local")
+
+    if os.uname().machine == "arm64":
+        print("Creating symlinks for M1 Mac...")
+        symlink_dir.mkdir(parents=True, exist_ok=True)
+        (symlink_dir / "lib").mkdir(parents=True, exist_ok=True)
+        (symlink_dir / "include").mkdir(parents=True, exist_ok=True)
+        
+        lib_sqlcipher_a = symlink_dir / "lib/libsqlcipher.a"
+        if not lib_sqlcipher_a.exists():
+            lib_sqlcipher_a.symlink_to(f"{sqlcipher_path}/lib/libsqlcipher.a", target_is_directory=False)
+        
+        include_sqlcipher = symlink_dir / "include/sqlcipher"
+        if not include_sqlcipher.exists():
+            include_sqlcipher.symlink_to(f"{sqlcipher_path}/include/sqlcipher", target_is_directory=True)
+
+    if not (symlink_dir / "include/sqlcipher").exists():
+        print("Creating necessary symlinks for SQLCipher headers...")
+        (symlink_dir / "include").mkdir(parents=True, exist_ok=True)
+        include_sqlcipher = symlink_dir / "include/sqlcipher"
+        if not include_sqlcipher.exists():
+            include_sqlcipher.symlink_to(f"{sqlcipher_path}/include/sqlcipher", target_is_directory=True)
+
 
 def clone_repo(https_url: str) -> Path:
     path = Path.cwd() / https_url.split("/")[-1]
     if not path.exists():
-        os.system(f"git clone {https_url}")
+        run(["git", "clone", https_url], check=True)
         assert path.exists()
     else:
         print(f"Repository {https_url} already cloned")
@@ -83,7 +136,6 @@ def prepare_pysqlcipher(pysqlcipher_dir: Path, amalgamation_src: Path):
     shutil.copy2(amalgamation_src / "sqlite3.c", root / "sqlite3.c")
     shutil.copy2(amalgamation_src / "sqlite3.h", root / "sqlite3.h")
 
-
 def install_pysqlcipher(
     tmpdir="pysqlcipher3",
     crypto_lib="libcrypto.lib",
@@ -104,6 +156,10 @@ def install_pysqlcipher(
             print("No OPENSSL_LIBNAME environment variable found, updating `setup.py`!")
             patch_pysqlcipher_setup(pysqlcipher_dir, crypto_lib)
 
+    # Set environment paths and create symlinks
+    set_sqlcipher_paths()
+    create_symlinks()
+
     # Build amalgamation and install pysqlcipher
     if not pyexecutable:
         pyexecutable = sys.executable
@@ -112,18 +168,18 @@ def install_pysqlcipher(
         if build:
             # Build amalgamation
             print()
-            os.system(f"{pyexecutable} setup.py build_static build")
+            os.system(f"{pyexecutable} -m build --wheel")
         if install:
             # Install pysqlcipher package
             print()
-            os.system(f"{pyexecutable} setup.py install")
+
 
     # Remove temporary files
     if cleanup:
         try:
             print()
             print("Cleaning up")
-            tmpdir.unlink(missing_ok=True)
+            shutil.rmtree(tmpdir)
         except PermissionError as e:
             print()
             print(e)
@@ -163,7 +219,7 @@ def main():
         "and write it to the cache file.",
     )
 
-    # Install pysqlcipher3 command (Windows only)
+    # Install pysqlcipher3 command (Windows/Mac OS)
     install_parser = subparsers.add_parser(
         "install-sqlcipher",
         help="Build sqlcipher against amalgamation and install pysqlcipher3",
