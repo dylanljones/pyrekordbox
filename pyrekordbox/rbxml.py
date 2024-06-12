@@ -1282,7 +1282,7 @@ class RekordboxXml:
             The default is 3 spaces.
         """
         string = self.tostring(indent)
-        with open(path, "w") as fh:
+        with open(path, "w", encoding="utf-8") as fh:
             fh.write(string)
 
     def __repr__(self):
