@@ -1911,7 +1911,7 @@ class Rekordbox6Database:
         <DjmdContent(123456789 Title=Banger)>
         """
         path = Path(path)
-        path_string = str(path)
+        path_string = path.resolve().as_posix()
         query = self.query(tables.DjmdContent).filter_by(FolderPath=path_string)
         if query.count() > 0:
             raise ValueError(f"Track with path '{path}' already exists in database")
@@ -1923,7 +1923,12 @@ class Rekordbox6Database:
         uuid = str(uuid4())
         content_link = self.get_menu_items(Name="TRACK").one()
         date_created = datetime.date.today()
-        device = self.get_device().first()
+
+        # allow kwargs to specify a device
+        device = kwargs.pop("Device", None)
+        if device is None:
+            device = self.get_device().first()
+
         file_name_l = path.name
         file_size = path.stat().st_size
 
