@@ -1108,6 +1108,84 @@ class Rekordbox6Database:
         self.registry.enable_tracking()
         self.registry.on_move(moved)
 
+    def update_playlist_track_numbers(self, playlist, new_track_nos):
+        """Updates all track numbers in a playlist.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The playlist the track is in. Can either be a :class:`DjmdPlaylist`
+            object or a playlist ID.
+        new_track_nos : list[int]
+            The new track numbers for each song. Must be unique and contain all
+            integers between 1 and the playlist length.
+
+        Examples
+        --------
+        Take a playlist containing a few tracks:
+
+        >>> db = Rekordbox6Database()
+        >>> pid = 56789
+        >>> pl = db.get_playlist(ID=pid)
+        >>> songs = sorted(pl.Songs, key=lambda x: x.TrackNo)
+        >>> [s.Content.Title for s in songs]  # noqa
+        ['Demo Track 1', 'Demo Track 2', 'HORN', 'NOISE']
+
+        Reshuffle all tracks in playlist:
+
+        >>> db.update_playlist_track_nos(pl, new_track_nos=[3, 2, 1, 4])
+        >>> [s.Content.Title for s in sorted(pl.Songs, key=lambda x: x.TrackNo)]  # noqa
+        ['HORN', 'Demo Track 2', 'Demo Track 1', 'NOISE']
+
+        """
+        if isinstance(playlist, (int, str)):
+            playlist = self.get_playlist(ID=playlist)
+        nsongs = (
+            self.query(tables.DjmdSongPlaylist)
+            .filter_by(PlaylistID=playlist.ID)
+            .count()
+        )
+        sorted_track_nos = sorted(new_track_nos)
+        if len(new_track_nos) != nsongs:
+            raise ValueError(
+                f"List of track numbers length ({len(new_track_nos)}) "
+                f"must match number of songs in playlist ({nsongs})"
+            )
+        if sorted_track_nos != list(range(1, nsongs + 1)):
+            raise ValueError(
+                "List must contain all integers between 1 and the playlist length"
+            )
+        if new_track_nos == sorted_track_nos:
+            logger.info("No playlist changes required")
+            return
+
+        now = datetime.datetime.now()
+        self.registry.disable_tracking()
+        moved = list()
+
+        log_output = []
+        existing_track_positions = {song.TrackNo: song for song in playlist.Songs}
+
+        for new_pos_index, old_pos in enumerate(new_track_nos):
+            new_pos = new_pos_index + 1
+            song = existing_track_positions.get(old_pos)
+            if song.TrackNo == new_pos:
+                continue
+            log_output.append(
+                f"\t{song.TrackNo} -> {new_pos}: {song.Content.FileNameL}"
+            )
+            song.TrackNo = new_pos
+            song.updated_at = now
+            moved.append(song)
+
+        self.registry.enable_tracking()
+        self.registry.on_move(moved)
+        logger.info(
+            "Updated track numbers in playlist: %s:\n%s",
+            playlist.Name,
+            "\n".join(log_output),
+        )
+
     def _create_playlist(
         self, name, seq, image_path, parent, smart_list=None, attribute=None
     ):
