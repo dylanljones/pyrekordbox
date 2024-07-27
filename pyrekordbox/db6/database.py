@@ -194,10 +194,11 @@ class Rekordbox6Database:
     <DjmdContent(40110712   Title=NOISE)>
     """
 
-    def __init__(self, path=None, db_dir="", key="", unlock=True):
+    def __init__(self, path=None, db_dir="", key="", unlock=True, db_clone=False):
         rb6_config = get_config("rekordbox6")
         pid = get_rekordbox_pid()
-        if pid:
+        self.db_clone = db_clone
+        if pid and not db_clone:
             logger.warning("Rekordbox is running!")
 
         if not path:
@@ -479,7 +480,7 @@ class Rekordbox6Database:
         autoincrement_usn : Auto-increments the local Rekordbox USN's.
         """
         pid = get_rekordbox_pid()
-        if pid:
+        if pid and not self.db_clone:
             raise RuntimeError(
                 "Rekordbox is running. Please close Rekordbox before commiting changes."
             )
