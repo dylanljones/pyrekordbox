@@ -4,8 +4,8 @@
 
 """Rekordbox 6 `master.db` SQLAlchemy table declarations."""
 
-import re
 import math
+import re
 import struct
 from datetime import datetime
 from enum import IntEnum
