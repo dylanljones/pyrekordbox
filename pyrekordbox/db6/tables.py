@@ -119,8 +119,6 @@ class DateTime(TypeDecorator):
     """Custom datetime column with timezone support.
 
     The datetime format in the database is `YYYY-MM-DD HH:MM:SS.SSS +00:00`.
-    The timezone seems to always be `+00:00` (UTC).
-    Old database implementations display different timezones.
     This format is not supported by the `DateTime` column of SQLAlchemy 2.
     """
 
