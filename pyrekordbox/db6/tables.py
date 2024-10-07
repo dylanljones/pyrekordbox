@@ -157,6 +157,7 @@ class FileType(IntEnum):
     FLAC = 5
     WAV = 11
     AIFF = 12
+    AIF = 12
 
 
 # -- Base- and Mixin classes -----------------------------------------------------------
