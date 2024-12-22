@@ -324,7 +324,6 @@ class SmartList:
             if cond.property in PROPERTY_COLUMN_MAP:
                 colum_name = PROPERTY_COLUMN_MAP[cond.property]
                 if cond.property == Property.MYTAG:
-                    vl = val_left
                     if int(val_left) < 0:
                         val_left = str(right_bitshift(int(val_left)))
 
