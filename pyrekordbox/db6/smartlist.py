@@ -320,11 +320,13 @@ class SmartList:
         comps = list()
         for cond in self.conditions:
             val_left, val_right = _get_condition_values(cond)
-
+            # val_left = str(-abs(int(val_left))) if val_left is not None else ""
             if cond.property in PROPERTY_COLUMN_MAP:
                 colum_name = PROPERTY_COLUMN_MAP[cond.property]
                 if cond.property == Property.MYTAG:
-                    val_left = str(right_bitshift(int(val_left)))
+                    vl = val_left
+                    if int(val_left) < 0:
+                        val_left = str(right_bitshift(int(val_left)))
 
                 if cond.operator == Operator.EQUAL:
                     comp = getattr(DjmdContent, colum_name) == val_left
