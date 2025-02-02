@@ -1,15 +1,11 @@
 
-# -- Project metadata ------------------------------------------------------------------
-
-[project]
+[tool.poetry]
 name = "pyrekordbox"
 description = "Inofficial Python package for interacting with the library of Pioneers Rekordbox DJ software."
 readme = "README.md"
-authors = [
-    {name = "Dylan Jones", email = "dylanljones94@gmail.com"},
-]
-license = {file = "LICENSE"}
-dynamic = ["version"]
+authors = ["Dylan Jones <dylanljones94@gmail.com>"]
+license = "MIT"
+version = "0.3.3"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -27,54 +23,38 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Multimedia :: Sound/Audio",
 ]
-requires-python = ">=3.8"
-dependencies = [
-    "bidict>=0.21.0",
-    "blowfish>=0.6.0",
-    "construct>=2.10.0",
-    "numpy>=1.19.0",
-    "packaging",
-    "psutil>=5.9.0",
-    "sqlalchemy>=2.0.0",
-    "frida-tools",
-    "python-dateutil",
-]
 
-[project.optional-dependencies]
-test = [
-    "hypothesis>=6.0.0",
-    "pytest>=6.2.0",
-    "pytest-cov",
-]
+[tool.poetry.dependencies]
+python = ">=3.8"
+bidict = ">=0.21.0"
+blowfish = ">=0.6.0"
+construct = ">=2.10.0"
+numpy = ">=1.19.0"
+packaging = "*"
+psutil = ">=5.9.0"
+sqlalchemy = ">=2.0.0"
+frida-tools = "*"
+python-dateutil = "*"
+hypothesis = ">=6.0.0"
+pytest = ">=6.2.0"
+pytest-cov = "*"
 
-[project.urls]
-Source = "https://github.com/dylanljones/pyrekordbox"
-Documentation = "https://pyrekordbox.readthedocs.io/en/stable/"
-Tracker = "https://github.com/dylanljones/pyrekordbox/issues"
+[tool.poetry.extras]
+test = ["hypothesis", "pytest", "pytest-cov"]
 
-
-# -- Build -----------------------------------------------------------------------------
+[tool.poetry.urls]
+homepage = "https://github.com/dylanljones/pyrekordbox"
+documentation = "https://pyrekordbox.readthedocs.io/en/stable/"
+repository = "https://github.com/dylanljones/pyrekordbox"
+bug_tracker = "https://github.com/dylanljones/pyrekordbox/issues"
 
 [build-system]
-requires = [
-    "setuptools >= 61.0.0",
-    "setuptools_scm[toml] >= 4",
-    "setuptools_scm_git_archive",
-    "wheel >= 0.37.0",
-]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[tool.setuptools]
-platforms = ["any"]
-zip-safe = false
-include-package-data = true
-
-[tool.setuptools.packages]
-find = {}
-
-[tool.setuptools_scm]
+[tool.poetry-dynamic-versioning]
+enable = true
 write_to = "pyrekordbox/_version.py"
-git_describe_command = "git describe --dirty --tags --long --match * --first-parent"
 
 
 # -- Ruff ------------------------------------------------------------------------------
