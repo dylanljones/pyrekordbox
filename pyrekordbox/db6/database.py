@@ -195,17 +195,23 @@ class Rekordbox6Database:
     """
 
     def __init__(self, path=None, db_dir="", key="", unlock=True):
-        rb6_config = get_config("rekordbox6")
+        # get config of latest supported version
+        rb_config = get_config("rekordbox7")
+        if not rb_config:
+            rb_config = get_config("rekordbox6")
+
         pid = get_rekordbox_pid()
         if pid:
             logger.warning("Rekordbox is running!")
 
         if not path:
             # Get path from the RB config
-            path = rb6_config.get("db_path", "")
+            path = rb_config.get("db_path", "")
             if not path:
                 pdir = get_config("pioneer", "install_dir")
-                raise FileNotFoundError(f"No Rekordbox v6 directory found in '{pdir}'")
+                raise FileNotFoundError(
+                    f"No Rekordbox v6/v7 directory found in '{pdir}'"
+                )
         path = Path(path)
         # make sure file exists
         if not path.exists():
@@ -218,7 +224,7 @@ class Rekordbox6Database:
                 )
             if not key:
                 try:
-                    key = rb6_config["dp"]
+                    key = rb_config["dp"]
                 except KeyError:
                     raise NoCachedKey(
                         "Could not unlock database: No key found\n"
@@ -232,7 +238,7 @@ class Rekordbox6Database:
                 if not key.startswith("402fd"):
                     raise ValueError("The provided database key doesn't look valid!")
 
-            logger.info("Key: %s", key)
+            logger.debug("Key: %s", key)
             # Unlock database and create engine
             url = f"sqlite+pysqlcipher://:{key}@/{path}?"
             engine = create_engine(url, module=sqlite3)

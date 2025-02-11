@@ -40,6 +40,7 @@ __config__ = {
     },
     "rekordbox5": {},
     "rekordbox6": {},
+    "rekordbox7": {},
 }
 
 
@@ -50,7 +51,8 @@ class InvalidApplicationDirname(Exception):
 def get_pioneer_install_dir(path: Union[str, Path] = None) -> Path:  # pragma: no cover
     """Returns the path of the Pioneer program installation directory.
 
-    On Windows, the Pioneer program data is stored in `/ProgramFiles/Pioneer`
+    On Windows, the Pioneer program data is stored in `/ProgramFiles/Pioneer`.
+    For rekordbox version 7 this has changed to `/ProgramFiles/rekordbox`.
     On macOS the program data is somewhere in `/Applications/`.
 
     Parameters
@@ -68,7 +70,7 @@ def get_pioneer_install_dir(path: Union[str, Path] = None) -> Path:  # pragma: n
         if sys.platform == "win32":
             # Windows: located in /ProgramFiles/Pioneer
             program_files = os.environ["ProgramFiles"].replace("(x86)", "").strip()
-            path = Path(program_files) / "Pioneer"
+            path = Path(program_files)
         elif sys.platform == "darwin":
             # MacOS: located in /Applications/
             path = Path("/Applications")
@@ -284,6 +286,12 @@ def _get_rb_config(
     config : dict
         The program configuration.
     """
+    if sys.platform == "win32":
+        if major_version >= 7:
+            pioneer_install_dir = pioneer_install_dir / "rekordbox"
+        else:
+            pioneer_install_dir = pioneer_install_dir / "Pioneer"
+
     if application_dirname:
         # Applitcation dirname is given, only extract version from it
         # `major_version` is compared to the version string
@@ -328,7 +336,7 @@ def _get_rb_config(
     logger.debug("Found Rekordbox %s install-dir: '%s'", major_version, rb_prog_dir)
 
     # Get Rekordbox application directory path for major release `major_version`
-    name = "rekordbox6" if major_version == 6 else "rekordbox"
+    name = "rekordbox6" if major_version >= 6 else "rekordbox"
     rb_app_dir = pioneer_app_dir / name
     if not rb_app_dir.exists():
         raise FileNotFoundError(f"The directory '{rb_app_dir}' doesn't exist!")
@@ -337,7 +345,7 @@ def _get_rb_config(
     # Get Rekordbox database locations for major release `major_version`
     settings = read_rekordbox_settings(rb_app_dir)
     db_dir = Path(settings["masterDbDirectory"])
-    db_filename = "master.db" if major_version == 6 else "datafile.edb"
+    db_filename = "master.db" if major_version >= 6 else "datafile.edb"
     db_path = db_dir / db_filename
     if not db_path.exists():
         raise FileNotFoundError(f"The Rekordbox database '{db_path}' doesn't exist!")
@@ -456,23 +464,13 @@ def write_db6_key_cache(key: str) -> None:  # pragma: no cover
     with open(_cache_file, "w") as fh:
         fh.write(text)
     # Set the config key to make sure the key is present after calling method
-    __config__["rekordbox6"]["dp"] = key
+    if __config__["rekordbox6"]:
+        __config__["rekordbox6"]["dp"] = key
+    if __config__["rekordbox7"]:
+        __config__["rekordbox7"]["dp"] = key
 
 
-def _get_rb6_config(
-    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
-) -> dict:
-    """Get the program configuration for Rekordbox v6.x.x."""
-    major_version = 6
-    conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
-
-    # Read Rekordbox 6 'options.json' and check db_path
-    opts = read_rekordbox6_options(pioneer_app_dir)
-    db_path = Path(opts["db-path"])
-    db_dir = db_path.parent
-    assert str(conf["db_dir"]) == str(db_dir)
-    assert str(conf["db_path"]) == str(db_path)
-
+def _update_sqlite_key(opts, conf):
     cache_version = 0
     pw, dp = "", ""
     if _cache_file.exists():  # pragma: no cover
@@ -551,6 +549,44 @@ def _get_rb6_config(
     if dp:
         conf["dp"] = dp
 
+
+def _get_rb6_config(
+    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
+) -> dict:
+    """Get the program configuration for Rekordbox v6.x.x."""
+    major_version = 6
+    conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
+
+    # Read Rekordbox 6 'options.json' and check db_path
+    opts = read_rekordbox6_options(pioneer_app_dir)
+    db_path = Path(opts["db-path"])
+    db_dir = db_path.parent
+    assert str(conf["db_dir"]) == str(db_dir)
+    assert str(conf["db_path"]) == str(db_path)
+
+    # Update SQLite key
+    _update_sqlite_key(opts, conf)
+
+    return conf
+
+
+def _get_rb7_config(
+    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
+) -> dict:
+    """Get the program configuration for Rekordbox v7.x.x."""
+    major_version = 7
+    conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
+
+    # Read Rekordbox 6 'options.json' and check db_path
+    opts = read_rekordbox6_options(pioneer_app_dir)
+    db_path = Path(opts["db-path"])
+    db_dir = db_path.parent
+    assert str(conf["db_dir"]) == str(db_dir)
+    assert str(conf["db_path"]) == str(db_path)
+
+    # Update SQLite key
+    _update_sqlite_key(opts, conf)
+
     return conf
 
 
@@ -616,6 +652,7 @@ def update_config(
     pioneer_app_dir: Union[str, Path] = None,
     rb5_install_dirname: str = "",
     rb6_install_dirname: str = "",
+    rb7_install_dirname: str = "",
 ):
     """Update the pyrekordbox configuration.
 
@@ -642,6 +679,9 @@ def update_config(
     rb6_install_dirname : str, optional
         The name of the Rekordbox 6 installation directory. By default, the normal
         directory name is used (Windows: 'rekordbox 6.x.x', macOS: 'rekordbox 6.app').
+    rb7_install_dirname : str, optional
+        The name of the Rekordbox 7 installation directory. By default, the normal
+        directory name is used (Windows: 'rekordbox 7.x.x', macOS: 'rekordbox 7.app').
     """
     # Read config file
     conf = read_pyrekordbox_configuration()
@@ -653,6 +693,8 @@ def update_config(
         rb5_install_dirname = conf["rekordbox5-install-dirname"]
     if not rb6_install_dirname and "rekordbox6-install-dirname" in conf:
         rb6_install_dirname = conf["rekordbox6-install-dirname"]
+    if not rb7_install_dirname and "rekordbox7-install-dirname" in conf:
+        rb7_install_dirname = conf["rekordbox7-install-dirname"]
 
     # Pioneer installation directory
     try:
@@ -688,6 +730,15 @@ def update_config(
     except FileNotFoundError as e:
         logger.info(e)
 
+    # Update Rekordbox 7 config
+    try:
+        conf = _get_rb7_config(
+            pioneer_install_dir, pioneer_app_dir, rb7_install_dirname
+        )
+        __config__["rekordbox7"].update(conf)
+    except FileNotFoundError as e:
+        logger.info(e)
+
 
 def get_config(section: str, key: str = None):
     """Gets a section or value of the pyrekordbox configuration.
@@ -720,6 +771,7 @@ def pformat_config(indent: str = "   ", hw: int = 14, delim: str = " = ") -> str
     pioneer = get_config("pioneer")
     rb5 = get_config("rekordbox5")
     rb6 = get_config("rekordbox6")
+    rb7 = get_config("rekordbox7")
 
     lines = ["Pioneer:"]
     lines += [f"{indent}{k + delim:<{hw}} {pioneer[k]}" for k in sorted(pioneer.keys())]
@@ -730,6 +782,10 @@ def pformat_config(indent: str = "   ", hw: int = 14, delim: str = " = ") -> str
     if rb6:
         rb6_keys = [k for k in rb6.keys() if k not in ("dp", "p")]
         lines += [f"{indent}{k + delim:<{hw}} {rb6[k]}" for k in sorted(rb6_keys)]
+    lines.append("Rekordbox 7:")
+    if rb7:
+        rb7_keys = [k for k in rb7.keys() if k not in ("dp", "p")]
+        lines += [f"{indent}{k + delim:<{hw}} {rb7[k]}" for k in sorted(rb7_keys)]
     return "\n".join(lines)
 
 

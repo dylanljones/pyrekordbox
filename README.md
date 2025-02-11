@@ -22,7 +22,7 @@ Pioneers Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Setting files
 
-Tested Rekordbox versions: ``5.8.6 | 6.5.3 | 6.7.7``
+Tested Rekordbox versions: ``5.8.6 | 6.7.7 | 7.0.9``
 
 
 |⚠️| This project is still under development and might contain bugs or have breaking API changes in the future. Check the [changelog][CHANGELOG] for recent changes! |
@@ -103,9 +103,9 @@ Alternatively the two paths can be specified in a configuration file under the s
 pyrekordbox.cfg and pyrekordbox.yaml.
 
 
-### Rekordbox 6 database
+### Rekordbox 6/7 database
 
-Rekordbox 6 now uses a SQLite database for storing the collection content.
+Rekordbox 6 and 7 now us a SQLite database for storing the collection content.
 Unfortunatly, the new `master.db` SQLite database is encrypted using
 [SQLCipher][sqlcipher], which means it can't be used without the encryption key.
 However, since your data is stored and used locally, the key must be present on the
@@ -136,6 +136,7 @@ content.Title = "New Title"
 Some fields are stored as references to other tables, for example the artist of a track.
 Check the [documentation][db6-doc] of the corresponding object for more information.
 So far only a few tables support adding or deleting entries:
+- ``DjmdContent``: Tracks
 - ``DjmdPlaylist``: Playlists/Playlist Folders
 - ``DjmdSongPlaylist``: Songs in a playlist
 - ``DjmdAlbum``: Albums
