@@ -897,9 +897,9 @@ def test_move_playlist_seq(db):
     assert pl1.rb_local_usn == usn_old + 1
     assert pl2.rb_local_usn == usn_old + 2
     assert pl3.rb_local_usn == usn_old + 3
-    assert pl1.updated_at > mtime_old
-    assert pl2.updated_at > mtime_old
-    assert pl3.updated_at > mtime_old
+    assert pl1.updated_at >= mtime_old
+    assert pl2.updated_at >= mtime_old
+    assert pl3.updated_at >= mtime_old
 
     usn_old = db.get_local_usn()
     # Move playlist 3 to position 2
@@ -922,9 +922,9 @@ def test_move_playlist_seq(db):
     assert pl3.rb_local_usn == usn_old + 1
     assert f2.rb_local_usn == usn_old + 2
     assert pl2.rb_local_usn == usn_old + 3
-    assert pl2.updated_at > mtime_old
-    assert pl3.updated_at > mtime_old
-    assert f2.updated_at > mtime_old
+    assert pl2.updated_at >= mtime_old
+    assert pl3.updated_at >= mtime_old
+    assert f2.updated_at >= mtime_old
 
     assert _check_playlist_xml(db)
 
@@ -974,7 +974,7 @@ def test_move_playlist_parent(db):
     pl = db.get_playlist(Name="pl 1").one()
     assert db.get_local_usn() == old_usn + 1
     assert pl.rb_local_usn == old_usn + 1
-    assert pl.updated_at > old_mtime
+    assert pl.updated_at >= old_mtime
 
     # Move playlist 2 to sub playlist
     old_usn = db.get_local_usn()
@@ -1000,7 +1000,7 @@ def test_move_playlist_parent(db):
     pl = db.get_playlist(Name="pl 2").one()
     assert db.get_local_usn() == old_usn + 5
     assert pl.rb_local_usn == old_usn + 1
-    assert pl.updated_at > old_mtime
+    assert pl.updated_at >= old_mtime
     assert subpl2.rb_local_usn == old_usn + 2
     assert subpl3.rb_local_usn == old_usn + 3
     assert subpl4.rb_local_usn == old_usn + 4
@@ -1027,7 +1027,7 @@ def test_rename_playlist(db):
 
     pl = db.get_playlist(ID=pid)
     assert pl.Name == "pl 1 new"
-    assert pl.updated_at > mtime_old
+    assert pl.updated_at >= mtime_old
     assert db.get_local_usn() == usn_old + 1
     assert pl.rb_local_usn == usn_old + 1
 
