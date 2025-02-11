@@ -44,32 +44,10 @@ where `VERSION` is a release, tag or branch name.
 
 ### Dependencies
 
+
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
-Pyrekordbox makes no attempt to download/install SQLCipher, as it is a
-pure Python package - whereas the SQLCipher/sqlcipher3 installation is
-platform-dependent and can not be installed via ``pip``.
-
-#### Windows
-
-SQLCipher can be used by building the libary against an amalgamation with [sqlcipher3].
-For a detailed instruction, see the [installation guide][installation].
-
-#### MacOS
-
-For MacOS follow these steps:
-
-1) Install [Homebrew](https://brew.sh) if you do not have it on your machine.
-2) Install SQLCipher with `brew install SQLCipher`.
-3) With the python environment you are using to run pyrekordbox active execute the following:
-```shell
-git clone https://github.com/coleifer/sqlcipher3
-cd sqlcipher3
-SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==5 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py build
-SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==5 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
-```
-Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
-If you are having issues installing [sqlcipher3] on M1 Macs please refer to the
-[installation guide][installation].
+Pyrekordbox tries to install pre-built wheels with included sqlcipher binaries via the [sqlcipher3-wheels] package.
+If this fails, it can be installed manually following the [installation guide][installation].
 
 
 ## 🚀 Quick-Start
@@ -326,7 +304,7 @@ the CI setup since it requires a working Rekordbox installation.
 
 [repo]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
-[sqlcipher3]: https://github.com/coleifer/sqlcipher3
+[sqlcipher3-wheels]: https://github.com/laggykiller/sqlcipher3
 [rekordcrate]: https://github.com/Holzhaus/rekordcrate
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox

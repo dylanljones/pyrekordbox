@@ -23,9 +23,8 @@ $ pip install .
 ## Installing SQLCipher
 
 Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
-Pyrekordbox makes no attempt to download/install SQLCipher, as it is a
-pure Python package - whereas the SQLCipher/sqlcipher3 installation is
-platform-dependent and can not be installed easily via ``pip``.
+Pyrekordbox tries to install pre-built wheels with included sqlcipher binaries via the [sqlcipher3-wheels] package.
+If this fails, it can be installed manually following the instructions below.
 
 [sqlcipher3] can either be built with the system [SQLCipher][sqlcipher] or built against
 a statically linked amalgamation of the SQLite3 source code.
@@ -186,8 +185,8 @@ For building [sqlcipher3] against the system SQLCipher installation on MacOS fol
 ```shell
 git clone https://github.com/coleifer/sqlcipher3
 cd sqlcipher3
-SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py build
-SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==4 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
+SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==5 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py build
+SQLCIPHER_PATH=$(brew info sqlcipher | awk 'NR==5 {print $1; exit}'); C_INCLUDE_PATH="$SQLCIPHER_PATH"/include LIBRARY_PATH="$SQLCIPHER_PATH"/lib python setup.py install
 ```
 Make sure the `C_INCLUDE` and `LIBRARY_PATH` point to the installed SQLCipher path. It may differ on your machine.
 
@@ -269,3 +268,4 @@ c.execute("PRAGMA key='password'")
 [Pypi]: https://pypi.org/project/pyrekordbox/
 [GitHub]: https://github.com/dylanljones/pyrekordbox
 [sqlcipher]: https://www.zetetic.net/sqlcipher/open-source/
+[sqlcipher3-wheels]: https://github.com/laggykiller/sqlcipher3
