@@ -3,8 +3,10 @@
 # Date:   2023-02-01
 
 import os
+import re
 import shutil
 import tempfile
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -36,6 +38,40 @@ CID4 = 24401986  # NOISE
 # Playlist ID
 PID1 = 2602250856  # Trial playlist - Cloud Library Sync
 
+KEY_SOURCES = [
+    {
+        "url": r"https://raw.githubusercontent.com/mganss/CueGen/19878e6eb3f586dee0eb3eb4f2ce3ef18309de9d/CueGen/Generator.cs",  # noqa: E501
+        "regex": re.compile(
+            r'((.|\n)*)Config\.UseSqlCipher.*\?.*"(?P<dp>.*)".*:.*null',
+            flags=re.IGNORECASE | re.MULTILINE,
+        ),
+    },
+    {
+        "url": r"https://raw.githubusercontent.com/dvcrn/go-rekordbox/8be6191ba198ed7abd4ad6406d177ed7b4f749b5/cmd/getencryptionkey/main.go",  # noqa: E501
+        "regex": re.compile(
+            r'((.|\n)*)fmt\.Print\("(?P<dp>.*)"\)', flags=re.IGNORECASE | re.MULTILINE
+        ),
+    },
+]
+
+
+def download_db6_key():
+    dp = ""
+    for source in KEY_SOURCES:
+        url = source["url"]
+        regex = source["regex"]
+
+        res = urllib.request.urlopen(url)
+        data = res.read().decode("utf-8")
+        match = regex.match(data)
+        if match:
+            dp = match.group("dp")
+            break
+    if dp:
+        return dp
+    else:
+        raise Exception("No key found in the online sources.")
+
 
 @pytest.fixture
 def db():
@@ -54,7 +90,8 @@ def test_open_rekordbox_database():
 
 
 def test_unlock_rekordbox_database():
-    con = open_rekordbox_database(LOCKED, unlock=True)
+    dp = download_db6_key()
+    con = open_rekordbox_database(LOCKED, key=dp, unlock=True)
     con.execute("SELECT name FROM sqlite_master WHERE type='table';")
     con.close()
 
