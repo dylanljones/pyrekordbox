@@ -53,6 +53,12 @@ def test_open_rekordbox_database():
     con.close()
 
 
+def test_unlock_rekordbox_database():
+    con = open_rekordbox_database(LOCKED, unlock=True)
+    con.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    con.close()
+
+
 def test_close_open():
     db = Rekordbox6Database(UNLOCKED, unlock=False)
     db.close()
