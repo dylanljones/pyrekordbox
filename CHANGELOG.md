@@ -5,16 +5,20 @@
 
 ### New Features
 
-- **db:** **add method for creating tracks**  
+- **db:** **add method for creating tracks ([#121](https://github.com/dylanljones/pyrekordbox/pull/121))**  
   New tracks can now be created and added to the Rekordbox collection.
   Note that the user still has to reload tags/analyze the newly added tracks in Rekordbox.
+- **config:** **add Rekordbox 7 support ([#133](https://github.com/dylanljones/pyrekordbox/issues/133))**  
 
 ### Improvements/Bug Fixes
 
 - **db:** **fix missing proxy association in table dict**  
   The association proxies were missing in the `to_dict` method.
   The keys are now also cached.
-
+- **db:** **Fix an error with .aif file extension ([#138](https://github.com/dylanljones/pyrekordbox/pull/138))**
+- **db:** **Fix to smartlist not always working correctly due to unneccessary bit shift for specific MyTag values ([#142](https://github.com/dylanljones/pyrekordbox/pull/142))**  
+  Fix smartlists not always working correctly due to unneccessary bit shift for specific MyTag values
+- **xml:** **save xml as utf-8 ([#135](https://github.com/dylanljones/pyrekordbox/pull/135))**  
 
 <a name="v0.3.2"></a>
 ## [v0.3.2] - 2024-01-05
