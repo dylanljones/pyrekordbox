@@ -15,9 +15,11 @@
 - **db:** **fix missing proxy association in table dict**  
   The association proxies were missing in the `to_dict` method.
   The keys are now also cached.
-- **db:** **Fix an error with .aif file extension ([#138](https://github.com/dylanljones/pyrekordbox/pull/138))**
-- **db:** **Fix to smartlist not always working correctly due to unneccessary bit shift for specific MyTag values ([#142](https://github.com/dylanljones/pyrekordbox/pull/142))**  
+- **db:** **fix an error with .aif file extension ([#138](https://github.com/dylanljones/pyrekordbox/pull/138))**
+- **db:** **fix to smartlist not always working correctly due to unneccessary bit shift for specific MyTag values ([#142](https://github.com/dylanljones/pyrekordbox/pull/142))**  
   Fix smartlists not always working correctly due to unneccessary bit shift for specific MyTag values
+- **db:** **fix different timezone assertion ([#137](https://github.com/dylanljones/pyrekordbox/pull/137))**  
+  Allow different timezones other than "+00:00" in the datetime format of the DB.
 - **xml:** **save xml as utf-8 ([#135](https://github.com/dylanljones/pyrekordbox/pull/135))**  
 - **build:** **use pre-built sqlcipher wheels as dependency ([#134](https://github.com/dylanljones/pyrekordbox/pull/134))**  
   The sqlcipher dependency can now be installed using pre-built wheels with included sqlcipher binaries. This makes the whole library installable via pip!
