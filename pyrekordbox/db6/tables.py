@@ -5,6 +5,7 @@
 """Rekordbox 6 `master.db` SQLAlchemy table declarations."""
 
 import math
+import re
 import struct
 from datetime import datetime
 from enum import IntEnum
@@ -118,7 +119,6 @@ class DateTime(TypeDecorator):
     """Custom datetime column with timezone support.
 
     The datetime format in the database is `YYYY-MM-DD HH:MM:SS.SSS +00:00`.
-    The timezone seems to always be `+00:00` (UTC).
     This format is not supported by the `DateTime` column of SQLAlchemy 2.
     """
 
@@ -137,7 +137,7 @@ class DateTime(TypeDecorator):
                     datestr, tzinfo = value[:23], value[23:]
                     datestr = datestr.strip()
                     tzinfo = tzinfo.strip()
-                    assert tzinfo == "+00:00", tzinfo
+                    assert re.match(r"^\+\d{2}:\d{2}$", tzinfo)
                 else:
                     datestr, tzinfo = value, ""
                 dt = datetime.fromisoformat(datestr)
