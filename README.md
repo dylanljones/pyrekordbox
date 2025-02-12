@@ -83,8 +83,8 @@ pyrekordbox.cfg and pyrekordbox.yaml.
 
 ### Rekordbox 6/7 database
 
-Rekordbox 6 and 7 now us a SQLite database for storing the collection content.
-Unfortunatly, the new `master.db` SQLite database is encrypted using
+Rekordbox 6 and 7 use a SQLite database for storing the collection content.
+Unfortunatly, the `master.db` SQLite database is encrypted using
 [SQLCipher][sqlcipher], which means it can't be used without the encryption key.
 However, since your data is stored and used locally, the key must be present on the
 machine running Rekordbox.
