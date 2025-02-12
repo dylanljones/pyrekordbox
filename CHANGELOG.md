@@ -3,6 +3,9 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+This release adds the ability to create new tracks in the Rekordbox v6 database.
+It also adds support for Rekordbox 7 and fixes various bugs.
+
 ### New Features
 
 - **db:** **add method for creating tracks ([#121](https://github.com/dylanljones/pyrekordbox/pull/121))**  
