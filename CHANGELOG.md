@@ -23,11 +23,19 @@
 - **xml:** **save xml as utf-8 ([#135](https://github.com/dylanljones/pyrekordbox/pull/135))**  
 - **build:** **use pre-built sqlcipher wheels as dependency ([#134](https://github.com/dylanljones/pyrekordbox/pull/134))**  
   The sqlcipher dependency can now be installed using pre-built wheels with included sqlcipher binaries. This makes the whole library installable via pip!
+- **db:** **remove deprecated `xml` module**  
+- **db:** **remove deprecated `open_rekordbox_database` method**  
 
 ### Documentation
 
 - **db:** **add documentation for adding tracks**
 - **db:** **add more info to djmdContent table**
+
+### BREAKING CHANGE
+
+Remove deprecated `open_rekordbox_database` method. Use the `Rekordbox6Database` database handler instead!  
+Remove deprecated `xml` module. Use the `rbxml` module instead!
+
 
 <a name="v0.3.2"></a>
 ## [v0.3.2] - 2024-01-05
