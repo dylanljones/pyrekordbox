@@ -11,9 +11,10 @@ from pathlib import Path
 
 import pytest
 from pytest import mark
+from sqlalchemy import text
 from sqlalchemy.orm.query import Query
 
-from pyrekordbox import Rekordbox6Database, open_rekordbox_database
+from pyrekordbox import Rekordbox6Database
 from pyrekordbox.db6 import tables
 from pyrekordbox.db6.smartlist import LogicalOperator, Operator, Property, SmartList
 
@@ -84,16 +85,16 @@ def db():
 
 
 def test_open_rekordbox_database():
-    con = open_rekordbox_database(UNLOCKED, unlock=False)
-    con.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    con.close()
+    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table';"))
+    db.close()
 
 
 def test_unlock_rekordbox_database():
-    dp = download_db6_key()
-    con = open_rekordbox_database(LOCKED, key=dp, unlock=True)
-    con.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    con.close()
+    key = download_db6_key()
+    db = Rekordbox6Database(LOCKED, key=key, unlock=True)
+    db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table';"))
+    db.close()
 
 
 def test_close_open():
