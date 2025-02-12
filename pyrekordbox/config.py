@@ -517,9 +517,10 @@ def _update_sqlite_key(opts, conf):
                 if sys.platform == "win32":
                     executable = conf["install_dir"] / "rekordbox.exe"
                 elif sys.platform == "darwin":
-                    executable = (
-                        conf["install_dir"] / "Contents" / "MacOS" / "rekordbox"
-                    )
+                    install_dir = conf["install_dir"]
+                    if not str(install_dir).endswith(".app"):
+                        install_dir = install_dir / "rekordbox.app"
+                    executable = install_dir / "Contents" / "MacOS" / "rekordbox"
                 else:
                     # Linux: not supported
                     logger.warning(f"OS {sys.platform} not supported!")
