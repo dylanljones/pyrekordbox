@@ -4,7 +4,7 @@
 
 from .anlz import AnlzFile, get_anlz_paths, read_anlz_files, walk_anlz_paths
 from .config import get_config, show_config, update_config
-from .db6 import Rekordbox6Database, open_rekordbox_database
+from .db6 import Rekordbox6Database
 from .logger import logger
 from .mysettings import (
     DevSettingFile,

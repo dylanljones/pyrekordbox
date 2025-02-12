@@ -2,7 +2,7 @@
 # Author: Dylan Jones
 # Date:   2022-05-07
 
-from .database import Rekordbox6Database, open_rekordbox_database
+from .database import Rekordbox6Database
 from .smartlist import SmartList
 from .tables import (
     AgentRegistry,

@@ -16,7 +16,7 @@ from sqlalchemy.sql.sqltypes import DateTime, String
 
 from ..anlz import AnlzFile, get_anlz_paths, read_anlz_files
 from ..config import get_config
-from ..utils import get_rekordbox_pid, warn_deprecated
+from ..utils import get_rekordbox_pid
 from . import tables
 from .aux_files import MasterPlaylistXml
 from .registry import RekordboxAgentRegistry
@@ -39,101 +39,6 @@ logger = logging.getLogger(__name__)
 
 class NoCachedKey(Exception):
     pass
-
-
-def open_rekordbox_database(path=None, key="", unlock=True, sql_driver=None):
-    """Opens a connection to the Rekordbox v6 master.db SQLite3 database.
-
-    Parameters
-    ----------
-    path : str or Path, optional
-        The path of the Rekordbox v6 database file. By default, pyrekordbox
-        automatically finds the Rekordbox v6 master.db database file.
-        This parameter is only required for opening other databases or if the
-        configuration fails.
-    key : str, optional
-        The database key. By default, pyrekordbox automatically reads the database
-        key from the Rekordbox v6 configuration file. This parameter is only required
-        if the key extraction fails.
-    unlock: bool, optional
-        Flag if the database needs to be decrypted. Set to False if you are opening
-        an unencrypted test database.
-    sql_driver : Callable, optional
-        The SQLite driver to used for opening the database. The standard ``sqlite3``
-        package is used as default driver.
-
-    Returns
-    -------
-    con : sql_driver.Connection
-        The opened Rekordbox v6 database connection.
-
-    Examples
-    --------
-    Open the Rekordbox v6 master.db database:
-
-    >>> db = open_rekordbox_database()
-
-    Open a copy of the database:
-
-    >>> db = open_rekordbox_database("path/to/master_copy.db")
-
-    Open a decrypted copy of the database:
-
-    >>> db = open_rekordbox_database("path/to/master_unlocked.db", unlock=False)
-
-    To use the ``pysqlcipher3`` package as SQLite driver, either import it as
-
-    >>> from sqlcipher3 import dbapi2 as sqlite3  # noqa
-    >>> db = open_rekordbox_database("path/to/master_copy.db")
-
-    or supply the package as driver:
-
-    >>> from sqlcipher3 import dbapi2  # noqa
-    >>> db = open_rekordbox_database("path/to/master_copy.db", sql_driver=dbapi2)
-    """
-    warn_deprecated("open_rekordbox_database", remove_in="0.4.0")
-    rb6_config = get_config("rekordbox6")
-
-    if not path:
-        path = rb6_config["db_path"]
-    path = Path(path)
-    if not path.exists():
-        raise FileNotFoundError(f"File '{path}' does not exist!")
-    logger.info("Opening %s", path)
-
-    # Open database
-    if sql_driver is None:
-        # Use default sqlite3 package
-        # This requires that the 'sqlite3.dll' was replaced by the 'sqlcipher.dll'
-        sql_driver = sqlite3
-    con = sql_driver.connect(str(path))
-
-    if unlock:
-        if not key:
-            try:
-                key = rb6_config["dp"]
-            except KeyError:
-                raise NoCachedKey(
-                    "Could not unlock database: No key found\n"
-                    f"If you are using Rekordbox>{MAX_VERSION} the key can not be "
-                    f"extracted automatically!\n"
-                    "Please use the CLI of pyrekordbox to download the key or "
-                    "use the `key` parameter to manually provide the database key."
-                )
-            logger.info("Key: %s", key)
-        # Unlock database
-        con.execute(f"PRAGMA key='{key}'")
-
-    # Check connection
-    try:
-        con.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    except sqlite3.DatabaseError as e:
-        msg = f"Opening database failed: '{e}'. Check if the database key is correct!"
-        raise sqlite3.DatabaseError(msg)
-    else:
-        logger.info("Database unlocked!")
-
-    return con
 
 
 def _parse_query_result(query, kwargs):
