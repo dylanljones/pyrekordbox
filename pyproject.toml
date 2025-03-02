@@ -25,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Sound/Audio",
 ]
 requires-python = ">=3.8"
@@ -32,6 +33,7 @@ dependencies = [
     "bidict>=0.21.0",
     "blowfish>=0.6.0",
     "construct>=2.10.0",
+    "click",
     "numpy>=1.19.0",
     "packaging",
     "psutil>=5.9.0",
@@ -52,6 +54,9 @@ test = [
 Source = "https://github.com/dylanljones/pyrekordbox"
 Documentation = "https://pyrekordbox.readthedocs.io/en/stable/"
 Tracker = "https://github.com/dylanljones/pyrekordbox/issues"
+
+[project.scripts]
+model_dmft = "pyrekordbox.__main__:cli"
 
 
 # -- Build -----------------------------------------------------------------------------
@@ -93,7 +98,7 @@ exclude = [
     "*/_version.py",
     "docs/*",
 ]
-line-length = 88
+line-length = 100
 indent-width = 4
 
 [tool.ruff.lint]
