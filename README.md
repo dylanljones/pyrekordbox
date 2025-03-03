@@ -110,6 +110,7 @@ can be changed via the corresponding property of the object:
 ````python
 content = db.get_content()[0]
 content.Title = "New Title"
+db.commit()
 ````
 Some fields are stored as references to other tables, for example the artist of a track.
 Check the [documentation][db6-doc] of the corresponding object for more information.
