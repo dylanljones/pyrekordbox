@@ -6,7 +6,7 @@
 
 ### Improvements/Bug Fixes
 
-- **allow commiting if playlist is not found in XML ([#149](https://github.com/dylanljones/pyrekordbox/issues/149))**  
+- **db:** **allow commiting if playlist is not found in XML ([#149](https://github.com/dylanljones/pyrekordbox/issues/149))**  
   This fixes an issue where the changes to the DB can not be commited if the playlist is missing 
   in the playlist-xml. A warning is now shown instead.
 
