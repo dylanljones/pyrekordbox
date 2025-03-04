@@ -114,8 +114,11 @@ content = db.get_content()[0]
 content.Title = "New Title"
 db.commit()
 ````
-Some fields are stored as references to other tables, for example the artist of a track.
-Check the [documentation][db6-doc] of the corresponding object for more information.
+
+> [!NOTE]
+> Some fields are stored as references to other tables, for example the artist of a track.
+> Check the [documentation][db6-doc] of the corresponding object for more information.
+
 So far only a few tables support adding or deleting entries:
 - ``DjmdContent``: Tracks
 - ``DjmdPlaylist``: Playlists/Playlist Folders
