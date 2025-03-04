@@ -404,17 +404,18 @@ class Rekordbox6Database:
             # Sync the updated_at values of the playlists in the DB and the XML file
             for pl in self.get_playlist():
                 plxml = self.playlist_xml.get(pl.ID)
-                if plxml is None:
-                    raise ValueError(
+                if plxml is not None:
+                    ts = plxml["Timestamp"]
+                    diff = pl.updated_at - ts
+                    if abs(diff.total_seconds()) > 1:
+                        logger.debug("Updating updated_at of playlist %s in XML", pl.ID)
+                        self.playlist_xml.update(pl.ID, updated_at=pl.updated_at)
+                else:
+                    logger.warning(
                         f"Playlist {pl.ID} not found in masterPlaylists6.xml! "
                         "Did you add it manually? "
                         "Use the create_playlist method instead."
                     )
-                ts = plxml["Timestamp"]
-                diff = pl.updated_at - ts
-                if abs(diff.total_seconds()) > 1:
-                    logger.debug("Updating updated_at of playlist %s in XML", pl.ID)
-                    self.playlist_xml.update(pl.ID, updated_at=pl.updated_at)
 
             # Save the XML file if it was modified
             if self.playlist_xml.modified:
