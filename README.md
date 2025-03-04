@@ -24,9 +24,9 @@ Pioneers Rekordbox DJ Software. It currently supports
 
 Tested Rekordbox versions: ``5.8.6 | 6.7.7 | 7.0.9``
 
-
-|⚠️| This project is still under development and might contain bugs or have breaking API changes in the future. Check the [changelog][CHANGELOG] for recent changes! |
-|----|:----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+> [!WARNING]
+> This project is still under development and might contain bugs or have breaking API changes in the future.
+> Check the [changelog][CHANGELOG] for recent changes!
 
 
 ## 🔧 Installation
@@ -54,8 +54,10 @@ If this fails, it can be installed manually following the [installation guide][i
 
 [Read the full documentation on ReadTheDocs!][documentation]
 
-| ❗  | Please make sure to back up your Rekordbox collection before making changes with pyrekordbox or developing/testing new features. The backup dialog can be found under "File" > "Library" > "Backup Library" |
-|----|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+> [!CAUTION]
+> Please make sure to back up your Rekordbox collection before making changes with pyrekordbox
+> or developing/testing new features.
+> The backup dialog can be found under "File" > "Library" > "Backup Library"
 
 
 ### Configuration
