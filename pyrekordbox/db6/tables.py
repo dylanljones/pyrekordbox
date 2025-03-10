@@ -240,9 +240,7 @@ class Base(DeclarativeBase):
 class StatsTime:
     """Mixin class for tables that only use time statistics columns."""
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.now
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     """The creation date of the table entry (from :class:`StatsTime`)."""
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
@@ -271,9 +269,7 @@ class StatsFull:
     rb_local_usn: Mapped[int] = mapped_column(BigInteger, default=None)
     """The local USN (unique sequence number) of the table entry
     (from :class:`StatsFull`)."""
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.now
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     """The creation date of the table entry (from :class:`StatsFull`)."""
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
@@ -371,9 +367,7 @@ class ContentActiveCensor(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the :class:`DjmdContent` entry this censor belongs to."""
     ActiveCensors: Mapped[str] = mapped_column(Text, default=None)
     """The active censors of the table entry."""
@@ -396,9 +390,7 @@ class ContentCue(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the :class:`DjmdContent` entry this cue belongs to."""
     Cues: Mapped[str] = mapped_column(Text, default=None)
     """The cues of the table entry."""
@@ -421,9 +413,7 @@ class ContentFile(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the :class:`DjmdContent` entry this file belongs to."""
     Path: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The path of the file."""
@@ -468,9 +458,7 @@ class DjmdActiveCensor(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the :class:`DjmdContent` entry this censor belongs to."""
     InMsec: Mapped[int] = mapped_column(Integer, default=None)
     """The in time of the censor (in milliseconds)."""
@@ -483,9 +471,7 @@ class DjmdActiveCensor(Base, StatsFull):
     ContentUUID: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The UUID of the :class:`DjmdContent` entry this censor belongs to."""
 
-    Content = relationship(
-        "DjmdContent", foreign_keys=ContentID, back_populates="ActiveCensors"
-    )
+    Content = relationship("DjmdContent", foreign_keys=ContentID, back_populates="ActiveCensors")
     """The content entry this censor belongs to (links to :class:`DjmdContent`)."""
 
 
@@ -616,17 +602,11 @@ class DjmdContent(Base, StatsFull):
     """The short file name of the file corresponding to the content entry."""
     Title: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The title of the track."""
-    ArtistID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None
-    )
+    ArtistID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None)
     """The ID of the :class:`DjmdArtist` entry of the artist of this track."""
-    AlbumID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdAlbum.ID"), default=None
-    )
+    AlbumID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdAlbum.ID"), default=None)
     """The ID of the :class:`DjmdAlbum` entry of the album of this track."""
-    GenreID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdGenre.ID"), default=None
-    )
+    GenreID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdGenre.ID"), default=None)
     """The ID of the :class:`DjmdGenre` entry of the genre of this track."""
     BPM: Mapped[int] = mapped_column(Integer, default=None)
     """The BPM (beats per minute) of the track."""
@@ -646,27 +626,19 @@ class DjmdContent(Base, StatsFull):
     """The rating of the track."""
     ReleaseYear: Mapped[int] = mapped_column(Integer, default=None)
     """The release year of the track."""
-    RemixerID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None
-    )
+    RemixerID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None)
     """The ID of the :class:`DjmdArtist` entry of the remixer of this track."""
-    LabelID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdLabel.ID"), default=None
-    )
+    LabelID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdLabel.ID"), default=None)
     """The ID of the :class:`DjmdLabel` entry of the label of this track."""
     OrgArtistID: Mapped[str] = mapped_column(
         VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None
     )
     """The ID of the :class:`DjmdArtist` entry of the original artist of this track."""
-    KeyID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdKey.ID"), default=None
-    )
+    KeyID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdKey.ID"), default=None)
     """The ID of the :class:`DjmdKey` entry of the key of this track."""
     StockDate: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The stock date of the track."""
-    ColorID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdColor.ID"), default=None
-    )
+    ColorID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdColor.ID"), default=None)
     """The ID of the :class:`DjmdColor` entry of the color of this track."""
     DJPlayCount: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The play count of the track."""
@@ -684,9 +656,7 @@ class DjmdContent(Base, StatsFull):
     """The file size of the track."""
     DiscNo: Mapped[int] = mapped_column(Integer, default=None)
     """The number of the disc of the album of the track."""
-    ComposerID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None
-    )
+    ComposerID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None)
     """The ID of the :class:`DjmdArtist` entry of the composer of this track."""
     Subtitle: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The subtitle of the track."""
@@ -718,9 +688,7 @@ class DjmdContent(Base, StatsFull):
     """The analysis updated status of the track."""
     TrackInfoUpdated: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The track info updated status of the track."""
-    Lyricist: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None
-    )
+    Lyricist: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdArtist.ID"), default=None)
     """The ID of the :class:`DjmdArtist` entry of the lyricist of this track."""
     ISRC: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The ISRC of the track."""
@@ -787,9 +755,7 @@ class DjmdContent(Base, StatsFull):
     """The album artist entry of the track (links to :class:`DjmdArtist`)."""
     MyTags = relationship("DjmdSongMyTag", back_populates="Content")
     """The my tags of the track (links to :class:`DjmdSongMyTag`)."""
-    Cues = relationship(
-        "DjmdCue", foreign_keys="DjmdCue.ContentID", back_populates="Content"
-    )
+    Cues = relationship("DjmdCue", foreign_keys="DjmdCue.ContentID", back_populates="Content")
     """The cues of the track (links to :class:`DjmdCue`)."""
     ActiveCensors = relationship("DjmdActiveCensor", back_populates="Content")
     """The active censors of the track (links to :class:`DjmdActiveCensor`)."""
@@ -838,9 +804,7 @@ class DjmdCue(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content (:class:`DjmdContent`) containing the cue point."""
     InMsec: Mapped[int] = mapped_column(Integer, default=None)
     """The in point of the cue point in milliseconds."""
@@ -943,9 +907,7 @@ class DjmdHistory(Base, StatsFull):
     """The name of the history playlist."""
     Attribute: Mapped[int] = mapped_column(Integer, default=None)
     """The attributes of the history playlist"""
-    ParentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None
-    )
+    ParentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None)
     """The ID of the parent history playlist (:class:`DjmdHistory`)."""
     DateCreated: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The date the history playlist was created."""
@@ -978,13 +940,9 @@ class DjmdSongHistory(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
 
-    HistoryID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None
-    )
+    HistoryID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdHistory.ID"), default=None)
     """The ID of the history playlist (:class:`DjmdHistory`)."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content (:class:`DjmdContent`)."""
     TrackNo: Mapped[int] = mapped_column(Integer, default=None)
     """The track number of the song in the history playlist."""
@@ -1050,9 +1008,7 @@ class DjmdSongHotCueBanklist(Base, StatsFull):
         VARCHAR(255), ForeignKey("djmdHotCueBanklist.ID"), default=None
     )
     """The ID of the hot cue banklist (:class:`DjmdHotCueBanklist`)."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content (:class:`DjmdContent`)."""
     TrackNo: Mapped[int] = mapped_column(Integer, default=None)
     """The track number of the hot-cue in the hot cue banklist."""
@@ -1160,9 +1116,7 @@ class DjmdMixerParam(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content (:class:`DjmdContent`)."""
     GainHigh: Mapped[int] = mapped_column(Integer, default=None)
     """The high gain of the mixer parameter."""
@@ -1243,9 +1197,7 @@ class DjmdMyTag(Base, StatsFull):
     """The name of the My-Tag list."""
     Attribute: Mapped[int] = mapped_column(Integer, default=None)
     """The attribute of the My-Tag list."""
-    ParentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None
-    )
+    ParentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
     """The ID of the parent My-Tag list (:class:`DjmdMyTag`)."""
 
     MyTags = relationship("DjmdSongMyTag", back_populates="MyTag")
@@ -1274,13 +1226,9 @@ class DjmdSongMyTag(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    MyTagID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None
-    )
+    MyTagID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdMyTag.ID"), default=None)
     """The ID of the My-Tag list (links to :class:`DjmdMyTag`)."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content this item belongs to (:class:`DjmdContent`)."""
     TrackNo: Mapped[int] = mapped_column(Integer, default=None)
     """The track number of the My-Tag item (for ordering)."""
@@ -1314,16 +1262,12 @@ class DjmdPlaylist(Base, StatsFull):
     """The path to the image of the playlist."""
     Attribute: Mapped[int] = mapped_column(Integer, default=None)
     """The attribute of the playlist."""
-    ParentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdPlaylist.ID"), default=None
-    )
+    ParentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdPlaylist.ID"), default=None)
     """The ID of the parent playlist (:class:`DjmdPlaylist`)."""
     SmartList: Mapped[str] = mapped_column(Text, default=None)
     """The smart list settings of the playlist."""
 
-    Songs = relationship(
-        "DjmdSongPlaylist", back_populates="Playlist", cascade="all, delete"
-    )
+    Songs = relationship("DjmdSongPlaylist", back_populates="Playlist", cascade="all, delete")
     """The contents of the playlist (links to :class:`DjmdSongPlaylist`)."""
     Children = relationship(
         "DjmdPlaylist",
@@ -1368,9 +1312,7 @@ class DjmdSongPlaylist(Base, StatsFull):
         VARCHAR(255), ForeignKey("djmdPlaylist.ID"), default=None
     )
     """The ID of the playlist this item is in (:class:`DjmdPlaylist`)."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content this item belongs to (:class:`DjmdContent`)."""
     TrackNo: Mapped[int] = mapped_column(Integer, default=None)
     """The track number of the playlist item (for ordering)."""
@@ -1441,9 +1383,7 @@ class DjmdSongRelatedTracks(Base, StatsFull):
     )
     """The ID of the related tracks list this item is in
     (:class:`DjmdRelatedTracks`)."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content this item belongs to (:class:`DjmdContent`)."""
     TrackNo: Mapped[int] = mapped_column(Integer, default=None)
     """The track number of the related tracks list item (for ordering)."""
@@ -1472,9 +1412,7 @@ class DjmdSampler(Base, StatsFull):
     """The name of the sampler list."""
     Attribute: Mapped[int] = mapped_column(Integer, default=None)
     """The attribute of the sampler list."""
-    ParentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdSampler.ID"), default=None
-    )
+    ParentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdSampler.ID"), default=None)
     """The ID of the parent sampler list (:class:`DjmdSampler`)."""
 
     Songs = relationship("DjmdSongSampler", back_populates="Sampler")
@@ -1505,13 +1443,9 @@ class DjmdSongSampler(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    SamplerID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdSampler.ID"), default=None
-    )
+    SamplerID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdSampler.ID"), default=None)
     """The ID of the sampler list this item is in (:class:`DjmdSampler`)."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content this item belongs to (:class:`DjmdContent`)."""
     TrackNo: Mapped[int] = mapped_column(Integer, default=None)
     """The track number of the sampler list item (for ordering)."""
@@ -1529,9 +1463,7 @@ class DjmdSongTagList(Base, StatsFull):
 
     ID: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     """The ID (primary key) of the table entry."""
-    ContentID: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey("djmdContent.ID"), default=None
-    )
+    ContentID: Mapped[str] = mapped_column(VARCHAR(255), ForeignKey("djmdContent.ID"), default=None)
     """The ID of the content this item belongs to (:class:`DjmdContent`)."""
     TrackNo: Mapped[int] = mapped_column(Integer, default=None)
     """The track number of the tag list item (for ordering)."""

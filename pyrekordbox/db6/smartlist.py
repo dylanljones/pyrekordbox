@@ -179,8 +179,7 @@ class Condition:
     def __post_init__(self):
         if self.property not in PROPERTIES:
             raise ValueError(
-                f"Invalid property: '{self.property}'! "
-                f"Supported properties: {PROPERTIES}"
+                f"Invalid property: '{self.property}'! Supported properties: {PROPERTIES}"
             )
 
         valid_ops = VALID_OPS[self.property]
@@ -232,9 +231,7 @@ def _get_condition_values(cond):
 class SmartList:
     """Rekordbox smart playlist XML handler."""
 
-    def __init__(
-        self, logical_operator: int = LogicalOperator.ALL, auto_update: int = 0
-    ):
+    def __init__(self, logical_operator: int = LogicalOperator.ALL, auto_update: int = 0):
         self.playlist_id: Union[int, str] = ""
         self.logical_operator: int = int(logical_operator)
         self.auto_update: int = auto_update
