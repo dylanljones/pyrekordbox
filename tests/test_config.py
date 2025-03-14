@@ -179,9 +179,7 @@ def test_rb5_config_alt(pioneer_install_dir, pioneer_app_dir):
     assert version == expected_version
 
     # test alternative version
-    update_config(
-        pioneer_install_dir, pioneer_app_dir, rb5_install_dirname="rekordbox 5.1.1"
-    )
+    update_config(pioneer_install_dir, pioneer_app_dir, rb5_install_dirname="rekordbox 5.1.1")
     expected_version = "5.1.1"
 
     app_dir = get_config("rekordbox5", "app_dir")
@@ -209,9 +207,7 @@ def test_rb6_config_alt(pioneer_install_dir, pioneer_app_dir):
     assert version == expected_version
 
     # test alternative version
-    update_config(
-        pioneer_install_dir, pioneer_app_dir, rb6_install_dirname="rekordbox 6.1.1"
-    )
+    update_config(pioneer_install_dir, pioneer_app_dir, rb6_install_dirname="rekordbox 6.1.1")
     expected_version = "6.1.1"
 
     app_dir = get_config("rekordbox6", "app_dir")
@@ -239,9 +235,7 @@ def test_rb7_config_alt(pioneer_install_dir, pioneer_app_dir):
     assert version == expected_version
 
     # test alternative version
-    update_config(
-        pioneer_install_dir, pioneer_app_dir, rb7_install_dirname="rekordbox 7.1.1"
-    )
+    update_config(pioneer_install_dir, pioneer_app_dir, rb7_install_dirname="rekordbox 7.1.1")
     expected_version = "7.1.1"
 
     app_dir = get_config("rekordbox7", "app_dir")

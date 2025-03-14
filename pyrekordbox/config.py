@@ -234,12 +234,7 @@ def read_rekordbox6_asar(rb6_install_dir: Union[str, Path]) -> str:
         if not str(rb6_install_dir).endswith(".app"):
             rb6_install_dir = rb6_install_dir / "rekordbox.app"
         location = (
-            rb6_install_dir
-            / "Contents"
-            / "MacOS"
-            / "rekordboxAgent.app"
-            / "Contents"
-            / "Resources"
+            rb6_install_dir / "Contents" / "MacOS" / "rekordboxAgent.app" / "Contents" / "Resources"
         )
         encoding = "cp437"
     else:
@@ -360,9 +355,7 @@ def _get_rb_config(
     return conf
 
 
-def _get_rb5_config(
-    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
-) -> dict:
+def _get_rb5_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
     """Get the program configuration for Rekordbox v5.x.x."""
     major_version = 5
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -414,8 +407,7 @@ class KeyExtractor:
         pid = get_rekordbox_pid()
         if pid:
             raise RuntimeError(
-                "Rekordbox is running. "
-                "Please close Rekordbox before running the `KeyExtractor`."
+                "Rekordbox is running. Please close Rekordbox before running the `KeyExtractor`."
             )
         # Spawn Rekordbox process and attach to it
         pid = frida.spawn(self.executable)
@@ -551,9 +543,7 @@ def _update_sqlite_key(opts, conf):
         conf["dp"] = dp
 
 
-def _get_rb6_config(
-    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
-) -> dict:
+def _get_rb6_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
     """Get the program configuration for Rekordbox v6.x.x."""
     major_version = 6
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -571,9 +561,7 @@ def _get_rb6_config(
     return conf
 
 
-def _get_rb7_config(
-    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
-) -> dict:
+def _get_rb7_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
     """Get the program configuration for Rekordbox v7.x.x."""
     major_version = 7
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -715,27 +703,21 @@ def update_config(
 
     # Update Rekordbox 5 config
     try:
-        conf = _get_rb5_config(
-            pioneer_install_dir, pioneer_app_dir, rb5_install_dirname
-        )
+        conf = _get_rb5_config(pioneer_install_dir, pioneer_app_dir, rb5_install_dirname)
         __config__["rekordbox5"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)
 
     # Update Rekordbox 6 config
     try:
-        conf = _get_rb6_config(
-            pioneer_install_dir, pioneer_app_dir, rb6_install_dirname
-        )
+        conf = _get_rb6_config(pioneer_install_dir, pioneer_app_dir, rb6_install_dirname)
         __config__["rekordbox6"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)
 
     # Update Rekordbox 7 config
     try:
-        conf = _get_rb7_config(
-            pioneer_install_dir, pioneer_app_dir, rb7_install_dirname
-        )
+        conf = _get_rb7_config(pioneer_install_dir, pioneer_app_dir, rb7_install_dirname)
         __config__["rekordbox7"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)

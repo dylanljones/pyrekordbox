@@ -162,13 +162,9 @@ class PQTZAnlzTag(AbstractAnlzTag):
         n_bpms = len(bpms)
         n_times = len(times)
         if n_bpms != n_beats:
-            raise ValueError(
-                f"Number of bpms not equal to number of beats: {n_bpms} != {n_beats}"
-            )
+            raise ValueError(f"Number of bpms not equal to number of beats: {n_bpms} != {n_beats}")
         if n_times != n_beats:
-            raise ValueError(
-                f"Number of times not equal to number of beats: {n_bpms} != {n_times}"
-            )
+            raise ValueError(f"Number of times not equal to number of beats: {n_bpms} != {n_times}")
 
         # For now only values of existing beats can be set
         if n_beats != n:
@@ -184,9 +180,7 @@ class PQTZAnlzTag(AbstractAnlzTag):
         n = len(self.content.entries)
         n_new = len(beats)
         if n_new != n:
-            raise ValueError(
-                f"Number of beats not equal to current content length: {n_new} != {n}"
-            )
+            raise ValueError(f"Number of beats not equal to current content length: {n_new} != {n}")
 
         for i, beat in enumerate(beats):
             self.content.entries[i].beat = beat
@@ -195,9 +189,7 @@ class PQTZAnlzTag(AbstractAnlzTag):
         n = len(self.content.entries)
         n_new = len(bpms)
         if n_new != n:
-            raise ValueError(
-                f"Number of bpms not equal to current content length: {n_new} != {n}"
-            )
+            raise ValueError(f"Number of bpms not equal to current content length: {n_new} != {n}")
 
         for i, bpm in enumerate(bpms):
             self.content.entries[i].tempo = int(bpm * 100)
@@ -206,9 +198,7 @@ class PQTZAnlzTag(AbstractAnlzTag):
         n = len(self.content.entries)
         n_new = len(times)
         if n_new != n:
-            raise ValueError(
-                f"Number of times not equal to current content length: {n_new} != {n}"
-            )
+            raise ValueError(f"Number of times not equal to current content length: {n_new} != {n}")
 
         for i, t in enumerate(times):
             self.content.entries[i].time = int(1000 * t)

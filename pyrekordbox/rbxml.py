@@ -27,9 +27,7 @@ POSMARK_TYPE_MAPPING = bidict.bidict(
         "4": "loop",
     }
 )
-RATING_MAPPING = bidict.bidict(
-    {"0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5}
-)
+RATING_MAPPING = bidict.bidict({"0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "255": 5})
 NODE_KEYTYPE_MAPPING = bidict.bidict({"0": "TrackID", "1": "Location"})
 
 
@@ -273,9 +271,7 @@ class Tempo(AbstractElement):
     ATTRIBS = ["Inizio", "Bpm", "Metro", "Battito"]
     GETTERS = {"Inizio": float, "Bpm": float, "Battito": int}
 
-    def __init__(
-        self, parent=None, Inizio=0.0, Bpm=0.0, Metro="4/4", Battito=1, element=None
-    ):
+    def __init__(self, parent=None, Inizio=0.0, Bpm=0.0, Metro="4/4", Battito=1, element=None):
         super().__init__(element, parent, Inizio, Bpm, Metro, Battito)
 
     def _init(self, parent, inizio, bpm, metro, battito):
@@ -1264,9 +1260,7 @@ class RekordboxXml:
         num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
         n = int(self._collection.attrib["Entries"])
         if n != num_tracks:
-            raise ValueError(
-                f"Track count {num_tracks} does not match number of elements {n}"
-            )
+            raise ValueError(f"Track count {num_tracks} does not match number of elements {n}")
         # Generate XML string
         return pretty_xml(self._root, indent, encoding="utf-8")
 
