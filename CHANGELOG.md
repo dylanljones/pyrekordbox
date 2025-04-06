@@ -4,6 +4,11 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+
+- **cli**: **Add simple CLI tools**
+  Update the CLI and add tools simple updates of the database.
+
 ### Improvements/Bug Fixes
 
 - **db:** **allow commiting if playlist is not found in XML ([#149](https://github.com/dylanljones/pyrekordbox/issues/149))**  
