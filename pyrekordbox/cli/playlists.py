@@ -4,6 +4,7 @@
 
 import functools
 import json as json_
+from typing import Tuple
 
 import click
 
@@ -148,7 +149,7 @@ def playlist_cli():
 
 
 def format_opt(func):
-    """Click option decorator for human readable output."""
+    """Click option decorator for human-readable output."""
 
     @click.option("--format", "-f", is_flag=True, help="Format output as human readable string.")
     @functools.wraps(func)
@@ -208,3 +209,33 @@ def playlist_content(playlist_id: str, format: bool, indent: int = None):
     else:
         s = json_.dumps([_song_to_dict(song) for song in songs], indent=indent)
         click.echo(s)
+
+
+@playlist_cli.command(name="add")
+@click.argument("playlist_id", type=str)
+@click.argument("items", type=str, nargs=-1)
+def add_content(playlist_id: str, items: Tuple[str]):
+    r"""Add contents to a playlist.
+
+    The items are a list of JSON strings representing the content to add.
+    Each item should have a 'path' key with the path of the content.
+    Optionally, a 'seq' key can be used to specify the sequence of the content.
+
+    **Important**: On Windows, double quotes must be escaped with a backslash.
+
+    Example:
+    pyrekordbox playlist add 1234 [{\"path\": \"path/to/content\", \"seq\": 1}]
+    """
+    s = " ".join(items)
+    data = json_.loads(s)
+
+    db = Rekordbox6Database()
+    playlist = db.get_playlist(ID=playlist_id)
+
+    for item in data:
+        path = item["path"]
+        seq = item.get("seq", None)
+        content = db.get_content(FolderPath=path).first()
+        db.add_to_playlist(playlist, content, seq)
+
+    db.commit()
