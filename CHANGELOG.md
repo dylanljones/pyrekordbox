@@ -12,6 +12,7 @@
 - **config:** **move pyrekordbox cache file to appdir**  
   The cache file is now stored in the appdata directory of the user. 
   This avoids writing to the pyrekordbox package directory.
+- **config:** **fix asar file decoding error ([#154](https://github.com/dylanljones/pyrekordbox/issues/154))**  
 
 
 <a name="v0.4.0"></a>
