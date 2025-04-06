@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 # Cache file for pyrekordbox data
 _cache_file_version = 2
-_cache_file = Path(__file__).parent / "rb.cache"
+_cache_file_name = "rb.cache"
 
 # Define empty pyrekordbox configuration
 __config__ = {
@@ -46,6 +46,25 @@ __config__ = {
 
 class InvalidApplicationDirname(Exception):
     pass
+
+
+def get_appdata_dir() -> Path:
+    """Returns the path of the application data directory.
+
+    On Windows, the application data is stored in `/Users/user/AppData/Roaming`.
+    On macOS the application data is stored in `~/Libary/Application Support`.
+    """
+    if sys.platform == "win32":
+        # Windows: located in /Users/user/AppData/Roaming/
+        app_data = Path(os.environ["AppData"])
+    elif sys.platform == "darwin":
+        # MacOS: located in ~/Library/Application Support/
+        app_data = Path("~").expanduser() / "Library" / "Application Support"
+    else:
+        # Linux: not supported
+        logger.warning(f"OS {sys.platform} not supported!")
+        return Path("~").expanduser() / ".local" / "share"
+    return app_data
 
 
 def get_pioneer_install_dir(path: Union[str, Path] = None) -> Path:  # pragma: no cover
@@ -234,12 +253,7 @@ def read_rekordbox6_asar(rb6_install_dir: Union[str, Path]) -> str:
         if not str(rb6_install_dir).endswith(".app"):
             rb6_install_dir = rb6_install_dir / "rekordbox.app"
         location = (
-            rb6_install_dir
-            / "Contents"
-            / "MacOS"
-            / "rekordboxAgent.app"
-            / "Contents"
-            / "Resources"
+            rb6_install_dir / "Contents" / "MacOS" / "rekordboxAgent.app" / "Contents" / "Resources"
         )
         encoding = "cp437"
     else:
@@ -360,9 +374,7 @@ def _get_rb_config(
     return conf
 
 
-def _get_rb5_config(
-    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
-) -> dict:
+def _get_rb5_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
     """Get the program configuration for Rekordbox v5.x.x."""
     major_version = 5
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -414,8 +426,7 @@ class KeyExtractor:
         pid = get_rekordbox_pid()
         if pid:
             raise RuntimeError(
-                "Rekordbox is running. "
-                "Please close Rekordbox before running the `KeyExtractor`."
+                "Rekordbox is running. Please close Rekordbox before running the `KeyExtractor`."
             )
         # Spawn Rekordbox process and attach to it
         pid = frida.spawn(self.executable)
@@ -434,11 +445,15 @@ class KeyExtractor:
 
 
 def write_db6_key_cache(key: str) -> None:  # pragma: no cover
-    """Writes the decrypted Rekordbox6 database key to the cache file.
+    r"""Writes the decrypted Rekordbox6 database key to the cache file.
 
     This method can also be used to manually cache the database key, provided
     the user has found the key somewhere else. The key can be, for example,
     found in some other projects that hard-coded it.
+
+    The cache file is stored in the application data directory of pyrekordbox:
+    Windows: `C:\Users\<user>\AppData\Roaming\pyrekordbox`
+    macOS: `~/Library/Application Support/pyrekordbox`
 
     Parameters
     ----------
@@ -461,7 +476,12 @@ def write_db6_key_cache(key: str) -> None:  # pragma: no cover
     lines.append(f"version: {_cache_file_version}")
     lines.append("dp: " + key)
     text = "\n".join(lines)
-    with open(_cache_file, "w") as fh:
+
+    cache_file = get_appdata_dir() / "pyrekordbox" / _cache_file_name
+    if not cache_file.parent.exists():
+        cache_file.parent.mkdir()
+
+    with open(cache_file, "w") as fh:
         fh.write(text)
     # Set the config key to make sure the key is present after calling method
     if __config__["rekordbox6"]:
@@ -473,10 +493,13 @@ def write_db6_key_cache(key: str) -> None:  # pragma: no cover
 def _update_sqlite_key(opts, conf):
     cache_version = 0
     pw, dp = "", ""
-    if _cache_file.exists():  # pragma: no cover
-        logger.debug("Found cache file %s", _cache_file)
+
+    cache_file = get_appdata_dir() / "pyrekordbox" / _cache_file_name
+
+    if cache_file.exists():  # pragma: no cover
+        logger.debug("Found cache file %s", cache_file)
         # Read cache file
-        with open(_cache_file, "r") as fh:
+        with open(cache_file, "r") as fh:
             text = fh.read()
         lines = text.splitlines()
         if lines[0].startswith("version:"):
@@ -551,9 +574,7 @@ def _update_sqlite_key(opts, conf):
         conf["dp"] = dp
 
 
-def _get_rb6_config(
-    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
-) -> dict:
+def _get_rb6_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
     """Get the program configuration for Rekordbox v6.x.x."""
     major_version = 6
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -571,9 +592,7 @@ def _get_rb6_config(
     return conf
 
 
-def _get_rb7_config(
-    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
-) -> dict:
+def _get_rb7_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
     """Get the program configuration for Rekordbox v7.x.x."""
     major_version = 7
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -715,27 +734,21 @@ def update_config(
 
     # Update Rekordbox 5 config
     try:
-        conf = _get_rb5_config(
-            pioneer_install_dir, pioneer_app_dir, rb5_install_dirname
-        )
+        conf = _get_rb5_config(pioneer_install_dir, pioneer_app_dir, rb5_install_dirname)
         __config__["rekordbox5"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)
 
     # Update Rekordbox 6 config
     try:
-        conf = _get_rb6_config(
-            pioneer_install_dir, pioneer_app_dir, rb6_install_dirname
-        )
+        conf = _get_rb6_config(pioneer_install_dir, pioneer_app_dir, rb6_install_dirname)
         __config__["rekordbox6"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)
 
     # Update Rekordbox 7 config
     try:
-        conf = _get_rb7_config(
-            pioneer_install_dir, pioneer_app_dir, rb7_install_dirname
-        )
+        conf = _get_rb7_config(pioneer_install_dir, pioneer_app_dir, rb7_install_dirname)
         __config__["rekordbox7"].update(conf)
     except FileNotFoundError as e:
         logger.info(e)
