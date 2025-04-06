@@ -9,6 +9,10 @@
 - **db:** **allow commiting if playlist is not found in XML ([#149](https://github.com/dylanljones/pyrekordbox/issues/149))**  
   This fixes an issue where the changes to the DB can not be commited if the playlist is missing 
   in the playlist-xml. A warning is now shown instead.
+- **config:** **move pyrekordbox cache file to appdir**  
+  The cache file is now stored in the appdata directory of the user. 
+  This avoids writing to the pyrekordbox package directory.
+- **config:** **fix asar file decoding error ([#154](https://github.com/dylanljones/pyrekordbox/issues/154))**  
 
 
 <a name="v0.4.0"></a>

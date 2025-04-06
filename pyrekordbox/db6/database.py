@@ -114,9 +114,7 @@ class Rekordbox6Database:
             path = rb_config.get("db_path", "")
             if not path:
                 pdir = get_config("pioneer", "install_dir")
-                raise FileNotFoundError(
-                    f"No Rekordbox v6/v7 directory found in '{pdir}'"
-                )
+                raise FileNotFoundError(f"No Rekordbox v6/v7 directory found in '{pdir}'")
         path = Path(path)
         # make sure file exists
         if not path.exists():
@@ -124,9 +122,7 @@ class Rekordbox6Database:
         # Open database
         if unlock:
             if not _sqlcipher_available:
-                raise ImportError(
-                    "Could not unlock database: 'sqlcipher3' package not found"
-                )
+                raise ImportError("Could not unlock database: 'sqlcipher3' package not found")
             if not key:
                 try:
                     key = rb_config["dp"]
@@ -727,9 +723,7 @@ class Rekordbox6Database:
 
     # -- Database updates --------------------------------------------------------------
 
-    def generate_unused_id(
-        self, table, is_28_bit: bool = True, id_field_name: str = "ID"
-    ) -> int:
+    def generate_unused_id(self, table, is_28_bit: bool = True, id_field_name: str = "ID") -> int:
         """Generates an unused ID for the given table."""
         max_tries = 1000000
         for _ in range(max_tries):
@@ -804,20 +798,14 @@ class Rekordbox6Database:
         uuid = str(uuid4())
         id_ = str(uuid4())
         now = datetime.datetime.now()
-        nsongs = (
-            self.query(tables.DjmdSongPlaylist)
-            .filter_by(PlaylistID=playlist.ID)
-            .count()
-        )
+        nsongs = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=playlist.ID).count()
         if track_no is not None:
             insert_at_end = False
             track_no = int(track_no)
             if track_no < 1:
                 raise ValueError("Track number must be greater than 0")
             if track_no > nsongs + 1:
-                raise ValueError(
-                    f"Track number too high, parent contains {nsongs} items"
-                )
+                raise ValueError(f"Track number too high, parent contains {nsongs} items")
         else:
             insert_at_end = True
             track_no = nsongs + 1
@@ -893,9 +881,7 @@ class Rekordbox6Database:
             playlist = self.get_playlist(ID=playlist)
         if isinstance(song, (int, str)):
             song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
-        logger.info(
-            "Removing song with ID=%s from playlist with ID=%s", song.ID, playlist.ID
-        )
+        logger.info("Removing song with ID=%s from playlist with ID=%s", song.ID, playlist.ID)
         now = datetime.datetime.now()
         # Remove track from playlist
         track_no = song.TrackNo
@@ -966,11 +952,7 @@ class Rekordbox6Database:
             playlist = self.get_playlist(ID=playlist)
         if isinstance(song, (int, str)):
             song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
-        nsongs = (
-            self.query(tables.DjmdSongPlaylist)
-            .filter_by(PlaylistID=playlist.ID)
-            .count()
-        )
+        nsongs = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=playlist.ID).count()
         if new_track_no < 1:
             raise ValueError("Track number must be greater than 0")
         if new_track_no > nsongs + 1:
@@ -1020,9 +1002,7 @@ class Rekordbox6Database:
         self.registry.enable_tracking()
         self.registry.on_move(moved)
 
-    def _create_playlist(
-        self, name, seq, image_path, parent, smart_list=None, attribute=None
-    ):
+    def _create_playlist(self, name, seq, image_path, parent, smart_list=None, attribute=None):
         """Creates a new playlist object."""
         table = tables.DjmdPlaylist
         id_ = str(self.generate_unused_id(table, is_28_bit=True))
@@ -1047,9 +1027,7 @@ class Rekordbox6Database:
         else:
             # Check if parent exists and is a folder
             parent_id = parent
-            query = self.query(table.ID).filter(
-                table.ID == parent_id, table.Attribute == 1
-            )
+            query = self.query(table.ID).filter(table.ID == parent_id, table.Attribute == 1)
             if not self.query(query.exists()).scalar():
                 raise ValueError("Parent does not exist or is not a folder")
 
@@ -1108,9 +1086,7 @@ class Rekordbox6Database:
 
         # Update masterPlaylists6.xml
         if self.playlist_xml is not None:
-            self.playlist_xml.add(
-                id_, parent_id, attribute, now, lib_type=0, check_type=0
-            )
+            self.playlist_xml.add(id_, parent_id, attribute, now, lib_type=0, check_type=0)
 
         return playlist
 
@@ -1158,9 +1134,7 @@ class Rekordbox6Database:
         '123456'
         """
         logger.info("Creating playlist %s", name)
-        return self._create_playlist(
-            name, seq, image_path, parent, attribute=PlaylistType.PLAYLIST
-        )
+        return self._create_playlist(name, seq, image_path, parent, attribute=PlaylistType.PLAYLIST)
 
     def create_playlist_folder(self, name, parent=None, seq=None, image_path=None):
         """Creates a new playlist folder in the database.
@@ -1200,9 +1174,7 @@ class Rekordbox6Database:
         '123456'
         """
         logger.info("Creating playlist folder %s", name)
-        return self._create_playlist(
-            name, seq, image_path, parent, attribute=PlaylistType.FOLDER
-        )
+        return self._create_playlist(name, seq, image_path, parent, attribute=PlaylistType.FOLDER)
 
     def create_smart_playlist(
         self, name, smart_list: SmartList, parent=None, seq=None, image_path=None
@@ -1277,9 +1249,7 @@ class Rekordbox6Database:
             playlist = self.get_playlist(ID=playlist)
 
         if playlist.Attribute == 1:
-            logger.info(
-                "Deleting playlist folder '%s' with ID=%s", playlist.Name, playlist.ID
-            )
+            logger.info("Deleting playlist folder '%s' with ID=%s", playlist.Name, playlist.ID)
         else:
             logger.info("Deleting playlist '%s' with ID=%s", playlist.Name, playlist.ID)
 
@@ -1392,9 +1362,7 @@ class Rekordbox6Database:
         else:
             # Check if parent exists and is a folder
             parent_id = str(parent)
-            query = self.query(table.ID).filter(
-                table.ID == parent_id, table.Attribute == 1
-            )
+            query = self.query(table.ID).filter(table.ID == parent_id, table.Attribute == 1)
             if not self.query(query.exists()).scalar():
                 raise ValueError("Parent does not exist or is not a folder")
 
@@ -1415,9 +1383,7 @@ class Rekordbox6Database:
                 if seq < 1:
                     raise ValueError("Sequence number must be greater than 0")
                 elif seq > n + 1:
-                    raise ValueError(
-                        f"Sequence number too high, parent contains {n} items"
-                    )
+                    raise ValueError(f"Sequence number too high, parent contains {n} items")
 
             if not insert_at_end:
                 # Get all playlists with seq between old_seq and seq
@@ -1551,9 +1517,7 @@ class Rekordbox6Database:
         with self.registry.disabled():
             playlist.updated_at = now
 
-    def add_album(
-        self, name, artist=None, image_path=None, compilation=None, search_str=None
-    ):
+    def add_album(self, name, artist=None, image_path=None, compilation=None, search_str=None):
         """Adds a new album to the database.
 
         Parameters
@@ -1685,9 +1649,7 @@ class Rekordbox6Database:
 
         id_ = self.generate_unused_id(tables.DjmdArtist)
         uuid = str(uuid4())
-        artist = tables.DjmdArtist.create(
-            ID=id_, Name=name, SearchStr=search_str, UUID=uuid
-        )
+        artist = tables.DjmdArtist.create(ID=id_, Name=name, SearchStr=search_str, UUID=uuid)
         self.add(artist)
         self.flush()
         return artist
@@ -1829,9 +1791,7 @@ class Rekordbox6Database:
             raise ValueError(f"Track with path '{path}' already exists in database")
 
         id_ = self.generate_unused_id(tables.DjmdContent)
-        file_id = self.generate_unused_id(
-            tables.DjmdContent, id_field_name="rb_file_id"
-        )
+        file_id = self.generate_unused_id(tables.DjmdContent, id_field_name="rb_file_id")
         uuid = str(uuid4())
         content_link = self.get_menu_items(Name="TRACK").one()
         date_created = datetime.date.today()
@@ -1988,9 +1948,7 @@ class Rekordbox6Database:
             return AnlzFile.parse_file(path)
         return None
 
-    def update_content_path(
-        self, content, path, save=True, check_path=True, commit=True
-    ):
+    def update_content_path(self, content, path, save=True, check_path=True, commit=True):
         """Update the file path of a track in the Rekordbox v6 database.
 
         This changes the `FolderPath` entry in the ``DjmdContent`` table and the
@@ -2081,9 +2039,7 @@ class Rekordbox6Database:
             logger.debug("Committing changes to the database")
             self.commit()
 
-    def update_content_filename(
-        self, content, name, save=True, check_path=True, commit=True
-    ):
+    def update_content_filename(self, content, name, save=True, check_path=True, commit=True):
         """Update the file name of a track in the Rekordbox v6 database.
 
         This changes the `FolderPath` entry in the ``DjmdContent`` table and the
