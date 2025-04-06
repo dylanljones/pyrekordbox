@@ -263,7 +263,7 @@ def read_rekordbox6_asar(rb6_install_dir: Union[str, Path]) -> str:
     # Read asar file
     path = (location / "app.asar").absolute()
     with open(path, "rb") as fh:
-        data = fh.read().decode(encoding)
+        data = fh.read().decode(encoding, errors="replace")
     return data
 
 
