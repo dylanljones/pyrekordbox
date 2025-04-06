@@ -11,7 +11,7 @@ from pathlib import Path
 
 import click
 
-from pyrekordbox.config import _cache_file, write_db6_key_cache
+from pyrekordbox.config import write_db6_key_cache
 
 __all__ = ["cli"]
 
@@ -149,7 +149,7 @@ def download_db6_key():
             dp = match.group("dp")
             break
     if dp:
-        print(f"Found key, updating cache file {_cache_file}")
+        print("Found key, updating cache file")
         write_db6_key_cache(dp)
     else:
         print("No key found in the online sources.")

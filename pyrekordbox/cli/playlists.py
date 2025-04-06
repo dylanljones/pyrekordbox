@@ -101,6 +101,7 @@ def _song_to_dict(song: tables.DjmdSongPlaylist):
         "Title": content.Title,
         "Artist": content.ArtistName,
         "Album": content.AlbumName,
+        "updated_at": song.updated_at.isoformat(),
     }
 
 
@@ -111,6 +112,7 @@ def _playlist_to_dict(pl: tables.DjmdPlaylist, contents: bool = False) -> dict:
         "Attribute": pl.Attribute,
         "Seq": pl.Seq,
         "ParentID": pl.ParentID,
+        "updated_at": pl.updated_at.isoformat(),
     }
     if pl.Attribute == 0:
         # Normal playlist: add songs
@@ -160,9 +162,31 @@ def format_opt(func):
 
 
 def indent_opt(func):
-    """Click option decorator for commands usiong indentaion."""
+    """Click option decorator for commands using indentaion."""
 
     @click.option("--indent", "-i", type=int, default=None, help="Indentation level.")
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def playlist_id_arg(func):
+    """Click argument decorator for commands using a playlist ID."""
+
+    @click.argument("playlist_id", type=str)
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def playlist_items_args(func):
+    """Click argument decorator for commands using playlist items."""
+
+    @click.argument("items", type=str, nargs=-1)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -188,7 +212,7 @@ def playlist_tree(songs: bool, format: bool, indent: int = None):
 
 # noinspection PyShadowingBuiltins
 @playlist_cli.command(name="content")
-@click.argument("playlist_id", type=str)
+@playlist_id_arg
 @format_opt
 @indent_opt
 def playlist_content(playlist_id: str, format: bool, indent: int = None):
@@ -211,9 +235,9 @@ def playlist_content(playlist_id: str, format: bool, indent: int = None):
         click.echo(s)
 
 
-@playlist_cli.command(name="add")
-@click.argument("playlist_id", type=str)
-@click.argument("items", type=str, nargs=-1)
+@playlist_cli.command(name="add-content")
+@playlist_id_arg
+@playlist_items_args
 def add_content(playlist_id: str, items: Tuple[str]):
     r"""Add contents to a playlist.
 
@@ -224,7 +248,7 @@ def add_content(playlist_id: str, items: Tuple[str]):
     **Important**: On Windows, double quotes must be escaped with a backslash.
 
     Example:
-    pyrekordbox playlist add 1234 [{\"path\": \"path/to/content\", \"seq\": 1}]
+    pyrekordbox playlist add-content 1234 [{\"path\": \"path/to/content\", \"seq\": 1}]
     """
     s = " ".join(items)
     data = json_.loads(s)
@@ -238,4 +262,75 @@ def add_content(playlist_id: str, items: Tuple[str]):
         content = db.get_content(FolderPath=path).first()
         db.add_to_playlist(playlist, content, seq)
 
+    db.commit()
+
+
+@playlist_cli.command(name="remove-content")
+@playlist_id_arg
+@playlist_items_args
+def remove_content(playlist_id: str, items: Tuple[str]):
+    r"""Remove contents from a playlist.
+
+    The items are a list of JSON strings representing the content to remove.
+    Each item should have a 'path' key with the path of the content and a 'seq' key
+    with the sequence of the content.
+
+    **Important**: On Windows, double quotes must be escaped with a backslash.
+
+    Example:
+    pyrekordbox playlist remove-content 1234 [{\"path\": \"path/to/content\", \"seq\": 1}]
+    """
+    s = " ".join(items)
+    data = json_.loads(s)
+
+    db = Rekordbox6Database()
+    playlist = db.get_playlist(ID=playlist_id)
+
+    songs = db.get_playlist_songs(PlaylistID=playlist.ID).all()
+    to_remove = list()
+    for song in songs:
+        for item in data:
+            if song.Content.FolderPath == item["path"] and song.TrackNo == item["seq"]:
+                to_remove.append(song)
+                break
+
+    for song in to_remove:
+        db.remove_from_playlist(playlist, song.ID)
+
+
+@playlist_cli.command(name="sync-content")
+@playlist_id_arg
+@playlist_items_args
+def sync_content(playlist_id: str, items: Tuple[str]):
+    r"""Sync contents of a playlist.
+
+    The items are a list of JSON strings representing the content of the playlist.
+    Each item should have a 'path' key with the path of the content and a 'seq' key
+    with the sequence of the content.
+
+    **Important**: On Windows, double quotes must be escaped with a backslash.
+
+    Example:
+    pyrekordbox playlist sync-content 1234 [{\"path\": \"path/to/content\", \"seq\": 1}]
+    """
+    s = " ".join(items)
+    data = json_.loads(s)
+
+    db = Rekordbox6Database()
+    playlist = db.get_playlist(ID=playlist_id)
+    songs = db.get_playlist_songs(PlaylistID=playlist.ID).all()
+
+    # TODO: More efficient handling of this: Check difference and act accordingly
+
+    # Remove old contents
+    for song in songs:
+        db.remove_from_playlist(playlist, song)
+
+    # Add new contents
+    for item in data:
+        content = db.get_content(FolderPath=item["path"]).one()
+        if content is None:
+            print(f"Content not found: {item['path']}")
+            continue
+        db.add_to_playlist(playlist, content, track_no=item["seq"])
     db.commit()
