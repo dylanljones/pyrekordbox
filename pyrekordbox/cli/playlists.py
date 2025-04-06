@@ -235,6 +235,53 @@ def playlist_content(playlist_id: str, format: bool, indent: int = None):
         click.echo(s)
 
 
+@playlist_cli.command(name="create")
+@click.argument("name", type=str)
+@click.option("--parent", "-p", type=str, default=None, help="Parent playlist ID.")
+@click.option("--seq", "-s", type=int, default=None, help="Sequence number.")
+def create_playlist(name: str, parent: str = None, seq: int = None):
+    """Add a new playlist to the Rekordbox database."""
+    db = Rekordbox6Database()
+    playlist = db.create_playlist(name, parent, seq)
+    db.commit()
+    click.echo(f"Created playlist: {playlist.ID} - {playlist.Name}")
+
+
+@playlist_cli.command(name="delete")
+@playlist_id_arg
+def delete_playlist(playlist_id: str):
+    """Remove a playlist from the Rekordbox database."""
+    db = Rekordbox6Database()
+    playlist = db.get_playlist(ID=playlist_id)
+    if playlist is None:
+        click.echo(f"Playlist with ID '{playlist_id}' not found.")
+        return
+    db.delete_playlist(playlist)
+    db.commit()
+    click.echo(f"Deleted playlist: {playlist.ID} - {playlist.Name}")
+
+
+@playlist_cli.command(name="move")
+@playlist_id_arg
+@click.argument("parent_id", type=str)
+@click.option("--seq", "-s", type=int, default=None, help="Sequence number.")
+def move_playlist(playlist_id: str, parent_id: str, seq: int = None):
+    """Move a playlist in the Rekordbox database."""
+    db = Rekordbox6Database()
+    playlist = db.get_playlist(ID=playlist_id)
+    if playlist is None:
+        click.echo(f"Playlist with ID '{playlist_id}' not found.")
+        return
+    if parent_id == "root":
+        parent = None
+    else:
+        parent = db.get_playlist(ID=parent_id)
+        if parent is None:
+            click.echo(f"Parent playlist with ID '{parent_id}' not found.")
+            return
+    db.move_playlist(playlist, parent, seq)
+
+
 @playlist_cli.command(name="add-content")
 @playlist_id_arg
 @playlist_items_args
