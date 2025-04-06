@@ -6,7 +6,7 @@
 
 ### New Features
 
-- **cli**: **Add simple CLI tools**
+- **cli**: **Add simple CLI tools**  
   Update the CLI and add tools simple updates of the database.
 
 ### Improvements/Bug Fixes
