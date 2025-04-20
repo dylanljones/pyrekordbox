@@ -115,6 +115,37 @@ TABLES = [
 ]
 
 
+def datetime_to_str(value: datetime) -> str:
+    s = value.isoformat().replace("T", " ")
+    if value.tzinfo is not None:
+        # Get the timezone info (last 6 characters of the string)
+        tzinfo = s[-6:]
+        s = s[:-9] + " " + tzinfo
+    else:
+        s = s[:-3] + " +00:00"
+    return s
+
+
+def string_to_datetime(value: str) -> datetime:
+    try:
+        dt = datetime.fromisoformat(value)
+    except ValueError:
+        if len(value.strip()) > 23:
+            # Assume the format
+            # "2025-04-12 19:11:29.274 -05:00" or
+            # "2025-04-12 19:11:29.274 -05:00 (Central Daylight Time)"
+            datestr, tzinfo = value[:23], value[23:30]
+            datestr = datestr.strip()
+            tzinfo = tzinfo.strip()
+            assert re.match(r"^[+-]?\d{1,2}:\d{2}", tzinfo)
+            datestr = datestr.strip() + tzinfo
+        else:
+            datestr, tzinfo = value, ""
+        dt = datetime.fromisoformat(datestr)
+    # Convert to local timezone and return without timezone
+    return dt.astimezone().replace(tzinfo=None)
+
+
 class DateTime(TypeDecorator):
     """Custom datetime column with timezone support.
 
@@ -125,23 +156,12 @@ class DateTime(TypeDecorator):
     impl = Text
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
-        return value.isoformat().replace("T", " ")[:-3] + " +00:00"
+    def process_bind_param(self, value: datetime, dialect) -> str:
+        return datetime_to_str(value)
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: str, dialect):
         if value:
-            try:
-                dt = datetime.fromisoformat(value)
-            except ValueError:
-                if len(value.strip()) > 23:
-                    datestr, tzinfo = value[:23], value[23:]
-                    datestr = datestr.strip()
-                    tzinfo = tzinfo.strip()
-                    assert re.match(r"^\+\d{2}:\d{2}$", tzinfo)
-                else:
-                    datestr, tzinfo = value, ""
-                dt = datetime.fromisoformat(datestr)
-            return dt
+            return string_to_datetime(value)
         return None
 
 
