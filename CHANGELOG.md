@@ -8,7 +8,8 @@
 
 - **db:** **allow commiting if playlist is not found in XML ([#149](https://github.com/dylanljones/pyrekordbox/issues/149))**  
   This fixes an issue where the changes to the DB can not be commited if the playlist is missing 
-  in the playlist-xml. A warning is now shown instead.
+  in the playlist-xml. A warning is now shown instead. The warning is not shown for special 
+  playlists.
 - **db:** **add timezone support and fix date format issue ([#161](https://github.com/dylanljones/pyrekordbox/issues/161))**  
   Date formats in the DB are now converted to the local timezone. It is now also possible to read date fields with other formats.
 - **config:** **move pyrekordbox cache file to appdir**  
