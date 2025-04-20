@@ -7,6 +7,7 @@ import re
 import shutil
 import tempfile
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from sqlalchemy.orm.query import Query
 from pyrekordbox import Rekordbox6Database
 from pyrekordbox.db6 import tables
 from pyrekordbox.db6.smartlist import LogicalOperator, Operator, Property, SmartList
+from pyrekordbox.db6.tables import datetime_to_str, string_to_datetime
 
 TEST_ROOT = Path(__file__).parent.parent / ".testdata"
 LOCKED = TEST_ROOT / "rekordbox 6" / "master_locked.db"
@@ -103,6 +105,26 @@ def test_close_open():
     db.open()
     _ = db.get_content()[0]  # Try to query the database
     db.close()
+
+
+@mark.parametrize("dt", [datetime.now(), datetime.now(tz=timezone.utc)])
+def test_datetime_to_string(dt):
+    datetime_to_str(dt)
+
+
+@mark.parametrize(
+    "s",
+    [
+        "2025-04-12 19:11:29.274 +00:00",
+        "2025-04-12 19:11:29.274 +01:00",
+        "2025-04-12 19:11:29.274 -01:00",
+        "2025-04-12 19:11:29.274 -05:00 (Central Daylight Time)",
+    ],
+)
+def test_string_to_datetime(s):
+    dt = string_to_datetime(s)
+    # make sure no timezone is present
+    assert dt.tzinfo is None
 
 
 @mark.parametrize(
