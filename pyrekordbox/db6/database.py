@@ -33,6 +33,10 @@ except ImportError:
     _sqlcipher_available = False
 
 MAX_VERSION = "6.6.5"
+SPECIAL_PLAYLIST_IDS = [
+    "100000",  # Cloud Library Sync
+    "200000",  # CUE Analysis Playlist
+]
 
 logger = logging.getLogger(__name__)
 
@@ -407,11 +411,13 @@ class Rekordbox6Database:
                         logger.debug("Updating updated_at of playlist %s in XML", pl.ID)
                         self.playlist_xml.update(pl.ID, updated_at=pl.updated_at)
                 else:
-                    logger.warning(
-                        f"Playlist {pl.ID} not found in masterPlaylists6.xml! "
-                        "Did you add it manually? "
-                        "Use the create_playlist method instead."
-                    )
+                    # Dont warn for special playlists
+                    if pl.ID not in SPECIAL_PLAYLIST_IDS:
+                        logger.warning(
+                            f"Playlist {pl.ID} not found in masterPlaylists6.xml! "
+                            "Did you add it manually? "
+                            "Use the create_playlist method instead."
+                        )
 
             # Save the XML file if it was modified
             if self.playlist_xml.modified:
