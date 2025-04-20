@@ -1,8 +1,14 @@
 # What's New
 
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="v0.4.1"></a>
+## [v0.4.1] - 2025-04-20
+
+This release improves database functionality by allowing commits when playlists are missing in 
+XML (with warnings for non-special playlists), adds timezone support for date fields, 
+and fixes date format issues. 
+Configuration enhancements include relocating the pyrekordbox cache file to the user's 
+appdata directory and fixing an asar file decoding error.
 
 ### Improvements/Bug Fixes
 
@@ -628,7 +634,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.1...HEAD
+[v0.4.1]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/dylanljones/pyrekordbox/compare/v0.3.2...v0.4.0
 [v0.3.2]: https://github.com/dylanljones/pyrekordbox/compare/v0.3.1...v0.3.2
 [v0.3.1]: https://github.com/dylanljones/pyrekordbox/compare/0.3.0...v0.3.1
