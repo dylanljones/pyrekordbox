@@ -194,6 +194,9 @@ def playlist_items_args(func):
     return wrapper
 
 
+# -- Playlist tree ---------------------------------------------------------------------------------
+
+
 # noinspection PyShadowingBuiltins
 @playlist_cli.command(name="tree")
 @click.option("--songs", "-s", is_flag=True, help="Show songs contained in the playlists.")
@@ -207,31 +210,6 @@ def playlist_tree(songs: bool, format: bool, indent: int = None):
             click.echo(line)
     else:
         s = _playlist_tree_json(db, songs, indent)
-        click.echo(s)
-
-
-# noinspection PyShadowingBuiltins
-@playlist_cli.command(name="content")
-@playlist_id_arg
-@format_opt
-@indent_opt
-def playlist_content(playlist_id: str, format: bool, indent: int = None):
-    """Get the contents of a playlist."""
-    db = Rekordbox6Database()
-    playlist = db.get_playlist(ID=playlist_id)
-    if playlist is None:
-        click.echo(f"Playlist with ID '{playlist_id}' not found.")
-        return
-    if playlist.Attribute == 1:
-        click.echo(f"Playlist '{playlist.Name}' is a folder and has no contents.")
-        return
-
-    songs = list(playlist.Songs)
-    if format:
-        for song in songs:
-            click.echo(_song_info(song))
-    else:
-        s = json_.dumps([_song_to_dict(song) for song in songs], indent=indent)
         click.echo(s)
 
 
@@ -280,6 +258,34 @@ def move_playlist(playlist_id: str, parent_id: str, seq: int = None):
             click.echo(f"Parent playlist with ID '{parent_id}' not found.")
             return
     db.move_playlist(playlist, parent, seq)
+
+
+# -- Playlist contents -----------------------------------------------------------------------------
+
+
+# noinspection PyShadowingBuiltins
+@playlist_cli.command(name="content")
+@playlist_id_arg
+@format_opt
+@indent_opt
+def playlist_content(playlist_id: str, format: bool, indent: int = None):
+    """Get the contents of a playlist."""
+    db = Rekordbox6Database()
+    playlist = db.get_playlist(ID=playlist_id)
+    if playlist is None:
+        click.echo(f"Playlist with ID '{playlist_id}' not found.")
+        return
+    if playlist.Attribute == 1:
+        click.echo(f"Playlist '{playlist.Name}' is a folder and has no contents.")
+        return
+
+    songs = list(playlist.Songs)
+    if format:
+        for song in songs:
+            click.echo(_song_info(song))
+    else:
+        s = json_.dumps([_song_to_dict(song) for song in songs], indent=indent)
+        click.echo(s)
 
 
 @playlist_cli.command(name="add-content")
