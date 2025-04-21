@@ -1222,6 +1222,17 @@ def test_add_label(db):
         db.add_label(name)
 
 
+def test_add_content(db):
+    path = os.path.join(TEST_ROOT, "empty.mp3")
+    # Add content
+    content = db.add_content(path, Title="Test")
+    assert content.Title == "Test"
+
+    # Fail on duplicate content
+    with pytest.raises(ValueError):
+        db.add_content(path)
+
+
 def test_get_anlz_paths():
     content = DB.get_content().first()
 
