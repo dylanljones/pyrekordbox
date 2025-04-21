@@ -216,16 +216,27 @@ def playlist_tree(songs: bool, format: bool, indent: int = None):
 # noinspection PyShadowingBuiltins
 @playlist_cli.command(name="create")
 @click.argument("name", type=str)
+@click.option(
+    "--attribute", "-a", type=int, default=0, help="Playlist attribute (0: normal, 1: folder)."
+)
 @click.option("--parent", "-p", type=str, default=None, help="Parent playlist ID.")
 @click.option("--seq", "-s", type=int, default=None, help="Sequence number.")
 @format_opt
 @indent_opt
 def create_playlist(
-    name: str, parent: str = None, seq: int = None, format: bool = False, indent: int = None
+    name: str,
+    attribute,
+    parent: str = None,
+    seq: int = None,
+    format: bool = False,
+    indent: int = None,
 ):
     """Add a new playlist to the Rekordbox database."""
     db = Rekordbox6Database()
-    playlist = db.create_playlist(name, parent, seq)
+    if attribute == 0:
+        playlist = db.create_playlist(name, parent, seq)
+    else:
+        playlist = db.create_playlist_folder(name, parent, seq)
     db.commit()
 
     if format:
