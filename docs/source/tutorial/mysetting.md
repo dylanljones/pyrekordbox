@@ -13,7 +13,8 @@ DJ equipment.
 See the {ref}`My-Setting Files Format<My-Setting Files Format>` documentation for more information.
 ```
 
-Pyrekordbox includes a file handler for each of the four My-Settings files. To read any of the four files, use
+Pyrekordbox includes a file handler for each of the four My-Settings files.
+To read any of the four files, use
 ````python
 from pyrekordbox import read_mysetting_file
 
@@ -29,6 +30,21 @@ file2 = MySetting2File.parse_file("MYSETTING2.DAT")
 file3 = DjmMySettingFile.parse_file("DJMMYSETTING.DAT")
 file4 = DevSettingFile.parse_file("DEVSETTING.DAT")
 ````
+
+To find the My-Settings files, the database handler includes a method that returnes the
+paths of all four files:
+````python
+>>> from pyrekordbox import Rekordbox6Database
+>>> db = Rekordbox6Database()
+>>> db.get_mysetting_paths()
+[
+    'C:/Users/user/AppData/Roaming/Pioneer/rekordbox/DEVSETTING.DAT',
+    'C:/Users/user/AppData/Roaming/Pioneer/rekordbox/DJMMYSETTING.DAT',
+    'C:/Users/user/AppData/Roaming/Pioneer/rekordbox/MYSETTING.DAT',
+    'C:/Users/user/AppData/Roaming/Pioneer/rekordbox/MYSETTING2.DAT'
+]
+````
+
 
 After parsing a My-Setting file, the settings can be accessed as dictionary:
 ````python
