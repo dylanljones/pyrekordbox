@@ -9,7 +9,7 @@ import sys
 import urllib.request
 from pathlib import Path
 
-from pyrekordbox.config import _cache_file, write_db6_key_cache
+from pyrekordbox.config import get_cache_file, write_db6_key_cache
 
 KEY_SOURCES = [
     {
@@ -144,7 +144,8 @@ def download_db6_key():
             dp = match.group("dp")
             break
     if dp:
-        print(f"Found key, updating cache file {_cache_file}")
+        cache_file = get_cache_file()
+        print(f"Found key, updating cache file {cache_file}")
         write_db6_key_cache(dp)
     else:
         print("No key found in the online sources.")
