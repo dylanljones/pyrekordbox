@@ -1042,13 +1042,14 @@ class RekordboxXml:
         >>> track = file.get_track(TrackID=1)
 
         """
-        if index is None and TrackID is None:
-            raise ValueError("Either index or TrackID has to be specified!")
+        if index is None and TrackID is None and Location is None:
+            raise ValueError("Either index, TrackID or Location has to be specified!")
 
         if TrackID is not None:
             el = self._collection.find(f'.//{Track.TAG}[@TrackID="{TrackID}"]')
         elif Location is not None:
-            el = self._collection.find(f'.//{Track.TAG}[@Location="{Location}"]')
+            encoded = encode_path(Location)
+            el = self._collection.find(f'.//{Track.TAG}[@Location="{encoded}"]')
         else:
             el = self._collection.find(f".//{Track.TAG}[{index + 1}]")
         return Track(element=el)
@@ -1091,10 +1092,10 @@ class RekordboxXml:
             node = node.get_playlist(name)
         return node
 
-    def _update_track_count(self):
-        """Updates the track count element."""
-        num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
-        self._collection.attrib["Entries"] = str(num_tracks)
+    # def _update_track_count(self):
+    #     """Updates the track count element."""
+    #     num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
+    #     self._collection.attrib["Entries"] = str(num_tracks)
 
     def _increment_track_count(self):
         """Increment the track count element."""

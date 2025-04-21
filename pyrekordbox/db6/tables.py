@@ -207,14 +207,14 @@ class Base(DeclarativeBase):
         return [column.key for column in inspect(cls).relationships]  # noqa
 
     @classmethod
-    def __get_keys__(cls):
+    def __get_keys__(cls):  # pragma: no cover
         """Get all attributes of the table."""
         items = cls.__dict__.items()
         keys = [k for k, v in items if not callable(v) and not k.startswith("_")]
         return keys
 
     @classmethod
-    def keys(cls):
+    def keys(cls):  # pragma: no cover
         """Returns a list of all column names including the relationships."""
         if not cls.__keys__:  # Cache the keys
             cls.__keys__ = cls.__get_keys__()
@@ -248,7 +248,7 @@ class Base(DeclarativeBase):
         """Returns a dictionary of all column names and values."""
         return {key: self.__getitem__(key) for key in self.columns()}
 
-    def pformat(self, indent="   "):
+    def pformat(self, indent="   "):  # pragma: no cover
         lines = [f"{self.__tablename__}"]
         columns = self.columns()
         w = max(len(col) for col in columns)

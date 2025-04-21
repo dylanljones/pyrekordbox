@@ -27,7 +27,7 @@ try:
     from sqlcipher3 import dbapi2 as sqlite3  # noqa
 
     _sqlcipher_available = True
-except ImportError:
+except ImportError:  # pragma: no cover
     import sqlite3
 
     _sqlcipher_available = False
@@ -125,9 +125,9 @@ class Rekordbox6Database:
             raise FileNotFoundError(f"File '{path}' does not exist!")
         # Open database
         if unlock:
-            if not _sqlcipher_available:
+            if not _sqlcipher_available:  # pragma: no cover
                 raise ImportError("Could not unlock database: 'sqlcipher3' package not found")
-            if not key:
+            if not key:  # pragma: no cover
                 try:
                     key = rb_config["dp"]
                 except KeyError:
