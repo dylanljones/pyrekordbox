@@ -213,16 +213,27 @@ def playlist_tree(songs: bool, format: bool, indent: int = None):
         click.echo(s)
 
 
+# noinspection PyShadowingBuiltins
 @playlist_cli.command(name="create")
 @click.argument("name", type=str)
 @click.option("--parent", "-p", type=str, default=None, help="Parent playlist ID.")
 @click.option("--seq", "-s", type=int, default=None, help="Sequence number.")
-def create_playlist(name: str, parent: str = None, seq: int = None):
+@format_opt
+@indent_opt
+def create_playlist(
+    name: str, parent: str = None, seq: int = None, format: bool = False, indent: int = None
+):
     """Add a new playlist to the Rekordbox database."""
     db = Rekordbox6Database()
     playlist = db.create_playlist(name, parent, seq)
     db.commit()
-    click.echo(f"Created playlist: {playlist.ID} - {playlist.Name}")
+
+    if format:
+        click.echo(f"Created playlist: {playlist.ID} - {playlist.Name}")
+    else:
+        data = _playlist_to_dict(playlist, contents=False)
+        s = json_.dumps(data, indent=indent)
+        click.echo(s)
 
 
 @playlist_cli.command(name="delete")
