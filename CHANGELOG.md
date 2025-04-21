@@ -6,6 +6,7 @@
 
 ### Improvements/Bug Fixes
 
+- **cli:** **fix import error when downloading db key via CLI**  
 - **xml:** **fix get_track method to accept Location parameter**  
 
 
