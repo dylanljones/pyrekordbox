@@ -556,7 +556,7 @@ def test_get_track():
         xml.get_track()
 
     idx = 0
-    expected_loc = "C:\\Music\\PioneerDJ\\Demo Tracks\\Demo Track 1.mp3"
+    expected_loc = os.path.normpath(r"C:/Music/PioneerDJ/Demo Tracks/Demo Track 1.mp3")
     expected_id = 253529738
 
     # Test getting by index
