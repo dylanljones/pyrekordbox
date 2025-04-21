@@ -14,7 +14,7 @@ This release contains bug fixes for the command-line interface and XML handling.
 ### Documentation
 
 - **anlz:** **add simple tutorial for ANLZ files**  
-- **docs:** **add ActiveLoop description**  
+- **db:** **add ActiveLoop description**  
 
 
 <a name="v0.4.1"></a>
