@@ -7,7 +7,7 @@ import os
 import pytest
 
 from pyrekordbox import RekordboxXml
-from pyrekordbox.rbxml import PositionMark, Tempo, XmlDuplicateError
+from pyrekordbox.rbxml import Node, PositionMark, Tempo, XmlDuplicateError
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
 XML5 = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
@@ -548,8 +548,38 @@ def test_add_position_mark():
     assert mark.Num == num
 
 
+def test_get_track():
+    xml = RekordboxXml(XML6)
+
+    with pytest.raises(ValueError):
+        # Nothing provided
+        xml.get_track()
+
+    idx = 0
+    expected_loc = "C:\\Music\\PioneerDJ\\Demo Tracks\\Demo Track 1.mp3"
+    expected_id = 253529738
+
+    # Test getting by index
+    track = xml.get_track(index=idx)
+    assert track.Location == expected_loc
+    assert track.TrackID == expected_id
+
+    # Test getting by TrackID
+    track = xml.get_track(TrackID=expected_id)
+    assert track.Location == expected_loc
+    assert track.TrackID == expected_id
+
+    # Test getting by Location
+    track = xml.get_track(Location=expected_loc)
+    assert track.Location == expected_loc
+    assert track.TrackID == expected_id
+
+
 def test_get_playlist():
     xml = RekordboxXml(XML5)
+
+    playlists = xml.get_playlist()
+    assert isinstance(playlists, Node)
 
     playlist = xml.get_playlist("Playlist1")
     assert playlist.is_playlist
@@ -558,6 +588,10 @@ def test_get_playlist():
     folder = xml.get_playlist("Folder")
     assert folder.is_folder
     assert not folder.is_playlist
+
+    sub_playlists = folder.get_playlists()
+    assert isinstance(sub_playlists, list)
+    assert len(sub_playlists) == 1
 
     sub_playlist = xml.get_playlist("Folder", "Sub Playlist")
     assert sub_playlist.is_playlist
@@ -620,6 +654,7 @@ def test_update_playlist_entries():
 
     playlist.add_track(0)
     assert playlist.entries == 1
+    assert playlist.get_track(0) == 0
 
     playlist.add_track(1)
     assert playlist.entries == 2
@@ -629,3 +664,26 @@ def test_update_playlist_entries():
 
     playlist.remove_track(0)
     assert playlist.entries == 0
+
+
+def test_playlist_treestr():
+    xml = RekordboxXml(XML5)
+    root = xml.get_playlist()
+    assert isinstance(root.treestr(), str)
+
+    playlist = xml.get_playlist("Playlist1")
+    assert isinstance(playlist.treestr(), str)
+
+
+def test_save_load(tmp_path):
+    xml = RekordboxXml(XML5)
+
+    # Save to a file
+    test_file = tmp_path / "test_save_reload.xml"
+    xml.save(test_file)
+
+    # Load the saved file
+    loaded = RekordboxXml(test_file)
+
+    # Verify content was preserved
+    assert loaded.num_tracks == xml.num_tracks
