@@ -22,13 +22,14 @@ from pyrekordbox import AnlzFile
 anlz = AnlzFile.parse_file("path/to/ANLZXXXX.DAT")
 ```
 
-You can also read multiple ANLZ files for a single track using the `read_anlz_files` function:
+You can also read multiple ANLZ files for a single track using the `read_anlz_files` function.
+It takes the root directory of the files as argument:
 
 ```python
 from pyrekordbox import read_anlz_files
 
 # Read all ANLZ files for a track
-files = read_anlz_files("path/to/ANLZXXXX")
+files = read_anlz_files("path/to/anlz_directory")
 ```
 
 After modifiying the contents of a ANLZ file, it can be saved via
