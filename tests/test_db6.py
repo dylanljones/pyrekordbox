@@ -1227,6 +1227,7 @@ def test_add_content(db):
     # Add content
     content = db.add_content(path, Title="Test")
     assert content.Title == "Test"
+    assert content.FolderPath == path
 
     # Fail on duplicate content
     with pytest.raises(ValueError):
