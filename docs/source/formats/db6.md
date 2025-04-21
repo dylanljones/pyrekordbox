@@ -497,7 +497,7 @@ around 1/75th of a second (13.333ms) per frame, i.e. about half the granularity 
      - ?
      -
    * - `ActiveLoop`
-     - ?
+     - Should the loop start active when reaching the point in playback
      -
    * - `Comment`
      - Name of comment of cue point

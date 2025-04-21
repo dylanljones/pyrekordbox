@@ -4,9 +4,17 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+This release contains bug fixes for the command-line interface and XML handling.
+
 ### Improvements/Bug Fixes
 
+- **cli:** **fix import error when downloading db key via CLI ([#162](https://github.com/dylanljones/pyrekordbox/pull/162))**  
 - **xml:** **fix get_track method to accept Location parameter**  
+
+### Documentation
+
+- **anlz:** **add simple tutorial for ANLZ files**  
+- **db:** **add ActiveLoop description**  
 
 
 <a name="v0.4.1"></a>

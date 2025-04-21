@@ -67,6 +67,10 @@ def get_appdata_dir() -> Path:
     return app_data
 
 
+def get_cache_file() -> Path:
+    return get_appdata_dir() / "pyrekordbox" / _cache_file_name
+
+
 def get_pioneer_install_dir(path: Union[str, Path] = None) -> Path:  # pragma: no cover
     """Returns the path of the Pioneer program installation directory.
 
@@ -477,7 +481,7 @@ def write_db6_key_cache(key: str) -> None:  # pragma: no cover
     lines.append("dp: " + key)
     text = "\n".join(lines)
 
-    cache_file = get_appdata_dir() / "pyrekordbox" / _cache_file_name
+    cache_file = get_cache_file()
     if not cache_file.parent.exists():
         cache_file.parent.mkdir()
 
@@ -499,7 +503,7 @@ def _update_sqlite_key(opts, conf):
     cache_version = 0
     pw, dp = "", ""
 
-    cache_file = get_appdata_dir() / "pyrekordbox" / _cache_file_name
+    cache_file = get_cache_file()
 
     if cache_file.exists():  # pragma: no cover
         logger.debug("Found cache file %s", cache_file)
