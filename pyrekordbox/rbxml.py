@@ -10,12 +10,15 @@ import urllib.parse
 import xml.etree.cElementTree as xml
 from abc import abstractmethod
 from collections import abc
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterator, List, Set, Union
 
 import bidict
 
 from .utils import pretty_xml
 
 logger = logging.getLogger(__name__)
+
 
 URL_PREFIX = "file://localhost/"
 POSMARK_TYPE_MAPPING = bidict.bidict(
@@ -31,21 +34,35 @@ RATING_MAPPING = bidict.bidict({"0": 0, "51": 1, "102": 2, "153": 3, "204": 4, "
 NODE_KEYTYPE_MAPPING = bidict.bidict({"0": "TrackID", "1": "Location"})
 
 
+class XmlElementNotInitializedError(Exception):
+    """Raised when an XML element is not initialized."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"XML element {name} is not initialized!")
+
+
+class RootNodeNotInitializedError(Exception):
+    """Raised when the root paylist node is not initialized."""
+
+    def __init__(self) -> None:
+        super().__init__("Playlist root node is not initialized!")
+
+
 class XmlDuplicateError(Exception):
     """Raised when a track already exists in the XML database."""
 
-    def __init__(self, key_type, key):
+    def __init__(self, key_type: str, key: str) -> None:
         super().__init__(f"XML database already contains a track with {key_type}={key}")
 
 
 class XmlAttributeKeyError(Exception):
-    def __init__(self, cls, key, attributes):
+    def __init__(self, cls: Any, key: str, attributes: List[str]) -> None:
         super().__init__(
             f"{key} is not a valid key for {cls.__name__}! Valid attribs:\n{attributes}"
         )
 
 
-def encode_path(path):
+def encode_path(path: Union[str, Path]) -> str:
     r"""Encodes a file path as URI string.
 
     Parameters
@@ -70,7 +87,7 @@ def encode_path(path):
     return url
 
 
-def decode_path(url):
+def decode_path(url: str) -> str:
     r"""Decodes an as URI string encoded file path.
 
     Parameters
@@ -95,7 +112,7 @@ def decode_path(url):
     return os.path.normpath(path)
 
 
-class AbstractElement(abc.Mapping):
+class AbstractElement(abc.Mapping[str, Any]):
     """Abstract base class for Rekordbox XML elements.
 
     Implements attribute getters and setters for an XML element
@@ -104,17 +121,17 @@ class AbstractElement(abc.Mapping):
     TAG: str
     """str: Name of the XML element"""
 
-    ATTRIBS: list
+    ATTRIBS: List[str]
     """list[str]: List of all attribute keys of the XML element"""
 
-    GETTERS = dict()
+    GETTERS: Dict[str, Callable[[Any], Any]] = dict()
     """dict[str, Callable]: Dictionary of attribute getter conversion methods.
 
     See Also
     --------
     AbstractElement.get
     """
-    SETTERS = dict()
+    SETTERS: Dict[str, Callable[[Any], Any]] = dict()
     """dict[str, Callable]: Dictionary of attribute setter conversion methods.
 
     See Also
@@ -122,23 +139,23 @@ class AbstractElement(abc.Mapping):
     AbstractElement.set
     """
 
-    def __init__(self, element=None, *args, **kwargs):
-        self._element = element
+    def __init__(self, element: xml.Element = None, *args: Any, **kwargs: Any):
+        self._element: Union[xml.Element, None] = element
         if element is None:
             self._init(*args, **kwargs)
         else:
             self._load_subelements()
 
     @abstractmethod
-    def _init(self, *args, **kwargs):
+    def _init(self, *args: Any, **kwargs: Any) -> None:
         """Initializes a new XML element."""
         pass
 
-    def _load_subelements(self):
+    def _load_subelements(self) -> None:
         """Loads the sub-elements of an existing XML element."""
         pass
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
         """Returns the value of an attribute of the XML element.
 
         The type of the attribute value is converted if a conversion method is specified
@@ -165,6 +182,9 @@ class AbstractElement(abc.Mapping):
         """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
+        if self._element is None:
+            raise XmlElementNotInitializedError("_element")
+
         value = self._element.attrib.get(key, default)
         if value == default:
             return default
@@ -175,7 +195,7 @@ class AbstractElement(abc.Mapping):
             pass
         return value
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> None:
         """Sets the value of an attribute of the XML element.
 
         The type of the given value is converted before updating the attribute if a
@@ -197,6 +217,8 @@ class AbstractElement(abc.Mapping):
         """
         if key not in self.ATTRIBS:
             raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
+        if self._element is None:
+            raise XmlElementNotInitializedError("_element")
         try:
             # Apply callback
             value = self.SETTERS[key](value)
@@ -205,15 +227,19 @@ class AbstractElement(abc.Mapping):
             value = str(value)
         self._element.attrib[key] = value
 
-    def __len__(self):
+    def __len__(self) -> int:
         """int: The number of attributes of the XML element."""
+        if self._element is None:
+            raise XmlElementNotInitializedError("_element")
         return len(self._element.attrib)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Iterable: An iterator of the attribute keys of the XML element."""
+        if self._element is None:
+            raise XmlElementNotInitializedError("_element")
         return iter(self._element.attrib.keys())
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         """Returns the raw value of an attribute of the XML element.
 
         Parameters
@@ -228,7 +254,7 @@ class AbstractElement(abc.Mapping):
         """
         return self.get(key)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> None:
         """Sets the raw value of an attribute of the XML element.
 
         Parameters
@@ -240,11 +266,11 @@ class AbstractElement(abc.Mapping):
         """
         self.set(key, value)
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> Any:
         """Returns the raw value of an attribute of the XML element (same as `get`)."""
         return self.get(key)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__}()>"
 
 
@@ -271,10 +297,20 @@ class Tempo(AbstractElement):
     ATTRIBS = ["Inizio", "Bpm", "Metro", "Battito"]
     GETTERS = {"Inizio": float, "Bpm": float, "Battito": int}
 
-    def __init__(self, parent=None, Inizio=0.0, Bpm=0.0, Metro="4/4", Battito=1, element=None):
+    def __init__(
+        self,
+        parent: xml.Element = None,
+        Inizio: float = 0.0,
+        Bpm: float = 0.0,
+        Metro: str = "4/4",
+        Battito: int = 1,
+        element: xml.Element = None,
+    ):
         super().__init__(element, parent, Inizio, Bpm, Metro, Battito)
 
-    def _init(self, parent, inizio, bpm, metro, battito):
+    def _init(
+        self, parent: xml.Element, inizio: float, bpm: float, metro: str, battito: int
+    ) -> None:
         attrib = {
             "Inizio": str(inizio),
             "Bpm": str(bpm),
@@ -283,7 +319,7 @@ class Tempo(AbstractElement):
         }
         self._element = xml.SubElement(parent, self.TAG, attrib=attrib)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         args = ", ".join(
             [
                 f"Inizio={self.Inizio}",
@@ -327,17 +363,19 @@ class PositionMark(AbstractElement):
 
     def __init__(
         self,
-        parent=None,
-        Name="",
-        Type="cue",
-        Start=0.0,
-        End=None,
-        Num=-1,
-        element=None,
+        parent: xml.Element = None,
+        Name: str = "",
+        Type: str = "cue",
+        Start: float = 0.0,
+        End: float = None,
+        Num: int = -1,
+        element: xml.Element = None,
     ):
         super().__init__(element, parent, Name, Type, Start, End, Num)
 
-    def _init(self, parent, name, type_, start, end, num):
+    def _init(
+        self, parent: xml.Element, name: str, type_: str, start: float, end: float, num: int
+    ) -> None:
         attrib = {
             "Name": name,
             "Type": POSMARK_TYPE_MAPPING.inv.get(type_),  # noqa
@@ -348,7 +386,7 @@ class PositionMark(AbstractElement):
             attrib["End"] = str(end)
         self._element = xml.SubElement(parent, self.TAG, attrib=attrib)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         args = ", ".join(
             [
                 f"Name={self.Name}",
@@ -484,20 +522,31 @@ class Track(AbstractElement):
 
     SETTERS = {"Rating": RATING_MAPPING.inv.get, "Location": encode_path}  # noqa
 
-    def __init__(self, parent=None, Location="", element=None, **kwargs):
-        self.tempos = list()
-        self.marks = list()
+    def __init__(
+        self,
+        parent: xml.Element = None,
+        Location: Union[str, Path] = "",
+        element: xml.Element = None,
+        **kwargs: Any,
+    ):
+        self.tempos: List[Tempo] = list()
+        self.marks: List[PositionMark] = list()
         super().__init__(element, parent, Location, **kwargs)
 
-    def _init(self, parent, Location, **kwargs):
+    def _init(self, parent: xml.Element, Location: Union[str, Path] = "", **kwargs: Any) -> None:
         attrib = {"Location": encode_path(Location)}
         for key, val in kwargs.items():
             if key not in self.ATTRIBS:
                 raise XmlAttributeKeyError(self.__class__, key, self.ATTRIBS)
             attrib[key] = str(val)
-        self._element = xml.SubElement(parent, self.TAG, attrib=attrib)
+        element = xml.SubElement(parent, self.TAG, attrib=attrib)
+        if element is None:
+            raise RuntimeError("XML element is not initialized!")
+        self._element = element
 
-    def _load_subelements(self):
+    def _load_subelements(self) -> None:
+        if self._element is None:
+            raise XmlElementNotInitializedError("_element")
         tempo_elements = self._element.findall(f"{Tempo.TAG}")
         if tempo_elements is not None:
             self.tempos = [Tempo(element=el) for el in tempo_elements]
@@ -505,7 +554,7 @@ class Track(AbstractElement):
         if mark_elements is not None:
             self.marks = [PositionMark(element=el) for el in mark_elements]
 
-    def add_tempo(self, Inizio, Bpm, Metro, Battito):
+    def add_tempo(self, Inizio: float, Bpm: float, Metro: str, Battito: int) -> Tempo:
         """Adds a new ``Tempo`` XML element to the track element.
 
         Parameters
@@ -533,7 +582,14 @@ class Track(AbstractElement):
         self.tempos.append(tempo)
         return tempo
 
-    def add_mark(self, Name="", Type="cue", Start=0.0, End=None, Num=-1):
+    def add_mark(
+        self,
+        Name: str = "",
+        Type: str = "cue",
+        Start: float = 0.0,
+        End: float = None,
+        Num: int = -1,
+    ) -> PositionMark:
         """Adds a new ``PositionMark`` XML element to the track element.
 
         Parameters
@@ -564,7 +620,7 @@ class Track(AbstractElement):
         self.marks.append(mark)
         return mark
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__}(Location={self.Location})>"
 
 
@@ -587,33 +643,35 @@ class Node:
     FOLDER = 0
     PLAYLIST = 1
 
-    def __init__(self, parent=None, element=None, **attribs):
+    def __init__(self, parent: xml.Element = None, element: xml.Element = None, **attribs: Any):
+        if element is None:
+            if parent is None:
+                raise ValueError("Either parent or element must be given!")
+            element = xml.SubElement(parent, self.TAG, attrib=attribs)
         self._parent = parent
         self._element = element
-        if element is None:
-            self._element = xml.SubElement(parent, self.TAG, attrib=attribs)
 
     @classmethod
-    def folder(cls, parent, name):
+    def folder(cls, parent: xml.Element, name: str) -> "Node":
         """Initializes a playlist folder node XML element.
 
         Parameters
         ----------
-        parent : xml.Element
+        parent : Node
             The parent node XML element of the new playlist folder node.
         name : str
             The name of the playlist folder node.
         """
         attrib = {"Name": name, "Type": str(cls.FOLDER), "Count": "0"}
-        return cls(parent, **attrib)
+        return cls(parent, None, **attrib)
 
     @classmethod
-    def playlist(cls, parent, name, keytype="TrackID"):
+    def playlist(cls, parent: xml.Element, name: str, keytype: str = "TrackID") -> "Node":
         """Initializes a playlist node XML element.
 
         Parameters
         ----------
-        parent : xml.Element
+        parent : Node
             The parent node XML element of the new playlist node.
         name : str
             The name of the playlist node.
@@ -630,52 +688,59 @@ class Node:
         return cls(parent, **attrib)
 
     @property
-    def parent(self):
-        """Node: The parent of the node."""
+    def parent(self) -> Union[xml.Element, None]:
+        """xml.Element: The parent of the node."""
         return self._parent
 
     @property
-    def name(self):
+    def name(self) -> str:
         """str: The name of node."""
-        return self._element.attrib.get("Name")
+        value = self._element.attrib.get("Name")
+        if value is None:
+            raise ValueError("Name element has no value")
+        return value
 
     @property
-    def type(self):
+    def type(self) -> int:
         """int: The type of the node (0=folder or 1=playlist)."""
-        return int(self._element.attrib.get("Type"))
+        type_ = self._element.attrib.get("Type")
+        if type_ is None:
+            raise ValueError("Type element has no value")
+        return int(type_)
 
     @property
-    def count(self):
+    def count(self) -> int:
         """int: The number of attributes of the XML element."""
         return int(self._element.attrib.get("Count", 0))
 
     @property
-    def entries(self):
+    def entries(self) -> int:
         """int: The number of entries of the node."""
         return int(self._element.attrib.get("Entries", 0))
 
     @property
-    def key_type(self):
+    def key_type(self) -> str:
         """str: The type of key used by the playlist node."""
-        return NODE_KEYTYPE_MAPPING.get(self._element.attrib.get("KeyType"))
+        keytype: str = NODE_KEYTYPE_MAPPING[self._element.attrib.get("KeyType", "0")]
+        return keytype
 
     @property
-    def is_folder(self):
+    def is_folder(self) -> bool:
         """bool: True if the node is a playlist folder, false if otherwise."""
         return self.type == self.FOLDER
 
     @property
-    def is_playlist(self):
+    def is_playlist(self) -> bool:
         """bool: True if the node is a playlist, false if otherwise."""
         return self.type == self.PLAYLIST
 
-    def _update_count(self):
+    def _update_count(self) -> None:
         self._element.attrib["Count"] = str(len(self._element))
 
-    def _update_entries(self):
+    def _update_entries(self) -> None:
         self._element.attrib["Entries"] = str(len(self._element))
 
-    def get_node(self, i):
+    def get_node(self, i: int) -> "Node":
         """Returns the i-th sub-Node of the current node.
 
         Parameters
@@ -687,9 +752,9 @@ class Node:
         -------
         subnode : Node
         """
-        return Node(self, element=self._element.findall(f"{self.TAG}[{i + 1}]"))
+        return Node(self._element, element=self._element.find(f"{self.TAG}[{i + 1}]"))
 
-    def get_playlist(self, name):
+    def get_playlist(self, name: str) -> "Node":
         """Returns the sub-Node with the given name.
 
         Parameters
@@ -701,9 +766,9 @@ class Node:
         -------
         subnode : Node
         """
-        return Node(self, element=self._element.find(f'.//{self.TAG}[@Name="{name}"]'))
+        return Node(self._element, element=self._element.find(f'.//{self.TAG}[@Name="{name}"]'))
 
-    def get_playlists(self):
+    def get_playlists(self) -> List["Node"]:
         """Returns all sub-nodes that are playlists.
 
         Returns
@@ -711,9 +776,9 @@ class Node:
         playlists : list[Node]
             The playlist nodes in the current node.
         """
-        return [Node(self, element=el) for el in self._element]
+        return [Node(self._element, element=el) for el in self._element]
 
-    def add_playlist_folder(self, name):
+    def add_playlist_folder(self, name: str) -> "Node":
         """Add a new playlist folder as child to this node.
 
         Parameters
@@ -738,7 +803,7 @@ class Node:
         self._update_count()
         return node
 
-    def add_playlist(self, name, keytype="TrackID"):
+    def add_playlist(self, name: str, keytype: str = "TrackID") -> "Node":
         """Add a new playlist as child to this node.
 
         Parameters
@@ -766,7 +831,7 @@ class Node:
         self._update_count()
         return node
 
-    def remove_playlist(self, name):
+    def remove_playlist(self, name: str) -> None:
         """Removes a playlist from the playlist folder node.
 
         Parameters
@@ -779,7 +844,7 @@ class Node:
         self._update_count()
         self._update_entries()
 
-    def add_track(self, key):
+    def add_track(self, key: Union[int, str]) -> xml.Element:
         """Adds a new track to the playlist node.
 
         Parameters
@@ -793,10 +858,12 @@ class Node:
             The newly created playlist track element.
         """
         el = xml.SubElement(self._element, Track.TAG, attrib={"Key": str(key)})
+        if el is None:
+            raise RuntimeError("XML element is not initialized!")
         self._update_entries()
         return el
 
-    def remove_track(self, key):
+    def remove_track(self, key: Union[int, str]) -> xml.Element:
         """Removes a track from the playlist node.
 
         Parameters
@@ -806,11 +873,13 @@ class Node:
             playlist node.
         """
         el = self._element.find(f'{Track.TAG}[@Key="{key}"]')
+        if el is None:
+            raise ValueError(f"Track key {key} not found.")
         self._element.remove(el)
         self._update_entries()
         return el
 
-    def get_tracks(self):
+    def get_tracks(self) -> List[Union[int, str]]:
         """Returns the keys of all tracks contained in the playlist node.
 
         Returns
@@ -824,21 +893,23 @@ class Node:
         elements = self._element.findall(f".//{Track.TAG}")
         items = list()
         for el in elements:
-            val = el.attrib["Key"]
+            val: Union[int, str] = el.attrib["Key"]
             if self.key_type == "TrackID":
                 val = int(val)
             items.append(val)
         return items
 
-    def get_track(self, key):
+    def get_track(self, key: str) -> Union[int, str]:
         """Returns the formatted key of the track."""
         el = self._element.find(f'{Track.TAG}[@Key="{key}"]')
-        val = el.attrib["Key"]
+        if el is None:
+            raise ValueError(f"Track key {key} not found.")
+        val: Union[int, str] = el.attrib["Key"]
         if self.key_type == "TrackID":
             val = int(val)
         return val
 
-    def treestr(self, indent=4, lvl=0):
+    def treestr(self, indent: int = 4, lvl: int = 0) -> str:
         """returns a formatted string of the node tree strucutre.
 
         Parameters
@@ -863,10 +934,12 @@ class Node:
                 string += node.treestr(indent, lvl + 1)
         return string
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Node):
+            raise NotImplementedError()
         return self.parent == other.parent and self.name == other.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__}({self.name})>"
 
 
@@ -908,17 +981,23 @@ class RekordboxXml:
     PLST_TAG = "PLAYLISTS"
     COLL_TAG = "COLLECTION"
 
-    def __init__(self, path=None, name=None, version=None, company=None):
-        self._root = None
-        self._product = None
-        self._collection = None
-        self._playlists = None
-        self._root_node = None
+    def __init__(
+        self,
+        path: Union[str | Path] = None,
+        name: str = None,
+        version: str = None,
+        company: str = None,
+    ):
+        self._root: Union[xml.Element, None] = None
+        self._product: Union[xml.Element, None] = None
+        self._collection: Union[xml.Element, None] = None
+        self._playlists: Union[xml.Element, None] = None
+        self._root_node: Union[Node, None] = None
 
         self._last_id = 0
         # Used for fast duplicate check
-        self._locations = set()
-        self._ids = set()
+        self._locations: Set[str] = set()
+        self._ids: Set[int] = set()
 
         if path is not None:
             self._parse(path)
@@ -926,36 +1005,48 @@ class RekordboxXml:
             self._init(name, version, company)
 
     @property
-    def frmt_version(self):
+    def frmt_version(self) -> str:
         """str : The version of the Rekordbox XML format."""
-        return self._root.attrib["Version"]
+        if self._root is None:
+            raise XmlElementNotInitializedError("_root")
+        return self._root.attrib.get("Version", "")
 
     @property
-    def product_name(self):
+    def product_name(self) -> str:
         """str : The product name that will be displayed in the software."""
-        return self._product.attrib.get("Name")
+        if self._product is None:
+            raise XmlElementNotInitializedError("_product")
+        return self._product.attrib.get("Name", "")
 
     @property
-    def product_version(self):
+    def product_version(self) -> str:
         """str : The product version."""
-        return self._product.attrib.get("Version")
+        if self._product is None:
+            raise XmlElementNotInitializedError("_product")
+        return self._product.attrib.get("Version", "")
 
     @property
-    def product_company(self):
+    def product_company(self) -> str:
         """str : The company name."""
-        return self._product.attrib.get("Company")
+        if self._product is None:
+            raise XmlElementNotInitializedError("_product")
+        return self._product.attrib.get("Company", "")
 
     @property
-    def num_tracks(self):
-        """str : The number of tracks in the collection."""
-        return int(self._collection.attrib.get("Entries"))
+    def num_tracks(self) -> int:
+        """int : The number of tracks in the collection."""
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
+        return int(self._collection.attrib.get("Entries", "0"))
 
     @property
-    def root_playlist_folder(self):
+    def root_playlist_folder(self) -> Node:
         """Node: The node of the root playlist folder containing all other nodes."""
+        if self._root_node is None:
+            raise RootNodeNotInitializedError()
         return self._root_node
 
-    def _parse(self, path):
+    def _parse(self, path: Union[str, Path]) -> None:
         """Parse an existing XML file.
 
         Parameters
@@ -965,13 +1056,26 @@ class RekordboxXml:
         """
         tree = xml.parse(str(path))
         self._root = tree.getroot()
-        self._product = self._root.find(self.PRDT_TAG)
-        self._collection = self._root.find(self.COLL_TAG)
-        self._playlists = self._root.find(self.PLST_TAG)
+
+        product = self._root.find(self.PRDT_TAG)
+        collection = self._root.find(self.COLL_TAG)
+        playlists = self._root.find(self.PLST_TAG)
+        if product is None:
+            raise RuntimeError(f"No product found in {path}")
+        if collection is None:
+            raise RuntimeError(f"No collection found in {path}")
+        if playlists is None:
+            raise RuntimeError(f"No playlists found in {path}")
+
+        self._product = product
+        self._collection = collection
+        self._playlists = playlists
         self._root_node = Node(element=self._playlists.find(Node.TAG))
         self._update_cache()
 
-    def _init(self, name=None, version=None, company=None, frmt_version=None):
+    def _init(
+        self, name: str = None, version: str = None, company: str = None, frmt_version: str = None
+    ) -> None:
         """Initialize a new XML file."""
         frmt_version = frmt_version or "1.0.0"
         name = name or "pyrekordbox"
@@ -994,7 +1098,7 @@ class RekordboxXml:
         if track_ids:
             self._last_id = max(track_ids)
 
-    def get_tracks(self):
+    def get_tracks(self) -> List[Track]:
         """Returns the tracks in the collection of the XML file.
 
         Returns
@@ -1002,10 +1106,14 @@ class RekordboxXml:
         tracks : list of Track
             A list of the track objects in the collection.
         """
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
         elements = self._collection.findall(f".//{Track.TAG}")
         return [Track(element=el) for el in elements]
 
-    def get_track(self, index=None, TrackID=None, Location=None):
+    def get_track(
+        self, index: int = None, TrackID: Union[int, str] = None, Location: str = None
+    ) -> Track:
         """Get a track in the collection of the XML file.
 
         Parameters
@@ -1013,7 +1121,7 @@ class RekordboxXml:
         index : int, optional
             If `index` is given, the track with this index in the collection is
             returned.
-        TrackID : int, optional
+        TrackID : int or str, optional
             If `TrackID` is given, the track with this ID in the collection is
             returned.
         Location : str, optional
@@ -1042,19 +1150,20 @@ class RekordboxXml:
         >>> track = file.get_track(TrackID=1)
 
         """
-        if index is None and TrackID is None and Location is None:
-            raise ValueError("Either index, TrackID or Location has to be specified!")
-
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
         if TrackID is not None:
             el = self._collection.find(f'.//{Track.TAG}[@TrackID="{TrackID}"]')
         elif Location is not None:
             encoded = encode_path(Location)
             el = self._collection.find(f'.//{Track.TAG}[@Location="{encoded}"]')
-        else:
+        elif index is not None:
             el = self._collection.find(f".//{Track.TAG}[{index + 1}]")
+        else:
+            raise ValueError("Either index, TrackID or Location has to be specified!")
         return Track(element=el)
 
-    def get_track_ids(self):
+    def get_track_ids(self) -> List[int]:
         """Returns the `TrackID` of all tracks in the collection of the XML file.
 
         Returns
@@ -1062,10 +1171,12 @@ class RekordboxXml:
         ids : list of int
             The ID's of all tracks.
         """
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
         elements = self._collection.findall(f".//{Track.TAG}")
         return [int(el.attrib["TrackID"]) for el in elements]
 
-    def get_playlist(self, *names):
+    def get_playlist(self, *names: str) -> Node:
         """Returns a playlist or playlist folder with the given path.
 
         Parameters
@@ -1085,6 +1196,8 @@ class RekordboxXml:
         >>> playlist = file.get_playlist("Folder", "Sub Playlist")
 
         """
+        if self._root_node is None:
+            raise RootNodeNotInitializedError()
         node = self._root_node
         if not names:
             return node
@@ -1097,34 +1210,38 @@ class RekordboxXml:
     #     num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
     #     self._collection.attrib["Entries"] = str(num_tracks)
 
-    def _increment_track_count(self):
+    def _increment_track_count(self) -> None:
         """Increment the track count element."""
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
         old = int(self._collection.attrib["Entries"])
         self._collection.attrib["Entries"] = str(old + 1)
 
-    def _decrement_track_count(self):
+    def _decrement_track_count(self) -> None:
         """Decrement the track count element."""
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
         old = int(self._collection.attrib["Entries"])
         self._collection.attrib["Entries"] = str(old - 1)
 
-    def _add_cache(self, track):
+    def _add_cache(self, track: Track) -> None:
         """Add the TrackID and Location to the cache."""
         self._locations.add(track.Location)
         self._ids.add(track.TrackID)
 
-    def _remove_cache(self, track):
+    def _remove_cache(self, track: Track) -> None:
         """Remove the TrackID and Location from the cache."""
         self._locations.remove(track.Location)
         self._ids.remove(track.TrackID)
 
-    def _update_cache(self):
+    def _update_cache(self) -> None:
         """Update the cache with the current tracks in the collection."""
         self._locations.clear()
         self._ids.clear()
         for track in self.get_tracks():
             self._add_cache(track)
 
-    def add_track(self, location, **kwargs):
+    def add_track(self, location: Union[str, Path], **kwargs: Any) -> Track:
         """Add a new track element to the Rekordbox XML collection.
 
         Parameters
@@ -1157,7 +1274,7 @@ class RekordboxXml:
         # Check that Location and TrackID are unique
         track_id = kwargs["TrackID"]
         if os.path.normpath(location) in self._locations:
-            raise XmlDuplicateError("Location", location)
+            raise XmlDuplicateError("Location", str(location))
         if track_id in self._ids:
             raise XmlDuplicateError("TrackID", track_id)
 
@@ -1168,7 +1285,7 @@ class RekordboxXml:
         self._add_cache(track)
         return track
 
-    def remove_track(self, track):
+    def remove_track(self, track: Track) -> None:
         """Remove a track element from the Rekordbox XML collection.
 
         Parameters
@@ -1183,11 +1300,15 @@ class RekordboxXml:
         >>> file.remove_track(t)
 
         """
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
+        if track._element is None:  # noqa
+            raise XmlElementNotInitializedError("track._element")
         self._collection.remove(track._element)  # noqa
         self._decrement_track_count()
         self._remove_cache(track)
 
-    def add_playlist_folder(self, name):
+    def add_playlist_folder(self, name: str) -> Node:
         """Add a new top-level playlist folder to the XML collection.
 
         Parameters
@@ -1209,10 +1330,12 @@ class RekordboxXml:
         >>> file = RekordboxXml("database.xml")
         >>> file.add_playlist_folder("New Folder")
         """
+        if self._root_node is None:
+            raise RootNodeNotInitializedError()
         return self._root_node.add_playlist_folder(name)
 
-    def add_playlist(self, name, keytype="TrackID"):
-        """Add a new top-level playlist to the XML collection.
+    def add_playlist(self, name: str, keytype: str = "TrackID") -> Node:
+        """Adds a new top-level playlist to the XML collection.
 
         Parameters
         ----------
@@ -1242,9 +1365,11 @@ class RekordboxXml:
 
         >>> file.add_playlist("New Playlist 2", keytype="Location")
         """
+        if self._root_node is None:
+            raise RootNodeNotInitializedError()
         return self._root_node.add_playlist(name, keytype)
 
-    def tostring(self, indent=None):
+    def tostring(self, indent: str = None) -> str:
         """Returns the contents of the XML file as a string.
 
         Parameters
@@ -1257,15 +1382,18 @@ class RekordboxXml:
         s : str
             The contents of the XML file
         """
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
         # Check track count is valid
         num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
         n = int(self._collection.attrib["Entries"])
         if n != num_tracks:
             raise ValueError(f"Track count {num_tracks} does not match number of elements {n}")
         # Generate XML string
-        return pretty_xml(self._root, indent, encoding="utf-8")
+        text: str = pretty_xml(self._root, indent, encoding="utf-8")
+        return text
 
-    def save(self, path="", indent=None):
+    def save(self, path: Union[str, Path] = "", indent: str = None) -> None:
         """Saves the contents to an XML file.
 
         Parameters
@@ -1280,7 +1408,7 @@ class RekordboxXml:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(string)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         name = self.product_name
         v = self.product_version
         company = self.product_company
