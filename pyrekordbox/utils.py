@@ -14,7 +14,7 @@ import psutil
 warnings.simplefilter("always", DeprecationWarning)
 
 
-def warn_deprecated(name, new_name="", hint="", remove_in=""):
+def warn_deprecated(name: str, new_name: str = "", hint: str = "", remove_in: str = "") -> None:
     s = f"'{name}' is deprecated"
     if remove_in:
         s += f" and will be removed in version '{remove_in}'"
@@ -30,7 +30,7 @@ def warn_deprecated(name, new_name="", hint="", remove_in=""):
     warnings.warn(s, DeprecationWarning, stacklevel=3)
 
 
-def get_process_id(name: str, raise_exec=False) -> int:
+def get_process_id(name: str, raise_exec: bool = False) -> int:
     """Returns the ID of a process if it exists.
 
     Parameters
@@ -62,7 +62,8 @@ def get_process_id(name: str, raise_exec=False) -> int:
         try:
             proc_name = os.path.splitext(proc.name())[0]  # needed on Windows (.exe)
             if proc_name == name:
-                return proc.pid
+                pid: int = proc.pid
+                return pid
         except (psutil.AccessDenied, psutil.NoSuchProcess):
             pass
     if raise_exec:
@@ -70,7 +71,7 @@ def get_process_id(name: str, raise_exec=False) -> int:
     return 0
 
 
-def get_rekordbox_pid(raise_exec=False):
+def get_rekordbox_pid(raise_exec: bool = False) -> int:
     """Returns the process ID of the Rekordbox application.
 
     Parameters
@@ -96,7 +97,7 @@ def get_rekordbox_pid(raise_exec=False):
     return get_process_id("rekordbox", raise_exec)
 
 
-def get_rekordbox_agent_pid(raise_exec=False):
+def get_rekordbox_agent_pid(raise_exec: bool = False) -> int:
     """Returns the process ID of the RekordboxAgent application.
 
     Parameters
@@ -122,7 +123,7 @@ def get_rekordbox_agent_pid(raise_exec=False):
     return get_process_id("rekordboxAgent", raise_exec)
 
 
-def pretty_xml(element, indent=None, encoding="utf-8"):
+def pretty_xml(element: xml.Element, indent: str = None, encoding: str = "utf-8") -> str:
     r"""Generates a formatted string of an XML element.
 
     Parameters
