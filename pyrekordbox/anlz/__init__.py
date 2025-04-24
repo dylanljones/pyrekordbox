@@ -4,7 +4,7 @@
 
 import re
 from pathlib import Path
-from typing import Union
+from typing import Dict, Iterator, Tuple, Union
 
 from . import structs
 from .file import AnlzFile
@@ -42,7 +42,7 @@ def is_anlz_file(path: Union[str, Path]) -> bool:
     return bool(RE_ANLZ.match(path.name))
 
 
-def get_anlz_paths(root: Union[str, Path]) -> dict:
+def get_anlz_paths(root: Union[str, Path]) -> Dict[str, Union[Path, None]]:
     """Returns the paths of all existing ANLZ files in a directory.
 
     Parameters
@@ -62,14 +62,14 @@ def get_anlz_paths(root: Union[str, Path]) -> dict:
     >>> p["DAT"]
     directory/ANLZ0000.DAT
     """
-    paths = {"DAT": None, "EXT": None, "2EX": None}
+    paths: Dict[str, Union[Path, None]] = {"DAT": None, "EXT": None, "2EX": None}
     for path in Path(root).iterdir():
         if RE_ANLZ.match(path.name):
             paths[path.suffix[1:].upper()] = path
     return paths
 
 
-def walk_anlz_dirs(root_dir: Union[str, Path]):
+def walk_anlz_dirs(root_dir: Union[str, Path]) -> Iterator[Path]:
     """Finds all ANLZ directory paths recursively.
 
     Parameters
@@ -88,7 +88,7 @@ def walk_anlz_dirs(root_dir: Union[str, Path]):
                 yield path
 
 
-def walk_anlz_paths(root_dir: Union[str, Path]):
+def walk_anlz_paths(root_dir: Union[str, Path]) -> Iterator[Tuple[Path, Dict[str, Path]]]:
     """Finds all ANLZ directory paths and the containing file paths recursively.
 
     Parameters
@@ -110,7 +110,7 @@ def walk_anlz_paths(root_dir: Union[str, Path]):
         yield anlz_dir, files
 
 
-def read_anlz_files(root: Union[str, Path] = "") -> dict:
+def read_anlz_files(root: Union[str, Path] = "") -> Dict[Path, AnlzFile]:
     """Open all ANLZ files in the given root directory.
 
     Parameters

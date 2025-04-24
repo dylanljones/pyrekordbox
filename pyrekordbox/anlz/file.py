@@ -5,12 +5,12 @@
 import logging
 from collections import abc
 from pathlib import Path
-from typing import Union
+from typing import Any, Iterator, List, Union
 
-from construct import Int16ub
+from construct import Int16ub, Struct
 
 from . import structs
-from .tags import TAGS
+from .tags import TAGS, AbstractAnlzTag, StructNotInitializedError
 
 logger = logging.getLogger(__name__)
 
@@ -18,35 +18,35 @@ XOR_MASK = bytearray.fromhex("CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9
 
 
 class BuildFileLengthError(Exception):
-    def __init__(self, struct, len_data):
+    def __init__(self, struct: Struct, len_data: int) -> None:
         super().__init__(
             f"`len_file` ({struct.len_file}) of '{struct.type}' does not "
             f"match the data-length ({len_data})!"
         )
 
 
-class AnlzFile(abc.Mapping):
+class AnlzFile(abc.Mapping[str, Any]):
     """Rekordbox `ANLZnnnn.xxx` binary file handler."""
 
-    def __init__(self):
-        self._path = ""
-        self.file_header = None
-        self.tags = list()
+    def __init__(self) -> None:
+        self._path: str = ""
+        self.file_header: Union[Struct, None] = None
+        self.tags: List[AbstractAnlzTag] = list()
 
     @property
-    def num_tags(self):
+    def num_tags(self) -> int:
         return len(self.tags)
 
     @property
-    def tag_types(self):
+    def tag_types(self) -> List[str]:
         return [tag.type for tag in self.tags]
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self._path
 
     @classmethod
-    def parse(cls, data: bytes):
+    def parse(cls, data: bytes) -> "AnlzFile":
         """Parses the in-memory data of a Rekordbox analysis binary file.
 
         Parameters
@@ -64,7 +64,7 @@ class AnlzFile(abc.Mapping):
         return self
 
     @classmethod
-    def parse_file(cls, path: Union[str, Path]):
+    def parse_file(cls, path: Union[str, Path]) -> "AnlzFile":
         """Reads and parses a Rekordbox analysis binary file.
 
         Parameters
@@ -92,10 +92,10 @@ class AnlzFile(abc.Mapping):
             data = fh.read()
 
         self = cls.parse(data)
-        self._path = path
+        self._path = str(path)
         return self
 
-    def _parse(self, data: bytes):
+    def _parse(self, data: bytes) -> None:
         file_header = structs.AnlzFileHeader.parse(data)
         tag_type = file_header.type
         assert tag_type == "PMAI"
@@ -136,6 +136,8 @@ class AnlzFile(abc.Mapping):
             try:
                 # Parse the struct
                 tag = TAGS[tag_type](tag_data)
+                if tag.struct is None:
+                    raise StructNotInitializedError()
                 tags.append(tag)
                 len_header = tag.struct.len_header
                 len_tag = tag.struct.len_tag
@@ -147,28 +149,34 @@ class AnlzFile(abc.Mapping):
                 )
             except KeyError:
                 logger.warning("Tag '%s' not supported!", tag_type)
-                tag = structs.AnlzTag.parse(tag_data)
-                len_tag = tag.len_tag
+                tag_struct = structs.AnlzTag.parse(tag_data)
+                len_tag = tag_struct.len_tag
             i += len_tag
 
         self.file_header = file_header
         self.tags = tags
 
-    def update_len(self):
+    def update_len(self) -> None:
         # Update struct lengths
+        if self.file_header is None:
+            raise StructNotInitializedError()
         tags_len = 0
         for tag in self.tags:
+            if tag.struct is None:
+                raise StructNotInitializedError()
             tag.update_len()
             tags_len += tag.struct.len_tag
         # Update file length
         len_file = self.file_header.len_header + tags_len
         self.file_header.len_file = len_file
 
-    def build(self):
+    def build(self) -> bytes:
+        if self.file_header is None:
+            raise StructNotInitializedError()
         self.update_len()
         header_data = structs.AnlzFileHeader.build(self.file_header)
         section_data = b"".join(tag.build() for tag in self.tags)
-        data = header_data + section_data
+        data: bytes = header_data + section_data
         # Check `len_file`
         len_file = self.file_header.len_file
         len_data = len(data)
@@ -177,38 +185,38 @@ class AnlzFile(abc.Mapping):
 
         return data
 
-    def save(self, path=""):
+    def save(self, path: Union[str, Path] = "") -> None:
         path = path or self._path
 
         data = self.build()
         with open(path, "wb") as fh:
             fh.write(data)
 
-    def get_tag(self, key):
+    def get_tag(self, key: str) -> AbstractAnlzTag:
         return self.__getitem__(key)[0]
 
-    def getall_tags(self, key):
+    def getall_tags(self, key: str) -> List[AbstractAnlzTag]:
         return self.__getitem__(key)
 
-    def get(self, key):
+    def get(self, key: str) -> Any:  # type: ignore[override]
         return self.__getitem__(key)[0].get()
 
-    def getall(self, key):
+    def getall(self, key: str) -> List[Any]:
         return [tag.get() for tag in self.__getitem__(key)]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.keys())
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(set(tag.type for tag in self.tags))
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> List[AbstractAnlzTag]:
         if item.isupper() and len(item) == 4:
             return [tag for tag in self.tags if tag.type == item]
         else:
             return [tag for tag in self.tags if tag.name == item]
 
-    def __contains__(self, item):
+    def __contains__(self, item: str) -> bool:  # type: ignore[override]
         if item.isupper() and len(item) == 4:
             for tag in self.tags:
                 if item == tag.type:
@@ -219,9 +227,9 @@ class AnlzFile(abc.Mapping):
                     return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.tag_types})"
 
-    def set_path(self, path):
+    def set_path(self, path: Union[Path, str]) -> None:
         tag = self.get_tag("PPTH")
         tag.set(path)
