@@ -376,9 +376,11 @@ class PositionMark(AbstractElement):
     def _init(
         self, parent: xml.Element, name: str, type_: str, start: float, end: float, num: int
     ) -> None:
+        if type_ not in POSMARK_TYPE_MAPPING.inv:
+            raise ValueError(f"Type '{type_}' is not supported!")
         attrib = {
             "Name": name,
-            "Type": POSMARK_TYPE_MAPPING.inv.get(type_),  # noqa
+            "Type": POSMARK_TYPE_MAPPING.inv.get(type_, "cue"),
             "Start": str(start),
             "Num": str(num),
         }
@@ -671,7 +673,7 @@ class Node:
 
         Parameters
         ----------
-        parent : Node
+        parent : xml.Element
             The parent node XML element of the new playlist node.
         name : str
             The name of the playlist node.
@@ -679,13 +681,15 @@ class Node:
             The key type used by the playlist node. Can be 'TrackID' or 'Location'
             (file path of the track).
         """
+        if keytype not in NODE_KEYTYPE_MAPPING.inv:
+            raise ValueError(f"Key type '{keytype}' is not supported!")
         attrib = {
             "Name": name,
             "Type": str(cls.PLAYLIST),
-            "KeyType": NODE_KEYTYPE_MAPPING.inv[keytype],  # noqa
+            "KeyType": NODE_KEYTYPE_MAPPING.inv.get(keytype, "TrackID"),
             "Entries": "0",
         }
-        return cls(parent, **attrib)
+        return cls(parent, None, **attrib)
 
     @property
     def parent(self) -> Union[xml.Element, None]:
@@ -694,7 +698,7 @@ class Node:
 
     @property
     def name(self) -> str:
-        """str: The name of node."""
+        """str: The name of the node."""
         value = self._element.attrib.get("Name")
         if value is None:
             raise ValueError("Name element has no value")
@@ -1390,6 +1394,8 @@ class RekordboxXml:
         if n != num_tracks:
             raise ValueError(f"Track count {num_tracks} does not match number of elements {n}")
         # Generate XML string
+        if self._root is None:
+            raise XmlElementNotInitializedError("root")
         text: str = pretty_xml(self._root, indent, encoding="utf-8")
         return text
 
