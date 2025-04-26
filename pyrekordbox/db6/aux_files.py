@@ -5,9 +5,19 @@
 import xml.etree.cElementTree as xml
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from ..config import get_config
 from ..utils import pretty_xml
+
+Attribs = Dict[str, Any]
+
+
+class XmlElementNotInitializedError(Exception):
+    """Raised when an XML element is not initialized."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"XML element {name} is not initialized!")
 
 
 class MasterPlaylistXml:
@@ -26,7 +36,7 @@ class MasterPlaylistXml:
 
     KEYS = ["Id", "ParentId", "Attributes", "Timestamp", "Lib_Type", "CheckType"]
 
-    def __init__(self, path=None, db_dir=None):
+    def __init__(self, path: Union[str, Path] = None, db_dir: Union[str, Path] = None):
         if path is None:
             if db_dir is None:
                 db_dir = get_config("rekordbox6", "db_dir")
@@ -40,29 +50,33 @@ class MasterPlaylistXml:
         self._changed = False
 
     @property
-    def version(self):
+    def version(self) -> str:
         return self.root.attrib["Version"]
 
     @property
-    def automatic_sync(self):
+    def automatic_sync(self) -> str:
         return self.root.attrib["AutomaticSync"]
 
     @property
-    def rekordbox_version(self):
+    def rekordbox_version(self) -> str:
+        if self.product is None:
+            raise XmlElementNotInitializedError("product")
         return self.product.attrib["Version"]
 
     @property
-    def modified(self):
+    def modified(self) -> bool:
         return self._changed
 
-    def get_playlists(self):
+    def get_playlists(self) -> List[Dict[str, Any]]:
         """Returns a list of the attributes of all playlist elements."""
+        if self.playlists is None:
+            raise XmlElementNotInitializedError("playlists")
         items = list()
         for playlist in self.playlists:
             items.append(playlist.attrib)
         return items
 
-    def get(self, playlist_id):
+    def get(self, playlist_id: Union[str, int]) -> Optional[Attribs]:
         """Returns element attribs with the PlaylistID used in the `master.db` database.
 
         Parameters
@@ -75,11 +89,13 @@ class MasterPlaylistXml:
         -------
         playlist : dict
         """
+        if self.playlists is None:
+            raise XmlElementNotInitializedError("playlists")
         hex_id = f"{int(playlist_id):X}"
         element = self.playlists.find(f'.//NODE[@Id="{hex_id}"]')
         if element is None:
             return None
-        attribs = dict(element.attrib)
+        attribs: Attribs = dict(element.attrib)
         attribs["Attribute"] = int(attribs["Attribute"])
         attribs["Timestamp"] = datetime.fromtimestamp(int(attribs["Timestamp"]) / 1000)
         attribs["Lib_Type"] = int(attribs["Lib_Type"])
@@ -94,7 +110,7 @@ class MasterPlaylistXml:
         updated_at: datetime,
         lib_type: int = 0,
         check_type: int = 0,
-    ):
+    ) -> xml.Element:
         """Adds a new element with the PlaylistID used in the `master.db` database.
 
         Parameters
@@ -119,6 +135,9 @@ class MasterPlaylistXml:
         element : xml.Element
             The newly created element.
         """
+        if self.playlists is None:
+            raise XmlElementNotInitializedError("playlists")
+
         hex_id = f"{int(playlist_id):X}"
         parent_id = f"{int(parent_id):X}" if parent_id != "root" else "0"
         timestamp = int(updated_at.timestamp() * 1000)
@@ -136,7 +155,7 @@ class MasterPlaylistXml:
         self._changed = True
         return element
 
-    def remove(self, playlist_id):
+    def remove(self, playlist_id: Union[str, int]) -> None:
         """Removes the element with the PlaylistID used in the `master.db` database.
 
         Parameters
@@ -145,6 +164,9 @@ class MasterPlaylistXml:
             The playlist ID used in the main `master.db` database. This id is converted
             to hexadecimal format before searching.
         """
+        if self.playlists is None:
+            raise XmlElementNotInitializedError("playlists")
+
         hex_id = f"{int(playlist_id):X}"
         element = self.playlists.find(f'.//NODE[@Id="{hex_id}"]')
         if element is None:
@@ -160,7 +182,7 @@ class MasterPlaylistXml:
         updated_at: datetime = None,
         lib_type: int = None,
         check_type: int = None,
-    ):
+    ) -> None:
         """Updates the element with the PlaylistID used in the `master.db` database.
 
         Parameters
@@ -180,6 +202,9 @@ class MasterPlaylistXml:
         check_type : int, optional
             The check type. It seems to be always 0.
         """
+        if self.playlists is None:
+            raise XmlElementNotInitializedError("playlists")
+
         hex_id = f"{int(playlist_id):X}"
         element = self.playlists.find(f'.//NODE[@Id="{hex_id}"]')
         if element is None:
@@ -200,10 +225,11 @@ class MasterPlaylistXml:
         element.attrib.update(attribs)
         self._changed = True
 
-    def to_string(self, indent=None):
-        return pretty_xml(self.root, indent, encoding="utf-8")
+    def to_string(self, indent: str = None) -> str:
+        text: str = pretty_xml(self.root, indent, encoding="utf-8")
+        return text
 
-    def save(self, path=None, indent=None):
+    def save(self, path: Union[str, Path] = None, indent: str = None) -> None:
         if path is None:
             path = self.path
         path = str(path)

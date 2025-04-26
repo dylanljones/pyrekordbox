@@ -7,11 +7,11 @@ import xml.etree.cElementTree as xml
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from dateutil.relativedelta import relativedelta  # noqa
 from sqlalchemy import and_, not_, or_
-from sqlalchemy.sql.elements import BooleanClauseList
+from sqlalchemy.sql.elements import ColumnElement
 
 from .tables import DjmdContent
 
@@ -99,7 +99,7 @@ _DATE_OPS = [
 ]
 
 # Defines the valid operators for each property
-VALID_OPS = {
+VALID_OPS: Dict[str, Any] = {
     Property.ARTIST: _STR_OPS,
     Property.ALBUM: _STR_OPS,
     Property.ALBUM_ARTIST: _STR_OPS,
@@ -126,7 +126,7 @@ VALID_OPS = {
 }
 
 # Defines the column names in the DB for properties that are directly mapped
-PROPERTY_COLUMN_MAP = {
+PROPERTY_COLUMN_MAP: Dict[str, str] = {
     Property.ARTIST: "ArtistName",
     Property.ALBUM: "AlbumName",
     Property.ALBUM_ARTIST: "AlbumArtistName",
@@ -152,7 +152,7 @@ PROPERTY_COLUMN_MAP = {
     Property.YEAR: "ReleaseYear",
 }
 
-TYPE_CONVERSION = {
+TYPE_CONVERSION: Dict[str, Any] = {
     Property.BPM: int,
     Property.STOCK_DATE: lambda x: datetime.strptime(x, "%Y-%m-%d"),
     Property.DATE_CREATED: lambda x: datetime.strptime(x, "%Y-%m-%d"),
@@ -176,7 +176,7 @@ class Condition:
     value_left: Union[str, int]
     value_right: Union[str, int]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.property not in PROPERTIES:
             raise ValueError(
                 f"Invalid property: '{self.property}'! Supported properties: {PROPERTIES}"
@@ -196,15 +196,15 @@ class Condition:
 
 def left_bitshift(x: int, nbit: int = 32) -> int:
     """Left shifts an N bit integer with sign change."""
-    return x - 2**nbit
+    return int(x - 2**nbit)
 
 
 def right_bitshift(x: int, nbit: int = 32) -> int:
     """Right shifts an N bit integer with sign change."""
-    return x + 2**nbit
+    return int(x + 2**nbit)
 
 
-def _get_condition_values(cond):
+def _get_condition_values(cond: Condition) -> Tuple[Any, Any]:
     val_left = cond.value_left
     val_right = cond.value_right
     func = None
@@ -223,7 +223,7 @@ def _get_condition_values(cond):
                 pass
 
     if val_left == "":
-        val_left = None
+        val_left = None  # type: ignore
 
     return val_left, val_right
 
@@ -304,12 +304,12 @@ class SmartList:
         cond = Condition(prop, int(operator), unit, value_left, value_right)
         self.conditions.append(cond)
 
-    def filter_clause(self) -> BooleanClauseList:
+    def filter_clause(self) -> ColumnElement[bool]:
         """Return a SQLAlchemy filter clause matching the content of the smart playlist.
 
         Returns
         -------
-        BooleanClauseList
+        ColumnElement[bool]
             A filter list macthing the contents of the smart playlist.
         """
         logical_op = and_ if self.logical_operator == LogicalOperator.ALL else or_

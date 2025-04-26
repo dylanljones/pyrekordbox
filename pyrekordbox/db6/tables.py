@@ -9,13 +9,13 @@ import re
 import struct
 from datetime import datetime
 from enum import IntEnum
-from typing import List
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import numpy as np
 from sqlalchemy import (
     VARCHAR,
     BigInteger,
-    Column,
+    Dialect,
     Float,
     ForeignKey,
     Integer,
@@ -71,6 +71,7 @@ __all__ = [
     "ImageFile",
     "SettingFile",
     "UuidIDMap",
+    "FileType",
 ]
 
 
@@ -146,7 +147,7 @@ def string_to_datetime(value: str) -> datetime:
     return dt.astimezone().replace(tzinfo=None)
 
 
-class DateTime(TypeDecorator):
+class DateTime(TypeDecorator):  # type: ignore[type-arg]
     """Custom datetime column with timezone support.
 
     The datetime format in the database is `YYYY-MM-DD HH:MM:SS.SSS +00:00`.
@@ -156,10 +157,10 @@ class DateTime(TypeDecorator):
     impl = Text
     cache_ok = True
 
-    def process_bind_param(self, value: datetime, dialect) -> str:
+    def process_bind_param(self, value: datetime, dialect: Dialect) -> str:  # type: ignore[override]
         return datetime_to_str(value)
 
-    def process_result_value(self, value: str, dialect):
+    def process_result_value(self, value: str, dialect: Dialect) -> Optional[datetime]:  # type: ignore[override]
         if value:
             return string_to_datetime(value)
         return None
@@ -190,65 +191,65 @@ class Base(DeclarativeBase):
     __keys__: List[str] = []
 
     @classmethod
-    def create(cls, **kwargs):
+    def create(cls, **kwargs: Any):  # type: ignore # noqa: ANN206
         with RekordboxAgentRegistry.disabled():
             # noinspection PyArgumentList
             self = cls(**kwargs)
         return self
 
     @classmethod
-    def columns(cls):
+    def columns(cls) -> List[str]:
         """Returns a list of all column names without the relationships."""
         return [column.name for column in inspect(cls).c]
 
     @classmethod
-    def relationships(cls):
+    def relationships(cls) -> List[str]:
         """Returns a list of all relationship names."""
         return [column.key for column in inspect(cls).relationships]  # noqa
 
     @classmethod
-    def __get_keys__(cls):  # pragma: no cover
+    def __get_keys__(cls) -> List[str]:  # pragma: no cover
         """Get all attributes of the table."""
         items = cls.__dict__.items()
         keys = [k for k, v in items if not callable(v) and not k.startswith("_")]
         return keys
 
     @classmethod
-    def keys(cls):  # pragma: no cover
+    def keys(cls) -> List[str]:  # pragma: no cover
         """Returns a list of all column names including the relationships."""
         if not cls.__keys__:  # Cache the keys
             cls.__keys__ = cls.__get_keys__()
         return cls.__keys__
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Iterates over all columns and relationship names."""
         return iter(self.keys())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum(1 for _ in self.__iter__())
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         return self.__getattribute__(item)
 
     # noinspection PyUnresolvedReferences
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: Any) -> None:
         if not key.startswith("_"):
             RekordboxAgentRegistry.on_update(self, key, value)
         super().__setattr__(key, value)
 
-    def values(self):
+    def values(self) -> List[Any]:
         """Returns a list of all column values including the relationships."""
         return [self.__getitem__(key) for key in self.keys()]
 
-    def items(self):
+    def items(self) -> Iterator[Tuple[str, Any]]:
         for key in self.__iter__():
             yield key, self.__getitem__(key)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Returns a dictionary of all column names and values."""
         return {key: self.__getitem__(key) for key in self.columns()}
 
-    def pformat(self, indent="   "):  # pragma: no cover
+    def pformat(self, indent: str = "   ") -> str:  # pragma: no cover
         lines = [f"{self.__tablename__}"]
         columns = self.columns()
         w = max(len(col) for col in columns)
@@ -271,7 +272,7 @@ class StatsTime:
 class StatsFull:
     """Mixin class for tables that use all statistics columns."""
 
-    ID: Column
+    ID: Mapped[str]
     """The ID (primary key) of the table entry."""
 
     UUID: Mapped[str] = mapped_column(VARCHAR(255), default=None)
@@ -296,7 +297,7 @@ class StatsFull:
     )
     """The last update date of the table entry (from :class:`StatsFull`)."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__}({self.ID})>"
 
 
@@ -525,7 +526,7 @@ class DjmdAlbum(Base, StatsFull):
     AlbumArtistName = association_proxy("AlbumArtist", "Name")
     """The name of the album artist (:class:`DjmdArtist`) of the track."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <10} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -542,7 +543,7 @@ class DjmdArtist(Base, StatsFull):
     SearchStr: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The search string of the artist."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <10} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -588,7 +589,7 @@ class DjmdColor(Base, StatsFull):
     Commnt: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The comment (name) of the color."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Comment={self.Commnt}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -807,7 +808,7 @@ class DjmdContent(Base, StatsFull):
     MyTagIDs = association_proxy("MyTags", "MyTagID")
     """The IDs of the my tags (:class:`DjmdSongMyTag`) of the track."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <10} Title={self.Title}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -869,11 +870,11 @@ class DjmdCue(Base, StatsFull):
     """The content entry of the cue point (links to :class:`DjmdContent`)."""
 
     @property
-    def is_memory_cue(self):
+    def is_memory_cue(self) -> bool:
         return self.Kind == 0
 
     @property
-    def is_hot_cue(self):
+    def is_hot_cue(self) -> bool:
         return self.Kind > 0
 
 
@@ -889,7 +890,7 @@ class DjmdDevice(Base, StatsFull):
     Name: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The name of the device."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -904,7 +905,7 @@ class DjmdGenre(Base, StatsFull):
     Name: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The name of the genre."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -943,7 +944,7 @@ class DjmdHistory(Base, StatsFull):
     Backrefs to the parent history playlist via :attr:`Parent`.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1007,7 +1008,7 @@ class DjmdHotCueBanklist(Base, StatsFull):
     Backrefs to the parent hot-cue banklist via :attr:`Parent`.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1087,7 +1088,7 @@ class DjmdKey(Base, StatsFull):
     Seq: Mapped[int] = mapped_column(Integer, default=None)
     """The sequence of the key (for ordering)."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.ScaleName}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1102,7 +1103,7 @@ class DjmdLabel(Base, StatsFull):
     Name: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The name of the label."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1119,7 +1120,7 @@ class DjmdMenuItems(Base, StatsFull):
     Name: Mapped[str] = mapped_column(VARCHAR(255), default=None)
     """The name of the menu item."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1151,7 +1152,7 @@ class DjmdMixerParam(Base, StatsFull):
     """The content this mixer parameters belong to (links to :class:`DjmdContent`)."""
 
     @staticmethod
-    def _get_db(low, high):
+    def _get_db(low: int, high: int) -> float:
         integer = (high << 16) | low
         byte_data = integer.to_bytes(4, byteorder="big")
         factor = struct.unpack("!f", byte_data)[0]
@@ -1160,7 +1161,7 @@ class DjmdMixerParam(Base, StatsFull):
         return 20 * math.log10(factor)
 
     @staticmethod
-    def _set_db(value):
+    def _set_db(value: float) -> Tuple[int, int]:
         if value == -np.inf:
             return 0, 0
         factor = 10 ** (value / 20)
@@ -1184,7 +1185,7 @@ class DjmdMixerParam(Base, StatsFull):
         self.GainLow, self.GainHigh = self._set_db(value)
 
     @property
-    def Peak(self):
+    def Peak(self) -> float:
         """The peak amplitude of a track in dB.
 
         This value is computed from the low and high peak values.
@@ -1193,7 +1194,7 @@ class DjmdMixerParam(Base, StatsFull):
         return self._get_db(self.PeakLow, self.PeakHigh)
 
     @Peak.setter
-    def Peak(self, value):
+    def Peak(self, value: float) -> None:
         self.PeakLow, self.PeakHigh = self._set_db(value)
 
 
@@ -1229,7 +1230,7 @@ class DjmdMyTag(Base, StatsFull):
     Backrefs to the parent list via :attr:`Parent`.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1300,18 +1301,18 @@ class DjmdPlaylist(Base, StatsFull):
     """
 
     @property
-    def is_playlist(self):
+    def is_playlist(self) -> bool:
         return self.Attribute == PlaylistType.PLAYLIST
 
     @property
-    def is_folder(self):
+    def is_folder(self) -> bool:
         return self.Attribute == PlaylistType.FOLDER
 
     @property
-    def is_smart_playlist(self):
+    def is_smart_playlist(self) -> bool:
         return self.Attribute == PlaylistType.SMART_PLAYLIST
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1381,7 +1382,7 @@ class DjmdRelatedTracks(Base, StatsFull):
     Backrefs to the parent related tracks list via :attr:`Parent`.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 
@@ -1446,7 +1447,7 @@ class DjmdSampler(Base, StatsFull):
     Backrefs to the parent sampler list via :attr:`Parent`.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         s = f"{self.ID: <2} Name={self.Name}"
         return f"<{self.__class__.__name__}({s})>"
 

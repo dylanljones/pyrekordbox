@@ -4,16 +4,28 @@
 
 import logging
 from abc import ABC
+from pathlib import Path
+from typing import Any, Sequence, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
+from construct import Struct
+from construct.lib.containers import Container
 
 from . import structs
 
 logger = logging.getLogger(__name__)
 
 
+class StructNotInitializedError(Exception):
+    """Raised when a struct is not initialized."""
+
+    def __init__(self) -> None:
+        super().__init__("Struct is not initialized!")
+
+
 class BuildTagLengthError(Exception):
-    def __init__(self, struct, len_data):
+    def __init__(self, struct: Struct, len_data: int) -> None:
         super().__init__(
             f"`len_tag` ({struct.len_tag}) of '{struct.type}' does not "
             f"match the data-length ({len_data})!"
@@ -28,16 +40,20 @@ class AbstractAnlzTag(ABC):
     LEN_HEADER: int = 0  # Expected value of `len_header`
     LEN_TAG: int = 0  # Expected value of `len_tag`
 
-    def __init__(self, tag_data):
-        self.struct = None
+    def __init__(self, tag_data: bytes) -> None:
+        self.struct: Union[Struct, None] = None
         if tag_data is not None:
             self.parse(tag_data)
 
     @property
-    def content(self):
+    def content(self) -> Container:
+        if self.struct is None:
+            raise StructNotInitializedError()
         return self.struct.content
 
-    def _check_len_header(self):
+    def _check_len_header(self) -> None:
+        if self.struct is None:
+            raise StructNotInitializedError()
         if self.LEN_HEADER != self.struct.len_header:
             logger.warning(
                 "`len_header` (%s) of `%s` doesn't match the expected value %s",
@@ -46,7 +62,9 @@ class AbstractAnlzTag(ABC):
                 self.LEN_HEADER,
             )
 
-    def _check_len_tag(self):
+    def _check_len_tag(self) -> None:
+        if self.struct is None:
+            raise StructNotInitializedError()
         if self.LEN_TAG != self.struct.len_tag:
             logger.warning(
                 "`len_tag` (%s)  of `%s` doesn't match the expected value %s",
@@ -55,10 +73,10 @@ class AbstractAnlzTag(ABC):
                 self.LEN_TAG,
             )
 
-    def check_parse(self):
+    def check_parse(self) -> None:
         pass
 
-    def parse(self, tag_data):
+    def parse(self, tag_data: bytes) -> None:
         self.struct = structs.AnlzTag.parse(tag_data)
         if self.LEN_HEADER:
             self._check_len_header()
@@ -66,32 +84,40 @@ class AbstractAnlzTag(ABC):
             self._check_len_tag()
         self.check_parse()
 
-    def build(self):
-        data = structs.AnlzTag.build(self.struct)
+    def build(self) -> bytes:
+        if self.struct is None:
+            raise StructNotInitializedError()
+        data: bytes = structs.AnlzTag.build(self.struct)
         len_data = len(data)
         if len_data != self.struct.len_tag:
             raise BuildTagLengthError(self.struct, len_data)
         return data
 
-    def get(self):
+    def get(self) -> Container:
+        if self.struct is None:
+            raise StructNotInitializedError()
         return self.struct.content
 
-    def set(self, *args, **kwargs):
+    def set(self, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def update_len(self):
+    def update_len(self) -> None:
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        if self.struct is None:
+            raise StructNotInitializedError()
         len_header = self.struct.len_header
         len_tag = self.struct.len_tag
         return f"{self.__class__.__name__}(len_header={len_header}, len_tag={len_tag})"
 
-    def pformat(self):
+    def pformat(self) -> str:
+        if self.struct is None:
+            raise StructNotInitializedError()
         return str(self.struct)
 
 
-def _parse_wf_preview(tag):
+def _parse_wf_preview(tag: structs.AnlzTag) -> Tuple[npt.NDArray[np.int8], npt.NDArray[np.int8]]:
     n = len(tag.entries)
     wf = np.zeros(n, dtype=np.int8)
     col = np.zeros(n, dtype=np.int8)
@@ -110,32 +136,32 @@ class PQTZAnlzTag(AbstractAnlzTag):
     LEN_HEADER = 24
 
     @property
-    def count(self):
+    def count(self) -> int:
         return len(self.content.entries)
 
     @property
-    def beats(self):
+    def beats(self) -> npt.NDArray[np.int8]:
         return self.get_beats()
 
     @property
-    def bpms(self):
+    def bpms(self) -> npt.NDArray[np.float64]:
         return self.get_bpms()
 
     @property
-    def bpms_average(self):
+    def bpms_average(self) -> float:
         if len(self.content.entries):
-            return np.mean(self.get_bpms())
+            return float(np.mean(self.get_bpms()))
         return 0.0
 
     @property
-    def bpms_unique(self):
+    def bpms_unique(self) -> Any:
         return np.unique(self.get_bpms())
 
     @property
-    def times(self):
+    def times(self) -> npt.NDArray[np.float64]:
         return self.get_times()
 
-    def get(self):
+    def get(self) -> Tuple[npt.NDArray[np.int8], npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         n = len(self.content.entries)
         beats = np.zeros(n, dtype=np.int8)
         bpms = np.zeros(n, dtype=np.float64)
@@ -147,16 +173,16 @@ class PQTZAnlzTag(AbstractAnlzTag):
             times[i] = time / 1_000  # Convert milliseconds to seconds
         return beats, bpms, times
 
-    def get_beats(self):
+    def get_beats(self) -> npt.NDArray[np.int8]:
         return np.array([entry.beat for entry in self.content.entries], dtype=np.int8)
 
-    def get_bpms(self):
-        return np.array([entry.tempo / 100 for entry in self.content.entries])
+    def get_bpms(self) -> npt.NDArray[np.float64]:
+        return np.array([entry.tempo / 100 for entry in self.content.entries], dtype=np.float64)
 
-    def get_times(self):
-        return np.array([entry.time / 1000 for entry in self.content.entries])
+    def get_times(self) -> npt.NDArray[np.float64]:
+        return np.array([entry.time / 1000 for entry in self.content.entries], dtype=np.float64)
 
-    def set(self, beats, bpms, times):
+    def set(self, beats: Sequence[int], bpms: Sequence[float], times: Sequence[float]) -> None:
         n = len(self.content.entries)
         n_beats = len(beats)
         n_bpms = len(bpms)
@@ -176,7 +202,7 @@ class PQTZAnlzTag(AbstractAnlzTag):
             data = {"beat": int(beat), "tempo": int(100 * bpm), "time": int(1000 * t)}
             self.content.entries[i].update(data)
 
-    def set_beats(self, beats):
+    def set_beats(self, beats: Sequence[int]) -> None:
         n = len(self.content.entries)
         n_new = len(beats)
         if n_new != n:
@@ -185,7 +211,7 @@ class PQTZAnlzTag(AbstractAnlzTag):
         for i, beat in enumerate(beats):
             self.content.entries[i].beat = beat
 
-    def set_bpms(self, bpms):
+    def set_bpms(self, bpms: Sequence[float]) -> None:
         n = len(self.content.entries)
         n_new = len(bpms)
         if n_new != n:
@@ -194,7 +220,7 @@ class PQTZAnlzTag(AbstractAnlzTag):
         for i, bpm in enumerate(bpms):
             self.content.entries[i].tempo = int(bpm * 100)
 
-    def set_times(self, times):
+    def set_times(self, times: Sequence[float]) -> None:
         n = len(self.content.entries)
         n_new = len(times)
         if n_new != n:
@@ -203,10 +229,14 @@ class PQTZAnlzTag(AbstractAnlzTag):
         for i, t in enumerate(times):
             self.content.entries[i].time = int(1000 * t)
 
-    def check_parse(self):
+    def check_parse(self) -> None:
+        if self.struct is None:
+            raise StructNotInitializedError()
         assert self.struct.content.entry_count == len(self.struct.content.entries)
 
-    def update_len(self):
+    def update_len(self) -> None:
+        if self.struct is None:
+            raise StructNotInitializedError()
         self.struct.len_tag = self.struct.len_header + 8 * len(self.content.entries)
 
 
@@ -220,33 +250,36 @@ class PQT2AnlzTag(AbstractAnlzTag):
     count = 2
 
     @property
-    def beats(self):
+    def beats(self) -> npt.NDArray[np.int8]:
         return self.get_beats()
 
     @property
-    def bpms(self):
+    def bpms(self) -> npt.NDArray[np.float64]:
         return self.get_bpms()
 
     @property
-    def times(self):
+    def times(self) -> npt.NDArray[np.float64]:
         return self.get_times()
 
     @property
-    def beat_grid_count(self):
-        return self.content.entry_count
+    def beat_grid_count(self) -> int:
+        count: int = self.content.entry_count
+        return count
 
     @property
-    def bpms_unique(self):
+    def bpms_unique(self) -> Any:
         return np.unique(self.get_bpms())
 
-    def check_parse(self):
+    def check_parse(self) -> None:
+        if self.struct is None:
+            raise StructNotInitializedError()
         len_beats = self.struct.content.entry_count
         if len_beats:
             expected = self.struct.len_tag - self.struct.len_header
             actual = 2 * len(self.content.entries)  # each entry consist of 2 bytes
             assert actual == expected, f"{actual} != {expected}"
 
-    def get(self):
+    def get(self) -> Tuple[npt.NDArray[np.int8], npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         n = len(self.content.bpm)
         beats = np.zeros(n, dtype=np.int8)
         bpms = np.zeros(n, dtype=np.float64)
@@ -258,32 +291,34 @@ class PQT2AnlzTag(AbstractAnlzTag):
             times[i] = time / 1_000  # Convert milliseconds to seconds
         return beats, bpms, times
 
-    def get_beats(self):
+    def get_beats(self) -> npt.NDArray[np.int8]:
         return np.array([entry.beat for entry in self.content.bpm], dtype=np.int8)
 
-    def get_bpms(self):
-        return np.array([entry.tempo / 100 for entry in self.content.bpm])
+    def get_bpms(self) -> npt.NDArray[np.float64]:
+        return np.array([entry.tempo / 100 for entry in self.content.bpm], dtype=np.float64)
 
-    def get_times(self):
-        return np.array([entry.time / 1000 for entry in self.content.bpm])
+    def get_times(self) -> npt.NDArray[np.float64]:
+        return np.array([entry.time / 1000 for entry in self.content.bpm], dtype=np.float64)
 
-    def get_beat_grid(self):
+    def get_beat_grid(self) -> npt.NDArray[np.int8]:
         return np.array([entry.beat for entry in self.content.entries], dtype=np.int8)
 
-    def set_beats(self, beats):
+    def set_beats(self, beats: Sequence[int]) -> None:
         for i, beat in enumerate(beats):
             self.content.bpm[i].beat = beat
 
-    def set_bpms(self, bpms):
+    def set_bpms(self, bpms: Sequence[float]) -> None:
         for i, bpm in enumerate(bpms):
             self.content.bpm[i].bpm = int(bpm * 100)
 
-    def set_times(self, times):
+    def set_times(self, times: Sequence[float]) -> None:
         for i, t in enumerate(times):
             self.content.bpm[i].time = int(1000 * t)
 
-    def build(self):
-        data = structs.AnlzTag.build(self.struct)
+    def build(self) -> bytes:
+        if self.struct is None:
+            raise StructNotInitializedError()
+        data: bytes = structs.AnlzTag.build(self.struct)
         if self.struct.content.entry_count == 0:
             data = data[: self.struct.len_tag]
 
@@ -317,19 +352,22 @@ class PPTHAnlzTag(AbstractAnlzTag):
     LEN_HEADER = 16
 
     @property
-    def path(self):
-        return self.content.path
+    def path(self) -> str:
+        path: str = self.content.path
+        return path
 
-    def get(self):
-        return self.content.path
+    def get(self) -> str:
+        return self.path
 
-    def set(self, path):
-        path = path.replace("\\", "/")
-        len_path = len(path.encode("utf-16-be")) + 2
-        self.content.path = path
+    def set(self, path: Union[str, Path]) -> None:
+        pathstr = str(path).replace("\\", "/")
+        len_path = len(pathstr.encode("utf-16-be")) + 2
+        self.content.path = pathstr
         self.content.len_path = len_path
 
-    def update_len(self):
+    def update_len(self) -> None:
+        if self.struct is None:
+            raise StructNotInitializedError()
         self.struct.len_tag = self.struct.len_header + self.content.len_path
 
 
@@ -341,8 +379,8 @@ class PVBRAnlzTag(AbstractAnlzTag):
     LEN_HEADER = 16
     LEN_TAG = 1620
 
-    def get(self):
-        return np.array(self.content.idx)
+    def get(self) -> npt.NDArray[np.uint64]:
+        return np.array(self.content.idx, dtype=np.uint64)
 
 
 class PSSIAnlzTag(AbstractAnlzTag):
@@ -360,7 +398,7 @@ class PWAVAnlzTag(AbstractAnlzTag):
     name = "wf_preview"
     LEN_HEADER = 20
 
-    def get(self):
+    def get(self) -> Tuple[npt.NDArray[np.int8], npt.NDArray[np.int8]]:
         return _parse_wf_preview(self.content)
 
 
@@ -371,7 +409,7 @@ class PWV2AnlzTag(AbstractAnlzTag):
     name = "wf_tiny_preview"
     LEN_HEADER = 20
 
-    def get(self):
+    def get(self) -> Tuple[npt.NDArray[np.int8], npt.NDArray[np.int8]]:
         return _parse_wf_preview(self.content)
 
 
@@ -382,7 +420,7 @@ class PWV3AnlzTag(AbstractAnlzTag):
     name = "wf_detail"
     LEN_HEADER = 24
 
-    def get(self):
+    def get(self) -> Tuple[npt.NDArray[np.int8], npt.NDArray[np.int8]]:
         return _parse_wf_preview(self.content)
 
 
@@ -393,7 +431,7 @@ class PWV4AnlzTag(AbstractAnlzTag):
     name = "wf_color"
     LEN_HEADER = 24
 
-    def get(self):
+    def get(self) -> Tuple[npt.NDArray[np.int64], npt.NDArray[np.int64], npt.NDArray[np.int64]]:
         num_entries = self.content.len_entries
         data = self.content.entries
         ws, hs = 1, 1
@@ -430,7 +468,7 @@ class PWV5AnlzTag(AbstractAnlzTag):
     name = "wf_color_detail"
     LEN_HEADER = 24
 
-    def get(self):
+    def get(self) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.int64]]:
         """Parse the Waveform Color Detail Tag (PWV5).
 
         The format of the entries is:
