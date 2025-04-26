@@ -112,7 +112,7 @@ def decode_path(url: str) -> str:
     return os.path.normpath(path)
 
 
-class AbstractElement(abc.Mapping[str, Any]):
+class AbstractElement(abc.Mapping):  # type: ignore[type-arg]
     """Abstract base class for Rekordbox XML elements.
 
     Implements attribute getters and setters for an XML element
