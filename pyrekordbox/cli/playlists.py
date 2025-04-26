@@ -253,12 +253,13 @@ def delete_playlist(playlist_id: str):
     """Remove a playlist from the Rekordbox database."""
     db = Rekordbox6Database()
     playlist = db.get_playlist(ID=playlist_id)
+    name = str(playlist.Name)
     if playlist is None:
         click.echo(f"Playlist with ID '{playlist_id}' not found.")
         return
     db.delete_playlist(playlist)
     db.commit()
-    click.echo(f"Deleted playlist: {playlist.ID} - {playlist.Name}")
+    click.echo(f"Deleted playlist: {playlist_id} - {name}")
 
 
 @playlist_cli.command(name="move")
@@ -281,7 +282,7 @@ def move_playlist(playlist_id: str, parent_id: str, seq: int = None):
             return
     db.move_playlist(playlist, parent, seq)
     db.commit()
-    click.echo(f"Moved playlist: {playlist_id}")
+    click.echo(f"Moved playlist: {playlist.ID} - {playlist.Name}")
 
 
 @playlist_cli.command(name="rename")
