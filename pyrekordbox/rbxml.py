@@ -10,6 +10,8 @@ import urllib.parse
 import xml.etree.cElementTree as xml
 from abc import abstractmethod
 from collections import abc
+from pathlib import Path
+from typing import Union
 
 import bidict
 
@@ -1244,13 +1246,15 @@ class RekordboxXml:
         """
         return self._root_node.add_playlist(name, keytype)
 
-    def tostring(self, indent=None):
-        """Returns the contents of the XML file as a string.
+    def tostring(self, indent: str = None, encoding: str = "utf-8") -> str:
+        r"""Returns the contents of the XML file as a string.
 
         Parameters
         ----------
         indent : str, optional
-            The indentation used for formatting the XML file. The default is 3 spaces.
+            The indentation used for formatting the XML file. The default is '\t'.
+        encoding : str, optional
+            The encoding used for the XML file. The default is 'utf-8'.
 
         Returns
         -------
@@ -1262,23 +1266,59 @@ class RekordboxXml:
         n = int(self._collection.attrib["Entries"])
         if n != num_tracks:
             raise ValueError(f"Track count {num_tracks} does not match number of elements {n}")
-        # Generate XML string
-        return pretty_xml(self._root, indent, encoding="utf-8")
 
-    def save(self, path="", indent=None):
-        """Saves the contents to an XML file.
+        space = "\t" if indent is None else indent
+        try:
+            tree = xml.ElementTree(self._root)
+            xml.indent(tree, space=space, level=0)
+            data: bytes = xml.tostring(self._root, encoding=encoding, xml_declaration=True)
+            text: str = data.decode(encoding)
+        except AttributeError:
+            # For Python < 3.9
+            try:
+                text: str = pretty_xml(self._root, space, encoding=encoding)
+            except Exception:  # noqa
+                # If the pretty_xml function fails, use unformatted XML
+                data: bytes = xml.tostring(self._root, encoding=encoding, xml_declaration=True)
+                text: str = data.decode(encoding)
+        return text
+
+    def save(
+        self, path: Union[str, Path] = "", indent: str = None, encoding: str = "utf-8"
+    ) -> None:
+        r"""Saves the contents to an XML file.
 
         Parameters
         ----------
         path : str or Path, optional
             The path for saving the XML file. The default is the original file.
         indent : str, optional
-            The indentation used for formatting the XML element.
-            The default is 3 spaces.
+            The indentation used for formatting the XML file. The default is '\t'.
+        encoding : str, optional
+            The encoding used for the XML file. The default is 'utf-8'.
         """
-        string = self.tostring(indent)
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(string)
+        # Check track count is valid
+        num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
+        n = int(self._collection.attrib["Entries"])
+        if n != num_tracks:
+            raise ValueError(f"Track count {num_tracks} does not match number of elements {n}")
+
+        space = "\t" if indent is None else indent
+        try:
+            tree = xml.ElementTree(self._root)
+            xml.indent(tree, space=space, level=0)
+            tree.write(path, encoding=encoding, xml_declaration=True)
+        except AttributeError:
+            # For Python < 3.9
+            try:
+                data: str = pretty_xml(self._root, space, encoding=encoding)
+                with open(path, "w", encoding=encoding) as fh:
+                    fh.write(data)
+            except Exception:  # noqa
+                # If the pretty_xml function fails, write the XML unformatted
+                text: bytes = xml.tostring(self._root, encoding=encoding, xml_declaration=True)
+                with open(path, "wb") as fh:
+                    fh.write(text)
 
     def __repr__(self):
         name = self.product_name
