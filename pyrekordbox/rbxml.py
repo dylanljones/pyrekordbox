@@ -1390,6 +1390,9 @@ class RekordboxXml:
         """
         if self._collection is None:
             raise XmlElementNotInitializedError("_collection")
+        if self._root is None:
+            raise XmlElementNotInitializedError("_root")
+
         # Check track count is valid
         num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
         n = int(self._collection.attrib["Entries"])
@@ -1397,19 +1400,21 @@ class RekordboxXml:
             raise ValueError(f"Track count {num_tracks} does not match number of elements {n}")
 
         space = "\t" if indent is None else indent
+        text: str
+        data: bytes
         try:
             tree = xml.ElementTree(self._root)
             xml.indent(tree, space=space, level=0)
-            data: bytes = xml.tostring(self._root, encoding=encoding, xml_declaration=True)
-            text: str = data.decode(encoding)
+            data = xml.tostring(self._root, encoding=encoding, xml_declaration=True)
+            text = data.decode(encoding)
         except AttributeError:
             # For Python < 3.9
             try:
-                text: str = pretty_xml(self._root, space, encoding=encoding)
+                text = pretty_xml(self._root, space, encoding=encoding)
             except Exception:  # noqa
                 # If the pretty_xml function fails, use unformatted XML
-                data: bytes = xml.tostring(self._root, encoding=encoding, xml_declaration=True)
-                text: str = data.decode(encoding)
+                data = xml.tostring(self._root, encoding=encoding, xml_declaration=True)
+                text = data.decode(encoding)
         return text
 
     def save(
@@ -1426,6 +1431,11 @@ class RekordboxXml:
         encoding : str, optional
             The encoding used for the XML file. The default is 'utf-8'.
         """
+        if self._collection is None:
+            raise XmlElementNotInitializedError("_collection")
+        if self._root is None:
+            raise XmlElementNotInitializedError("_root")
+
         # Check track count is valid
         num_tracks = len(self._collection.findall(f".//{Track.TAG}"))
         n = int(self._collection.attrib["Entries"])
