@@ -280,6 +280,8 @@ def move_playlist(playlist_id: str, parent_id: str, seq: int = None):
             click.echo(f"Parent playlist with ID '{parent_id}' not found.")
             return
     db.move_playlist(playlist, parent, seq)
+    db.commit()
+    click.echo(f"Moved playlist: {playlist_id}")
 
 
 @playlist_cli.command(name="rename")
@@ -292,6 +294,8 @@ def rename_playlist(playlist_id: str, new_name: str):
         click.echo(f"Playlist with ID '{playlist_id}' not found.")
         return
     db.rename_playlist(playlist, new_name)
+    db.commit()
+    click.echo(f"Renamed playlist: {playlist.ID} - {playlist.Name}")
 
 
 # -- Playlist contents -----------------------------------------------------------------------------
