@@ -987,7 +987,7 @@ class RekordboxXml:
 
     def __init__(
         self,
-        path: Union[str | Path] = None,
+        path: Union[str, Path] = None,
         name: str = None,
         version: str = None,
         company: str = None,
