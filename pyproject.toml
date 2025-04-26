@@ -148,6 +148,7 @@ unfixable = []
 "*__init__.py" = ["F401"]
 "*__main__.py" = ["ANN"]
 "tests/*" = ["ANN"]
+"cli/*" = ["ANN"]
 "rbxml.py" = ["N803"]
 "tables.py" = ["N802", "N815"]
 
@@ -176,6 +177,7 @@ show_error_codes = true  # Show error codes in the output
 
 exclude = [
     "__main__.py",
+    "cli/*",
     'tools',
     'agent'
 ]
