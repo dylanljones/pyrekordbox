@@ -282,6 +282,18 @@ def move_playlist(playlist_id: str, parent_id: str, seq: int = None):
     db.move_playlist(playlist, parent, seq)
 
 
+@playlist_cli.command(name="rename")
+@playlist_id_arg
+def rename_playlist(playlist_id: str, new_name: str):
+    """Move a playlist in the Rekordbox database."""
+    db = Rekordbox6Database()
+    playlist = db.get_playlist(ID=playlist_id)
+    if playlist is None:
+        click.echo(f"Playlist with ID '{playlist_id}' not found.")
+        return
+    db.rename_playlist(playlist, new_name)
+
+
 # -- Playlist contents -----------------------------------------------------------------------------
 
 
