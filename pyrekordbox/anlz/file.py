@@ -25,7 +25,7 @@ class BuildFileLengthError(Exception):
         )
 
 
-class AnlzFile(abc.Mapping[str, Any]):
+class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
     """Rekordbox `ANLZnnnn.xxx` binary file handler."""
 
     def __init__(self) -> None:
