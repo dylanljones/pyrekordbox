@@ -287,6 +287,7 @@ def move_playlist(playlist_id: str, parent_id: str, seq: int = None):
 
 @playlist_cli.command(name="rename")
 @playlist_id_arg
+@click.argument("new_name", type=str)
 def rename_playlist(playlist_id: str, new_name: str):
     """Move a playlist in the Rekordbox database."""
     db = Rekordbox6Database()
