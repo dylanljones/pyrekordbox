@@ -142,6 +142,7 @@ unfixable = []
 [tool.ruff.lint.per-file-ignores]
 "*__init__.py" = ["F401"]
 "*__main__.py" = ["ANN"]
+"tests/*" = ["ANN"]
 "rbxml.py" = ["N803"]
 "tables.py" = ["N802", "N815"]
 
