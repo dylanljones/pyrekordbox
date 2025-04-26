@@ -83,6 +83,9 @@ include = ["pyrekordbox", "pyrekordbox.*"]
 write_to = "pyrekordbox/_version.py"
 git_describe_command = "git describe --dirty --tags --long --match * --first-parent"
 
+[tool.setuptools.package-data]
+pyrekordbox = ["py.typed"]
+
 
 # -- Ruff ------------------------------------------------------------------------------
 
@@ -110,6 +113,7 @@ select = [
     "NPY", # Numpy
     "N", # pep8-naming
     "D", # pydocstyle
+    "ANN", # types-annotations
 ]
 ignore = [
     "E203",  # Whitespace before ':'
@@ -129,12 +133,21 @@ ignore = [
     "N813", # Camelcase imported as lowercase
     #"N815", # Variable in class scope should not be mixedCase
     "N818", # Exception name should be named with an Error suffix
+    "ANN001", # Missing type annotation for obj in method
+    "ANN002", # Missing type annotation for args in method
+    "ANN003", # Missing type annotation for kwargs in method
+    "ANN101", # Missing type annotation for self in method
+    "ANN102", # Missing type annotation for cls in classmethod
+    "ANN204", # Missing return type for __init__
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
 ]
 fixable = ["ALL"]  # Allow fix for all enabled rules (when `--fix`) is provided.
 unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
 "*__init__.py" = ["F401"]
+"*__main__.py" = ["ANN"]
+"tests/*" = ["ANN"]
 "rbxml.py" = ["N803"]
 "tables.py" = ["N802", "N815"]
 
@@ -152,6 +165,36 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
+
+# -- Mypy ------------------------------------------------------------------------------
+
+[tool.mypy]
+
+strict = true
+ignore_missing_imports = true  # Ignore missing type hints for third-party librarie
+show_error_codes = true  # Show error codes in the output
+
+exclude = [
+    "__main__.py",
+    'tools',
+    'agent'
+]
+
+# Useful fine-tuning overrides to 'strict'
+warn_unused_configs = true
+warn_return_any = true
+no_implicit_optional = false
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = false  # often useful to allow
+disallow_untyped_decorators = false  # decorators are often tricky
+check_untyped_defs = true
+
+plugins = [
+    "numpy.typing.mypy_plugin",
+    "sqlalchemy.ext.mypy.plugin",
+]
 
 # -- Coverage --------------------------------------------------------------------------
 

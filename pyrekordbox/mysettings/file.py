@@ -6,6 +6,8 @@
 
 import re
 from collections.abc import MutableMapping
+from pathlib import Path
+from typing import Any, Dict, Iterator, Type, Union
 
 from construct import Struct
 
@@ -51,7 +53,7 @@ CRC16_XMODEM_TABLE = [
 RE_INVALID_KEY = re.compile("[_u][0-9]?", flags=re.IGNORECASE)
 
 
-def compute_checksum(data, struct):
+def compute_checksum(data: bytes, struct: Struct) -> int:
     """Computes the CRC16 XModem checksum for My-Setting files.
 
     The checksum is calculated over the contents of the `data` field,
@@ -83,11 +85,11 @@ def compute_checksum(data, struct):
     return crc
 
 
-def _is_valid_key(k: str):
+def _is_valid_key(k: str) -> bool:
     return not RE_INVALID_KEY.match(k)
 
 
-class SettingsFile(MutableMapping):
+class SettingsFile(MutableMapping):  # type: ignore[type-arg]
     """Base class for the Rekordbox My-Setting file handler.
 
     The base class implements the getters and setter defined by the keys and
@@ -98,16 +100,16 @@ class SettingsFile(MutableMapping):
     """
 
     struct: Struct
-    defaults: dict
+    defaults: Dict[str, str]
     version: str = ""  # only used by DEVSETTING
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.parsed = None
-        self._items = dict()
+        self._items: Dict[str, str] = dict()
 
     @classmethod
-    def parse(cls, data: bytes):
+    def parse(cls, data: bytes) -> "SettingsFile":
         """Parses the in-memory data of a Rekordbox settings binary file.
 
         Parameters
@@ -125,18 +127,18 @@ class SettingsFile(MutableMapping):
         return self
 
     @classmethod
-    def parse_file(cls, path: str):
+    def parse_file(cls, path: Union[str, Path]) -> "SettingsFile":
         """Reads and parses a Rekordbox settings binary file.
 
         Parameters
         ----------
-        path : str
+        path : str or Path
             The path of a Rekordbox settings file which is used to read
             the file contents before parsing the binary data.
 
         Returns
         -------
-        self : AnlzFile
+        self : SettingsFile
             The new instance with the parsed file content.
 
         See Also
@@ -147,7 +149,7 @@ class SettingsFile(MutableMapping):
             data = fh.read()
         return cls.parse(data)
 
-    def _parse(self, data):
+    def _parse(self, data: bytes) -> None:
         parsed = self.struct.parse(data)
         keys = filter(_is_valid_key, parsed.data.keys())
         items = dict()
@@ -157,27 +159,27 @@ class SettingsFile(MutableMapping):
         self.parsed = parsed
         self._items.update(items)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.defaults.keys())
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self.defaults)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> str:
         try:
             return self._items[key]
         except KeyError:
             return self.defaults[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: str) -> None:
         if key not in self.defaults.keys():
             raise KeyError(f"Key {key} not a valid field of {self.__class__.__name__}")
         self._items[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         del self._items[key]
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: str = None) -> Union[str, None]:  # type: ignore[override]
         """Returns the value of a setting of the My-Setting file.
 
         If the key is not found in the My-Setting data, but it is present in the
@@ -202,7 +204,7 @@ class SettingsFile(MutableMapping):
         except KeyError:
             return default
 
-    def set(self, key, value):
+    def set(self, key: str, value: str) -> None:
         """Sets the value of a setting of the My-Setting file.
 
         Parameters
@@ -214,7 +216,7 @@ class SettingsFile(MutableMapping):
         """
         self.__setitem__(key, value)
 
-    def build(self):
+    def build(self) -> bytes:
         """Constructs the binary data for saving the My-Setting file.
 
         Returns
@@ -227,7 +229,7 @@ class SettingsFile(MutableMapping):
         items.update(self._items)
 
         # Create file data
-        file_items = {"data": items, "checksum": 0}
+        file_items: Dict[str, Any] = {"data": items, "checksum": 0}
         if self.version:
             file_items["version"] = self.version
 
@@ -239,9 +241,10 @@ class SettingsFile(MutableMapping):
         file_items["checksum"] = checksum
 
         # Write data with updated checksum
-        return self.struct.build(file_items)
+        bytedata: bytes = self.struct.build(file_items)
+        return bytedata
 
-    def save(self, path):
+    def save(self, path: Union[str, Path]) -> None:
         """Save the contents of the My-Setting file object.
 
         Parameters
@@ -257,7 +260,7 @@ class SettingsFile(MutableMapping):
         with open(path, "wb") as fh:
             fh.write(data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
 
@@ -363,7 +366,7 @@ class DevSettingFile(SettingsFile):
     defaults = dict(entries="")
 
 
-FILES = {
+FILES: Dict[str, Type[SettingsFile]] = {
     "DEVSETTING.DAT": DevSettingFile,
     "DJMMYSETTING.DAT": DjmMySettingFile,
     "MYSETTING.DAT": MySettingFile,

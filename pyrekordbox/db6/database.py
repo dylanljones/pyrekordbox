@@ -6,7 +6,8 @@ import datetime
 import logging
 import secrets
 from pathlib import Path
-from typing import Optional
+from types import TracebackType
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 from uuid import uuid4
 
 from sqlalchemy import MetaData, create_engine, event, or_, select
@@ -14,21 +15,21 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Query, Session
 from sqlalchemy.sql.sqltypes import DateTime, String
 
-from ..anlz import AnlzFile, get_anlz_paths, read_anlz_files
+from ..anlz import AnlzFile, get_anlz_paths, read_anlz_files  # type: ignore[attr-defined]
 from ..config import get_config
 from ..utils import get_rekordbox_pid
 from . import tables
 from .aux_files import MasterPlaylistXml
 from .registry import RekordboxAgentRegistry
 from .smartlist import SmartList
-from .tables import DjmdContent, FileType, PlaylistType
+from .tables import DjmdContent, DjmdPlaylist, DjmdSongPlaylist, FileType, PlaylistType
 
 try:
     from sqlcipher3 import dbapi2 as sqlite3  # noqa
 
     _sqlcipher_available = True
 except ImportError:  # pragma: no cover
-    import sqlite3
+    import sqlite3  # type: ignore[no-redef]
 
     _sqlcipher_available = False
 
@@ -40,18 +41,31 @@ SPECIAL_PLAYLIST_IDS = [
 
 logger = logging.getLogger(__name__)
 
+PathLike = Union[str, Path]
+ContentLike = Union[DjmdContent, int, str]
+PlaylistLike = Union[DjmdPlaylist, int, str]
+
 
 class NoCachedKey(Exception):
     pass
 
 
-def _parse_query_result(query, kwargs):
+T = TypeVar("T", bound=tables.Base)
+
+
+def _parse_query_result(query: Query[T], kwargs: Dict[str, Any]) -> Any:
     if "ID" in kwargs or "registry_id" in kwargs:
         try:
-            query = query.one()
+            result: T = query.one()
+            return result
         except NoResultFound:
             return None
     return query
+
+
+class SessionNotInitializedError(Exception):
+    def __init__(self) -> None:
+        super().__init__("Sqlite-session not intialized!")
 
 
 class Rekordbox6Database:
@@ -103,7 +117,9 @@ class Rekordbox6Database:
     <DjmdContent(40110712   Title=NOISE)>
     """
 
-    def __init__(self, path=None, db_dir="", key="", unlock=True):
+    def __init__(
+        self, path: PathLike = None, db_dir: PathLike = "", key: str = "", unlock: bool = True
+    ):
         # get config of latest supported version
         rb_config = get_config("rekordbox7")
         if not rb_config:
@@ -119,10 +135,10 @@ class Rekordbox6Database:
             if not path:
                 pdir = get_config("pioneer", "install_dir")
                 raise FileNotFoundError(f"No Rekordbox v6/v7 directory found in '{pdir}'")
-        path = Path(path)
+        db_path: Path = Path(path)
         # make sure file exists
-        if not path.exists():
-            raise FileNotFoundError(f"File '{path}' does not exist!")
+        if not db_path.exists():
+            raise FileNotFoundError(f"File '{db_path}' does not exist!")
         # Open database
         if unlock:
             if not _sqlcipher_available:  # pragma: no cover
@@ -145,47 +161,50 @@ class Rekordbox6Database:
 
             logger.debug("Key: %s", key)
             # Unlock database and create engine
-            url = f"sqlite+pysqlcipher://:{key}@/{path}?"
+            url = f"sqlite+pysqlcipher://:{key}@/{db_path}?"
             engine = create_engine(url, module=sqlite3)
         else:
-            engine = create_engine(f"sqlite:///{path}")
+            engine = create_engine(f"sqlite:///{db_path}")
 
         if not db_dir:
-            db_dir = path.parent
-        db_dir = Path(db_dir)
-        if not db_dir.exists():
-            raise FileNotFoundError(f"Database directory '{db_dir}' does not exist!")
+            db_dir = db_path.parent
+        db_directory: Path = Path(db_dir)
+        if not db_directory.exists():
+            raise FileNotFoundError(f"Database directory '{db_directory}' does not exist!")
 
         self.engine = engine
         self.session: Optional[Session] = None
 
         self.registry = RekordboxAgentRegistry(self)
-        self._events = dict()
+        self._events: Dict[str, Callable[[Any], None]] = dict()
+        self.playlist_xml: Optional[MasterPlaylistXml]
         try:
-            self.playlist_xml = MasterPlaylistXml(db_dir=db_dir)
+            self.playlist_xml = MasterPlaylistXml(db_dir=db_directory)
         except FileNotFoundError:
-            logger.warning(f"No masterPlaylists6.xml found in {db_dir}")
+            logger.warning(f"No masterPlaylists6.xml found in {db_directory}")
             self.playlist_xml = None
 
-        self._db_dir = db_dir
-        self._share_dir = db_dir / "share"
+        self._db_dir = db_directory
+        self._share_dir: Path = db_directory / "share"
 
         self.open()
 
     @property
-    def no_autoflush(self):
+    def no_autoflush(self) -> Any:
         """Creates a no-autoflush context."""
+        if self.session is None:
+            raise SessionNotInitializedError()
         return self.session.no_autoflush
 
     @property
-    def db_directory(self):
+    def db_directory(self) -> Path:
         return self._db_dir
 
     @property
-    def share_directory(self):
+    def share_directory(self) -> Path:
         return self._share_dir
 
-    def open(self):
+    def open(self) -> None:
         """Open the database by instantiating a new session using the SQLAchemy engine.
 
         A new session instance is only created if the session was closed previously.
@@ -200,21 +219,28 @@ class Rekordbox6Database:
             self.session = Session(bind=self.engine)
             self.registry.clear_buffer()
 
-    def close(self):
+    def close(self) -> None:
         """Close the currently active session."""
+        if self.session is None:
+            raise SessionNotInitializedError()
         for key in self._events:
             self.unregister_event(key)
         self.registry.clear_buffer()
         self.session.close()
         self.session = None
 
-    def __enter__(self):
+    def __enter__(self) -> "Rekordbox6Database":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        type_: Optional[Type[BaseException]],
+        value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         self.close()
 
-    def register_event(self, identifier, fn):
+    def register_event(self, identifier: str, fn: Callable[[Any], None]) -> None:
         """Registers a session event callback.
 
         Parameters
@@ -225,10 +251,12 @@ class Rekordbox6Database:
         fn : callable
             The event callback method.
         """
+        if self.session is None:
+            raise SessionNotInitializedError()
         event.listen(self.session, identifier, fn)
         self._events[identifier] = fn
 
-    def unregister_event(self, identifier):
+    def unregister_event(self, identifier: str) -> None:
         """Removes an existing session event callback.
 
         Parameters
@@ -236,10 +264,12 @@ class Rekordbox6Database:
         identifier : str
             The identifier of the event
         """
+        if self.session is None:
+            raise SessionNotInitializedError()
         fn = self._events[identifier]
         event.remove(self.session, identifier, fn)
 
-    def query(self, *entities, **kwargs):
+    def query(self, *entities: Any, **kwargs: Any) -> Any:
         """Creates a new SQL query for the given entities.
 
         Parameters
@@ -266,9 +296,11 @@ class Rekordbox6Database:
         >>> db = Rekordbox6Database()
         >>> query = db.query(DjmdContent.Title)
         """
+        if self.session is None:
+            raise SessionNotInitializedError()
         return self.session.query(*entities, **kwargs)
 
-    def add(self, instance):
+    def add(self, instance: tables.Base) -> None:
         """Add an element to the Rekordbox database.
 
         Parameters
@@ -276,10 +308,12 @@ class Rekordbox6Database:
         instance : tables.Base
             The table entry to add.
         """
+        if self.session is None:
+            raise SessionNotInitializedError()
         self.session.add(instance)
         self.registry.on_create(instance)
 
-    def delete(self, instance):
+    def delete(self, instance: tables.Base) -> None:
         """Delete an element from the Rekordbox database.
 
         Parameters
@@ -287,10 +321,12 @@ class Rekordbox6Database:
         instance : tables.Base
             The table entry to delte.
         """
+        if self.session is None:
+            raise SessionNotInitializedError()
         self.session.delete(instance)
         self.registry.on_delete(instance)
 
-    def get_local_usn(self):
+    def get_local_usn(self) -> int:
         """Returns the local sequence number (update count) of Rekordbox.
 
         Any changes made to the `Djmd...` tables increments the local update count of
@@ -304,7 +340,7 @@ class Rekordbox6Database:
         """
         return self.registry.get_local_update_count()
 
-    def set_local_usn(self, usn):
+    def set_local_usn(self, usn: int) -> None:
         """Sets the local sequence number (update count) of Rekordbox.
 
         Parameters
@@ -314,7 +350,7 @@ class Rekordbox6Database:
         """
         self.registry.set_local_update_count(usn)
 
-    def increment_local_usn(self, num=1):
+    def increment_local_usn(self, num: int = 1) -> int:
         """Increments the local update sequence number (update count) of Rekordbox.
 
         Parameters
@@ -342,7 +378,7 @@ class Rekordbox6Database:
         """
         return self.registry.increment_local_update_count(num)
 
-    def autoincrement_usn(self, set_row_usn=True):
+    def autoincrement_usn(self, set_row_usn: bool = True) -> int:
         """Auto-increments the local USN for all uncommited changes.
 
         Parameters
@@ -372,11 +408,13 @@ class Rekordbox6Database:
         """
         return self.registry.autoincrement_local_update_count(set_row_usn)
 
-    def flush(self):
+    def flush(self) -> None:
         """Flushes the buffer of the SQLAlchemy session instance."""
+        if self.session is None:
+            raise SessionNotInitializedError()
         self.session.flush()
 
-    def commit(self, autoinc=True):
+    def commit(self, autoinc: bool = True) -> None:
         """Commit the changes made to the database.
 
         Parameters
@@ -389,6 +427,8 @@ class Rekordbox6Database:
         --------
         autoincrement_usn : Auto-increments the local Rekordbox USN's.
         """
+        if self.session is None:
+            raise SessionNotInitializedError()
         pid = get_rekordbox_pid()
         if pid:
             raise RuntimeError(
@@ -423,45 +463,47 @@ class Rekordbox6Database:
             if self.playlist_xml.modified:
                 self.playlist_xml.save()
 
-    def rollback(self):
+    def rollback(self) -> None:
         """Rolls back the uncommited changes to the database."""
+        if self.session is None:
+            raise SessionNotInitializedError()
         self.session.rollback()
         self.registry.clear_buffer()
 
     # -- Table queries -----------------------------------------------------------------
 
-    def get_active_censor(self, **kwargs):
+    def get_active_censor(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdActiveCensor`` table."""
         query = self.query(tables.DjmdActiveCensor).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_album(self, **kwargs):
+    def get_album(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdAlbum`` table."""
         query = self.query(tables.DjmdAlbum).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_artist(self, **kwargs):
+    def get_artist(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdArtist`` table."""
         query = self.query(tables.DjmdArtist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_category(self, **kwargs):
+    def get_category(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdCategory`` table."""
         query = self.query(tables.DjmdCategory).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_color(self, **kwargs):
+    def get_color(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdColor`` table."""
         query = self.query(tables.DjmdColor).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_content(self, **kwargs):
+    def get_content(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdContent`` table."""
         query = self.query(tables.DjmdContent).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
     # noinspection PyUnresolvedReferences
-    def search_content(self, text):
+    def search_content(self, text: str) -> List[DjmdContent]:
         """Searches the contents of the ``DjmdContent`` table.
 
         The search is case-insensitive and includes the following collumns of the
@@ -514,86 +556,86 @@ class Rekordbox6Database:
         query = self.query(DjmdContent).join(DjmdContent.Key)
         results.update(query.filter(tables.DjmdKey.ScaleName.contains(text)).all())
 
-        results = list(results)
-        results.sort(key=lambda x: x.ID)
-        return results
+        result_list: List[DjmdContent] = list(results)
+        result_list.sort(key=lambda x: x.ID)
+        return result_list
 
-    def get_cue(self, **kwargs):
+    def get_cue(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdCue`` table."""
         query = self.query(tables.DjmdCue).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_device(self, **kwargs):
+    def get_device(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdDevice`` table."""
         query = self.query(tables.DjmdDevice).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_genre(self, **kwargs):
+    def get_genre(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdGenre`` table."""
         query = self.query(tables.DjmdGenre).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_history(self, **kwargs):
+    def get_history(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdHistory`` table."""
         query = self.query(tables.DjmdHistory).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_history_songs(self, **kwargs):
+    def get_history_songs(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSongHistory`` table."""
         query = self.query(tables.DjmdSongHistory).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_hot_cue_banklist(self, **kwargs):
+    def get_hot_cue_banklist(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdHotCueBanklist`` table."""
         query = self.query(tables.DjmdHotCueBanklist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_hot_cue_banklist_songs(self, **kwargs):
+    def get_hot_cue_banklist_songs(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSongHotCueBanklist`` table."""
         query = self.query(tables.DjmdSongHotCueBanklist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_key(self, **kwargs):
+    def get_key(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdKey`` table."""
         query = self.query(tables.DjmdKey).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_label(self, **kwargs):
+    def get_label(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdLabel`` table."""
         query = self.query(tables.DjmdLabel).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_menu_items(self, **kwargs):
+    def get_menu_items(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdMenuItems`` table."""
         query = self.query(tables.DjmdMenuItems).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_mixer_param(self, **kwargs):
+    def get_mixer_param(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdMixerParam`` table."""
         query = self.query(tables.DjmdMixerParam).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_my_tag(self, **kwargs):
+    def get_my_tag(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdMyTag`` table."""
         query = self.query(tables.DjmdMyTag).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_my_tag_songs(self, **kwargs):
+    def get_my_tag_songs(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSongMyTag`` table."""
         query = self.query(tables.DjmdSongMyTag).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_playlist(self, **kwargs):
+    def get_playlist(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdPlaylist`` table."""
         query = self.query(tables.DjmdPlaylist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_playlist_songs(self, **kwargs):
+    def get_playlist_songs(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSongPlaylist`` table."""
         query = self.query(tables.DjmdSongPlaylist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_playlist_contents(self, playlist, *entities) -> Query:
+    def get_playlist_contents(self, playlist: PlaylistLike, *entities: tables.Base) -> Any:
         """Return the contents of a regular or smart playlist.
 
         Parameters
@@ -625,111 +667,117 @@ class Rekordbox6Database:
         >>> db.get_playlist_contents(pl, DjmdContent.ID).all()
         [('12345678',), ('23456789',)]
         """
+        plist: DjmdPlaylist
         if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
-        if playlist.is_folder:
-            raise ValueError(f"Playlist {playlist} is a playlist folder.")
+            plist = self.get_playlist(ID=playlist)
+        else:
+            plist = playlist
+
+        if plist.is_folder:
+            raise ValueError(f"Playlist {plist} is a playlist folder.")
 
         if not entities:
             entities = [
                 DjmdContent,
-            ]
+            ]  # type: ignore[assignment]
 
-        if playlist.is_smart_playlist:
+        if plist.is_smart_playlist:
             smartlist = SmartList()
-            smartlist.parse(playlist.SmartList)
+            smartlist.parse(plist.SmartList)
             filter_clause = smartlist.filter_clause()
         else:
             sub_query = self.query(tables.DjmdSongPlaylist.ContentID).filter(
-                tables.DjmdSongPlaylist.PlaylistID == playlist.ID
+                tables.DjmdSongPlaylist.PlaylistID == plist.ID
             )
             filter_clause = DjmdContent.ID.in_(select(sub_query.subquery()))
 
         return self.query(*entities).filter(filter_clause)
 
-    def get_property(self, **kwargs):
+    def get_property(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdProperty`` table."""
         query = self.query(tables.DjmdProperty).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_related_tracks(self, **kwargs):
+    def get_related_tracks(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdRelatedTracks`` table."""
         query = self.query(tables.DjmdRelatedTracks).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_related_tracks_songs(self, **kwargs):
+    def get_related_tracks_songs(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSongRelatedTracks`` table."""
         query = self.query(tables.DjmdSongRelatedTracks).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_sampler(self, **kwargs):
+    def get_sampler(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSampler`` table."""
         query = self.query(tables.DjmdSampler).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_sampler_songs(self, **kwargs):
+    def get_sampler_songs(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSongSampler`` table."""
         query = self.query(tables.DjmdSongSampler).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_tag_list_songs(self, **kwargs):
+    def get_tag_list_songs(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSongTagList`` table."""
         query = self.query(tables.DjmdSongTagList).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_sort(self, **kwargs):
+    def get_sort(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``DjmdSort`` table."""
         query = self.query(tables.DjmdSort).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_agent_registry(self, **kwargs):
+    def get_agent_registry(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``AgentRegistry`` table."""
         query = self.query(tables.AgentRegistry).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_cloud_agent_registry(self, **kwargs):
+    def get_cloud_agent_registry(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``CloudAgentRegistry`` table."""
         query = self.query(tables.CloudAgentRegistry).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_content_active_censor(self, **kwargs):
+    def get_content_active_censor(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``ContentActiveCensor`` table."""
         query = self.query(tables.ContentActiveCensor).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_content_cue(self, **kwargs):
+    def get_content_cue(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``ContentCue`` table."""
         query = self.query(tables.ContentCue).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_content_file(self, **kwargs):
+    def get_content_file(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``ContentFile`` table."""
         query = self.query(tables.ContentFile).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_hot_cue_banklist_cue(self, **kwargs):
+    def get_hot_cue_banklist_cue(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``HotCueBanklistCue`` table."""
         query = self.query(tables.HotCueBanklistCue).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_image_file(self, **kwargs):
+    def get_image_file(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``ImageFile`` table."""
         query = self.query(tables.ImageFile).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_setting_file(self, **kwargs):
+    def get_setting_file(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``SettingFile`` table."""
         query = self.query(tables.SettingFile).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_uuid_map(self, **kwargs):
+    def get_uuid_map(self, **kwargs: Any) -> Any:
         """Creates a filtered query for the ``UuidIDMap`` table."""
         query = self.query(tables.UuidIDMap).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
     # -- Database updates --------------------------------------------------------------
 
-    def generate_unused_id(self, table, is_28_bit: bool = True, id_field_name: str = "ID") -> int:
+    def generate_unused_id(
+        self, table: Type[tables.Base], is_28_bit: bool = True, id_field_name: str = "ID"
+    ) -> int:
         """Generates an unused ID for the given table."""
         max_tries = 1000000
         for _ in range(max_tries):
@@ -749,7 +797,9 @@ class Rekordbox6Database:
 
         raise ValueError("Could not generate unused ID")
 
-    def add_to_playlist(self, playlist, content, track_no=None):
+    def add_to_playlist(
+        self, playlist: PlaylistLike, content: ContentLike, track_no: int = None
+    ) -> tables.DjmdSongPlaylist:
         """Adds a track to a playlist.
 
         Creates a new :class:`DjmdSongPlaylist` object corresponding to the given
@@ -793,18 +843,26 @@ class Rekordbox6Database:
         >>> new_song.TrackNo
         1
         """
+        plist: DjmdPlaylist
+        cont: DjmdContent
         if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
+            plist = self.get_playlist(ID=playlist)
+        else:
+            plist = playlist
+
         if isinstance(content, (int, str)):
-            content = self.get_content(ID=content)
+            cont = self.get_content(ID=content)
+        else:
+            cont = content
+
         # Check playlist attribute (can't be folder or smart playlist)
-        if playlist.Attribute != 0:
+        if plist.Attribute != 0:
             raise ValueError("Playlist must be a normal playlist")
 
         uuid = str(uuid4())
         id_ = str(uuid4())
         now = datetime.datetime.now()
-        nsongs = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=playlist.ID).count()
+        nsongs = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=plist.ID).count()
         if track_no is not None:
             insert_at_end = False
             track_no = int(track_no)
@@ -816,8 +874,8 @@ class Rekordbox6Database:
             insert_at_end = True
             track_no = nsongs + 1
 
-        cid = content.ID
-        pid = playlist.ID
+        cid = cont.ID
+        pid = plist.ID
 
         logger.info("Adding content with ID=%s to playlist with ID=%s:", cid, pid)
         logger.debug("Content ID:  %s", cid)
@@ -833,19 +891,19 @@ class Rekordbox6Database:
             query = (
                 self.query(tables.DjmdSongPlaylist)
                 .filter(
-                    tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                    tables.DjmdSongPlaylist.PlaylistID == plist.ID,
                     tables.DjmdSongPlaylist.TrackNo >= track_no,
                 )
                 .order_by(tables.DjmdSongPlaylist.TrackNo)
             )
-            for song in query:
-                song.TrackNo += 1
-                song.updated_at = now
-                moved.append(song)
+            for other_song in query:
+                other_song.TrackNo += 1
+                other_song.updated_at = now
+                moved.append(other_song)
             self.registry.enable_tracking()
 
         # Add song to playlist
-        song = tables.DjmdSongPlaylist.create(
+        song: tables.DjmdSongPlaylist = tables.DjmdSongPlaylist.create(
             ID=id_,
             PlaylistID=str(pid),
             ContentID=str(cid),
@@ -861,7 +919,11 @@ class Rekordbox6Database:
 
         return song
 
-    def remove_from_playlist(self, playlist, song):
+    def remove_from_playlist(
+        self,
+        playlist: PlaylistLike,
+        song: Union[tables.DjmdSongPlaylist, int, str],
+    ) -> None:
         """Removes a track from a playlist.
 
         Parameters
@@ -883,36 +945,49 @@ class Rekordbox6Database:
         >>> song = pl.Songs[0]
         >>> db.remove_from_playlist(pl, song)
         """
+        plist: DjmdPlaylist
+        plist_song: DjmdSongPlaylist
         if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
+            plist = self.get_playlist(ID=playlist)
+        else:
+            plist = playlist
+
         if isinstance(song, (int, str)):
-            song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
-        logger.info("Removing song with ID=%s from playlist with ID=%s", song.ID, playlist.ID)
+            plist_song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
+        else:
+            plist_song = song
+
+        logger.info("Removing song with ID=%s from playlist with ID=%s", plist_song.ID, plist.ID)
         now = datetime.datetime.now()
         # Remove track from playlist
-        track_no = song.TrackNo
-        self.delete(song)
+        track_no = plist_song.TrackNo
+        self.delete(plist_song)
         self.commit()
         # Update track numbers higher than the removed track
         query = (
             self.query(tables.DjmdSongPlaylist)
             .filter(
-                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                tables.DjmdSongPlaylist.PlaylistID == plist.ID,
                 tables.DjmdSongPlaylist.TrackNo > track_no,
             )
             .order_by(tables.DjmdSongPlaylist.TrackNo)
         )
         moved = list()
         with self.registry.disabled():
-            for song in query:
-                song.TrackNo -= 1
-                song.updated_at = now
-                moved.append(song)
+            for other_song in query:
+                other_song.TrackNo -= 1
+                other_song.updated_at = now
+                moved.append(other_song)
 
         if moved:
             self.registry.on_move(moved)
 
-    def move_song_in_playlist(self, playlist, song, new_track_no):
+    def move_song_in_playlist(
+        self,
+        playlist: PlaylistLike,
+        song: Union[tables.DjmdSongPlaylist, int, str],
+        new_track_no: int,
+    ) -> None:
         """Sets a new track number of a song.
 
         Also updates the track numbers of the other songs in the playlist.
@@ -954,23 +1029,31 @@ class Rekordbox6Database:
         >>> [s.Content.Title for s in sorted(pl.Songs, key=lambda x: x.TrackNo)]  # noqa
         ['Demo Track 1', 'HORN', 'NOISE', 'Demo Track 2']
         """
+        plist: DjmdPlaylist
+        plist_song: DjmdSongPlaylist
         if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
+            plist = self.get_playlist(ID=playlist)
+        else:
+            plist = playlist
+
         if isinstance(song, (int, str)):
-            song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
-        nsongs = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=playlist.ID).count()
+            plist_song = self.query(tables.DjmdSongPlaylist).filter_by(ID=song).one()
+        else:
+            plist_song = song
+
+        nsongs = self.query(tables.DjmdSongPlaylist).filter_by(PlaylistID=plist.ID).count()
         if new_track_no < 1:
             raise ValueError("Track number must be greater than 0")
         if new_track_no > nsongs + 1:
             raise ValueError(f"Track number too high, parent contains {nsongs} items")
         logger.info(
             "Moving song with ID=%s in playlist with ID=%s to %s",
-            song.ID,
-            playlist.ID,
+            plist_song.ID,
+            plist.ID,
             new_track_no,
         )
         now = datetime.datetime.now()
-        old_track_no = song.TrackNo
+        old_track_no = plist_song.TrackNo
 
         self.registry.disable_tracking()
         moved = list()
@@ -978,7 +1061,7 @@ class Rekordbox6Database:
             query = (
                 self.query(tables.DjmdSongPlaylist)
                 .filter(
-                    tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                    tables.DjmdSongPlaylist.PlaylistID == plist.ID,
                     old_track_no < tables.DjmdSongPlaylist.TrackNo,
                     tables.DjmdSongPlaylist.TrackNo <= new_track_no,
                 )
@@ -990,7 +1073,7 @@ class Rekordbox6Database:
                 moved.append(other_song)
         elif new_track_no < old_track_no:
             query = self.query(tables.DjmdSongPlaylist).filter(
-                tables.DjmdSongPlaylist.PlaylistID == playlist.ID,
+                tables.DjmdSongPlaylist.PlaylistID == plist.ID,
                 new_track_no <= tables.DjmdSongPlaylist.TrackNo,
                 tables.DjmdSongPlaylist.TrackNo < old_track_no,
             )
@@ -1001,19 +1084,27 @@ class Rekordbox6Database:
         else:
             return
 
-        song.TrackNo = new_track_no
-        song.updated_at = now
+        plist_song.TrackNo = new_track_no
+        plist_song.updated_at = now
         moved.append(song)
 
         self.registry.enable_tracking()
         self.registry.on_move(moved)
 
-    def _create_playlist(self, name, seq, image_path, parent, smart_list=None, attribute=None):
+    def _create_playlist(
+        self,
+        name: str,
+        seq: Optional[int],
+        image_path: Optional[str],
+        parent: Optional[PlaylistLike],
+        smart_list: Optional[SmartList] = None,
+        attribute: int = None,
+    ) -> DjmdPlaylist:
         """Creates a new playlist object."""
         table = tables.DjmdPlaylist
         id_ = str(self.generate_unused_id(table, is_28_bit=True))
         uuid = str(uuid4())
-        attribute = int(attribute)
+        attrib = int(attribute) if attribute is not None else 0
         now = datetime.datetime.now()
         if smart_list is not None:
             # Set the playlist ID in the smart list and generate XML
@@ -1032,7 +1123,7 @@ class Rekordbox6Database:
                 raise ValueError("Parent is not a folder")
         else:
             # Check if parent exists and is a folder
-            parent_id = parent
+            parent_id = str(parent)
             query = self.query(table.ID).filter(table.ID == parent_id, table.Attribute == 1)
             if not self.query(query.exists()).scalar():
                 raise ValueError("Parent does not exist or is not a folder")
@@ -1057,7 +1148,7 @@ class Rekordbox6Database:
         logger.debug("Name:        %s", name)
         logger.debug("Parent ID:   %s", parent_id)
         logger.debug("Seq:         %s", seq)
-        logger.debug("Attribute:   %s", attribute)
+        logger.debug("Attribute:   %s", attrib)
         logger.debug("Smart List:  %s", smart_list_xml)
         logger.debug("Image Path:  %s", image_path)
 
@@ -1074,12 +1165,12 @@ class Rekordbox6Database:
 
         # Add new playlist to database
         # First create with name 'New playlist'
-        playlist = table.create(
+        playlist: DjmdPlaylist = table.create(
             ID=id_,
             Seq=seq,
             Name="New playlist",
             ImagePath=image_path,
-            Attribute=attribute,
+            Attribute=attrib,
             ParentID=parent_id,
             SmartList=smart_list_xml,
             UUID=uuid,
@@ -1092,11 +1183,13 @@ class Rekordbox6Database:
 
         # Update masterPlaylists6.xml
         if self.playlist_xml is not None:
-            self.playlist_xml.add(id_, parent_id, attribute, now, lib_type=0, check_type=0)
+            self.playlist_xml.add(id_, parent_id, attrib, now, lib_type=0, check_type=0)
 
         return playlist
 
-    def create_playlist(self, name, parent=None, seq=None, image_path=None):
+    def create_playlist(
+        self, name: str, parent: PlaylistLike = None, seq: int = None, image_path: str = None
+    ) -> DjmdPlaylist:
         """Creates a new playlist in the database.
 
         Parameters
@@ -1142,7 +1235,9 @@ class Rekordbox6Database:
         logger.info("Creating playlist %s", name)
         return self._create_playlist(name, seq, image_path, parent, attribute=PlaylistType.PLAYLIST)
 
-    def create_playlist_folder(self, name, parent=None, seq=None, image_path=None):
+    def create_playlist_folder(
+        self, name: str, parent: PlaylistLike = None, seq: int = None, image_path: str = None
+    ) -> DjmdPlaylist:
         """Creates a new playlist folder in the database.
 
         Parameters
@@ -1183,8 +1278,13 @@ class Rekordbox6Database:
         return self._create_playlist(name, seq, image_path, parent, attribute=PlaylistType.FOLDER)
 
     def create_smart_playlist(
-        self, name, smart_list: SmartList, parent=None, seq=None, image_path=None
-    ):
+        self,
+        name: str,
+        smart_list: SmartList,
+        parent: PlaylistLike = None,
+        seq: int = None,
+        image_path: str = None,
+    ) -> DjmdPlaylist:
         """Creates a new smart playlist in the database.
 
         Parameters
@@ -1229,7 +1329,7 @@ class Rekordbox6Database:
             name, seq, image_path, parent, smart_list, PlaylistType.SMART_PLAYLIST
         )
 
-    def delete_playlist(self, playlist):
+    def delete_playlist(self, playlist: PlaylistLike) -> None:
         """Deletes a playlist or playlist folder from the database.
 
         Parameters
@@ -1251,17 +1351,20 @@ class Rekordbox6Database:
         >>> folder = db.get_playlist(Name="My Folder").one()
         >>> db.delete_playlist(folder)
         """
+        plist: DjmdPlaylist
         if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
-
-        if playlist.Attribute == 1:
-            logger.info("Deleting playlist folder '%s' with ID=%s", playlist.Name, playlist.ID)
+            plist = self.get_playlist(ID=playlist)
         else:
-            logger.info("Deleting playlist '%s' with ID=%s", playlist.Name, playlist.ID)
+            plist = playlist
+
+        if plist.Attribute == 1:
+            logger.info("Deleting playlist folder '%s' with ID=%s", plist.Name, plist.ID)
+        else:
+            logger.info("Deleting playlist '%s' with ID=%s", plist.Name, plist.ID)
 
         now = datetime.datetime.now()
-        seq = playlist.Seq
-        parent_id = playlist.ParentID
+        seq = plist.Seq
+        parent_id = plist.ParentID
 
         self.registry.disable_tracking()
         # Update seq numbers higher than the deleted seq number
@@ -1278,9 +1381,9 @@ class Rekordbox6Database:
             pl.Seq -= 1
             pl.updated_at = now
             moved.append(pl)
-        moved.append(playlist)
+        moved.append(plist)
 
-        children = [playlist]
+        children = [plist]
         # Get all child playlist IDs
         child_ids = list()
         while len(children):
@@ -1298,14 +1401,16 @@ class Rekordbox6Database:
                 self.playlist_xml.remove(pid)
 
         # Remove playlist from database
-        self.delete(playlist)
+        self.delete(plist)
         self.registry.enable_tracking()
         if len(child_ids) > 1:
-            # The playlist folder had children: on extra USN increment
+            # The playlist folder had children: one extra USN increment
             self.registry.on_delete(child_ids[1:])
         self.registry.on_delete(moved)
 
-    def move_playlist(self, playlist, parent=None, seq=None):
+    def move_playlist(
+        self, playlist: PlaylistLike, parent: PlaylistLike = None, seq: int = None
+    ) -> None:
         """Moves a playlist (folder) in the current parent folder or to a new one.
 
         Parameters
@@ -1351,15 +1456,19 @@ class Rekordbox6Database:
         """
         if parent is None and seq is None:
             raise ValueError("Either parent or seq must be given")
-        if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
+        plist: DjmdPlaylist
+        seqence: int
 
+        if isinstance(playlist, (int, str)):
+            plist = self.get_playlist(ID=playlist)
+        else:
+            plist = playlist
         now = datetime.datetime.now()
         table = tables.DjmdPlaylist
 
         if parent is None:
             # If no parent is given, keep the current parent
-            parent_id = playlist.ParentID
+            parent_id = plist.ParentID
         elif isinstance(parent, tables.DjmdPlaylist):
             # Check if parent is a folder
             parent_id = parent.ID
@@ -1373,22 +1482,23 @@ class Rekordbox6Database:
                 raise ValueError("Parent does not exist or is not a folder")
 
         n = self.get_playlist(ParentID=parent_id).count()
-        old_seq = playlist.Seq
+        old_seq = plist.Seq
 
-        if parent_id != playlist.ParentID:
+        if parent_id != plist.ParentID:
             # Move to new parent
 
-            old_parent_id = playlist.ParentID
+            old_parent_id = plist.ParentID
             if seq is None:
                 # New playlist is last in parents
-                seq = n + 1
+                seqence = n + 1
                 insert_at_end = True
             else:
+                seqence = seq
                 # Check if sequence number is valid
                 insert_at_end = False
-                if seq < 1:
+                if seqence < 1:
                     raise ValueError("Sequence number must be greater than 0")
-                elif seq > n + 1:
+                elif seqence > n + 1:
                     raise ValueError(f"Sequence number too high, parent contains {n} items")
 
             if not insert_at_end:
@@ -1404,10 +1514,10 @@ class Rekordbox6Database:
                 other_playlists = query.all()
             # Set seq number and update time *before* other playlists to ensure
             # right USN increment order
-            playlist.ParentID = parent_id
+            plist.ParentID = parent_id
             with self.registry.disabled():
-                playlist.Seq = seq
-                playlist.updated_at = now
+                plist.Seq = seqence
+                plist.updated_at = now
 
             if not insert_at_end:
                 # Update seq numbers higher than the new seq number in *new* parent
@@ -1438,31 +1548,33 @@ class Rekordbox6Database:
 
         else:
             # Keep parent, only change seq number
-
-            if seq < 1:
+            if seq is None:
+                raise ValueError("Sequence number must be given")
+            seqence = seq
+            if seqence < 1:
                 raise ValueError("Sequence number must be greater than 0")
-            elif seq > n + 1:
+            elif seqence > n + 1:
                 raise ValueError(f"Sequence number too high, parent contains {n} items")
 
-            if seq > old_seq:
+            if seqence > old_seq:
                 # Get all playlists with seq between old_seq and seq
                 query = (
                     self.query(tables.DjmdPlaylist)
                     .filter(
-                        tables.DjmdPlaylist.ParentID == playlist.ParentID,
+                        tables.DjmdPlaylist.ParentID == plist.ParentID,
                         old_seq < tables.DjmdPlaylist.Seq,
-                        tables.DjmdPlaylist.Seq <= seq,
+                        tables.DjmdPlaylist.Seq <= seqence,
                     )
                     .order_by(tables.DjmdPlaylist.Seq)
                 )
                 other_playlists = query.all()
                 delta_seq = -1
-            elif seq < old_seq:
+            elif seqence < old_seq:
                 query = (
                     self.query(tables.DjmdPlaylist)
                     .filter(
-                        tables.DjmdPlaylist.ParentID == playlist.ParentID,
-                        seq <= tables.DjmdPlaylist.Seq,
+                        tables.DjmdPlaylist.ParentID == plist.ParentID,
+                        seqence <= tables.DjmdPlaylist.Seq,
                         tables.DjmdPlaylist.Seq < old_seq,
                     )
                     .order_by(tables.DjmdPlaylist.Seq)
@@ -1474,10 +1586,10 @@ class Rekordbox6Database:
 
             # Set seq number and update time *before* other playlists to ensure
             # right USN increment order
-            playlist.Seq = seq
+            plist.Seq = seqence
             # Each move counts as one USN increment, so disable for update time
             with self.registry.disabled():
-                playlist.updated_at = now
+                plist.updated_at = now
 
             # Set seq number and update time for playlists between old_seq and seq
             for pl in other_playlists:
@@ -1486,7 +1598,7 @@ class Rekordbox6Database:
                 with self.registry.disabled():
                     pl.updated_at = now
 
-    def rename_playlist(self, playlist, name):
+    def rename_playlist(self, playlist: PlaylistLike, name: str) -> None:
         """Renames a playlist or playlist folder.
 
         Parameters
@@ -1514,16 +1626,27 @@ class Rekordbox6Database:
         >>> [pl.Name for pl in playlists]  # noqa
         ['Playlist new', 'Playlist 2']
         """
+        pl: DjmdPlaylist
         if isinstance(playlist, (int, str)):
-            playlist = self.get_playlist(ID=playlist)
+            pl = self.get_playlist(ID=playlist)
+        else:
+            pl = playlist
+
         now = datetime.datetime.now()
         # Update name of playlist
-        playlist.Name = name
+        pl.Name = name
         # Update update time: USN not incremented
         with self.registry.disabled():
-            playlist.updated_at = now
+            pl.updated_at = now
 
-    def add_album(self, name, artist=None, image_path=None, compilation=None, search_str=None):
+    def add_album(
+        self,
+        name: str,
+        artist: Union[tables.DjmdArtist, int, str] = None,
+        image_path: PathLike = None,
+        compilation: bool = None,
+        search_str: str = None,
+    ) -> tables.DjmdAlbum:
         """Adds a new album to the database.
 
         Parameters
@@ -1583,18 +1706,22 @@ class Rekordbox6Database:
             raise ValueError(f"Album '{name}' already exists in database")
 
         # Get artist ID
+        artist_id: Optional[str] = None
         if artist is not None:
+            art: tables.DjmdArtist
             if isinstance(artist, (int, str)):
-                artist = self.get_artist(ID=artist)
-            artist = artist.ID
+                art = self.get_artist(ID=artist)
+            else:
+                art = artist
+            artist_id = art.ID
 
         id_ = self.generate_unused_id(tables.DjmdAlbum)
         uuid = str(uuid4())
-        album = tables.DjmdAlbum.create(
+        album: tables.DjmdAlbum = tables.DjmdAlbum.create(
             ID=id_,
             Name=name,
-            AlbumArtistID=artist,
-            ImagePath=image_path,
+            AlbumArtistID=artist_id,
+            ImagePath=str(image_path) if image_path is not None else None,
             Compilation=compilation,
             SearchStr=search_str,
             UUID=str(uuid),
@@ -1603,7 +1730,7 @@ class Rekordbox6Database:
         self.flush()
         return album
 
-    def add_artist(self, name, search_str=None):
+    def add_artist(self, name: str, search_str: str = None) -> tables.DjmdArtist:
         """Adds a new artist to the database.
 
         Parameters
@@ -1655,12 +1782,14 @@ class Rekordbox6Database:
 
         id_ = self.generate_unused_id(tables.DjmdArtist)
         uuid = str(uuid4())
-        artist = tables.DjmdArtist.create(ID=id_, Name=name, SearchStr=search_str, UUID=uuid)
+        artist: tables.DjmdArtist = tables.DjmdArtist.create(
+            ID=id_, Name=name, SearchStr=search_str, UUID=uuid
+        )
         self.add(artist)
         self.flush()
         return artist
 
-    def add_genre(self, name):
+    def add_genre(self, name: str) -> tables.DjmdGenre:
         """Adds a new genre to the database.
 
         Parameters
@@ -1705,12 +1834,12 @@ class Rekordbox6Database:
 
         id_ = self.generate_unused_id(tables.DjmdGenre)
         uuid = str(uuid4())
-        genre = tables.DjmdGenre.create(ID=id_, Name=name, UUID=uuid)
+        genre: tables.DjmdGenre = tables.DjmdGenre.create(ID=id_, Name=name, UUID=uuid)
         self.add(genre)
         self.flush()
         return genre
 
-    def add_label(self, name):
+    def add_label(self, name: str) -> tables.DjmdLabel:
         """Adds a new label to the database.
 
         Parameters
@@ -1755,12 +1884,12 @@ class Rekordbox6Database:
 
         id_ = self.generate_unused_id(tables.DjmdLabel)
         uuid = str(uuid4())
-        label = tables.DjmdLabel.create(ID=id_, Name=name, UUID=uuid)
+        label: tables.DjmdLabel = tables.DjmdLabel.create(ID=id_, Name=name, UUID=uuid)
         self.add(label)
         self.flush()
         return label
 
-    def add_content(self, path, **kwargs):
+    def add_content(self, path: PathLike, **kwargs: Any) -> DjmdContent:
         """Adds a new track to the database.
 
         Parameters
@@ -1811,7 +1940,7 @@ class Rekordbox6Database:
         except ValueError:
             raise ValueError(f"Invalid file type: {path.suffix}")
 
-        content = tables.DjmdContent.create(
+        content: DjmdContent = tables.DjmdContent.create(
             ID=id_,
             UUID=uuid,
             ContentLink=content_link.rb_local_usn,
@@ -1834,7 +1963,7 @@ class Rekordbox6Database:
 
     # ----------------------------------------------------------------------------------
 
-    def get_mysetting_paths(self):
+    def get_mysetting_paths(self) -> List[Path]:
         """Returns the file paths of the local Rekordbox MySetting files.
 
         Returns
@@ -1842,12 +1971,12 @@ class Rekordbox6Database:
         paths : list[str]
             the file paths of the local MySetting files.
         """
-        paths = list()
+        paths: List[Path] = list()
         for item in self.get_setting_file():
             paths.append(self._db_dir / item.Path.lstrip("/\\"))
         return paths
 
-    def get_anlz_dir(self, content):
+    def get_anlz_dir(self, content: ContentLike) -> Path:
         """Returns the directory path containing the ANLZ analysis files of a track.
 
         Parameters
@@ -1862,14 +1991,17 @@ class Rekordbox6Database:
         anlz_dir : Path
             The path of the directory containing the analysis files for the content.
         """
+        cont: DjmdContent
         if isinstance(content, (int, str)):
-            content = self.get_content(ID=content)
+            cont = self.get_content(ID=content)
+        else:
+            cont = content
 
-        dat_path = Path(content.AnalysisDataPath.strip("\\/"))
-        path = self._share_dir / dat_path.parent
+        dat_path = Path(cont.AnalysisDataPath.strip("\\/"))
+        path: Path = self._share_dir / dat_path.parent
         return path
 
-    def get_anlz_paths(self, content):
+    def get_anlz_paths(self, content: ContentLike) -> Dict[str, Optional[Path]]:
         """Returns all existing ANLZ analysis file paths of a track.
 
         Parameters
@@ -1888,7 +2020,7 @@ class Rekordbox6Database:
         root = self.get_anlz_dir(content)
         return get_anlz_paths(root)
 
-    def read_anlz_files(self, content):
+    def read_anlz_files(self, content: ContentLike) -> Dict[Path, AnlzFile]:
         """Reads all existing ANLZ analysis files of a track.
 
         Parameters
@@ -1907,7 +2039,7 @@ class Rekordbox6Database:
         root = self.get_anlz_dir(content)
         return read_anlz_files(root)
 
-    def get_anlz_path(self, content, type_):
+    def get_anlz_path(self, content: ContentLike, type_: str) -> Optional[PathLike]:
         """Returns the file path of an ANLZ analysis file of a track.
 
         Parameters
@@ -1930,7 +2062,7 @@ class Rekordbox6Database:
         paths = get_anlz_paths(root)
         return paths.get(type_.upper(), "")
 
-    def read_anlz_file(self, content, type_):
+    def read_anlz_file(self, content: ContentLike, type_: str) -> Optional[AnlzFile]:
         """Reads an ANLZ analysis file of a track.
 
         Parameters
@@ -1954,7 +2086,14 @@ class Rekordbox6Database:
             return AnlzFile.parse_file(path)
         return None
 
-    def update_content_path(self, content, path, save=True, check_path=True, commit=True):
+    def update_content_path(
+        self,
+        content: ContentLike,
+        path: PathLike,
+        save: bool = True,
+        check_path: bool = True,
+        commit: bool = True,
+    ) -> None:
         """Update the file path of a track in the Rekordbox v6 database.
 
         This changes the `FolderPath` entry in the ``DjmdContent`` table and the
@@ -2001,16 +2140,20 @@ class Rekordbox6Database:
         C:/Music/PioneerDJ/Sampler/PRESET ONESHOT/NOISE.wav
 
         """
+        cont: DjmdContent
         if isinstance(content, (int, str)):
-            content = self.get_content(ID=content)
-        cid = content.ID
+            cont = self.get_content(ID=content)
+        else:
+            cont = content
+
+        cid = cont.ID
 
         path = Path(path)
         # Check and format path (the database and ANLZ files use "/" as path delimiter)
         if check_path:
             assert path.exists()
         path = str(path).replace("\\", "/")
-        old_path = content.FolderPath
+        old_path = cont.FolderPath
         logger.info("Replacing '%s' with '%s' of content [%s]", old_path, path, cid)
 
         # Update path in ANLZ files
@@ -2021,18 +2164,18 @@ class Rekordbox6Database:
 
         # Update path in database (DjmdContent)
         logger.debug("Updating database file path: %s", path)
-        content.FolderPath = path
+        cont.FolderPath = path
 
         # Update the OrgFolderPath column with the new path
         # if the column matches the old_path variable
-        org_folder_path = content.OrgFolderPath
+        org_folder_path = cont.OrgFolderPath
         if org_folder_path == old_path:
-            content.OrgFolderPath = path
+            cont.OrgFolderPath = path
 
         # Update the FileNameL column with the new filename if it changed
         new_name = path.split("/")[-1]
-        if content.FileNameL != new_name:
-            content.FileNameL = new_name
+        if cont.FileNameL != new_name:
+            cont.FileNameL = new_name
 
         if save:
             logger.debug("Saving ANLZ files")
@@ -2045,7 +2188,14 @@ class Rekordbox6Database:
             logger.debug("Committing changes to the database")
             self.commit()
 
-    def update_content_filename(self, content, name, save=True, check_path=True, commit=True):
+    def update_content_filename(
+        self,
+        content: ContentLike,
+        name: str,
+        save: bool = True,
+        check_path: bool = True,
+        commit: bool = True,
+    ) -> None:
         """Update the file name of a track in the Rekordbox v6 database.
 
         This changes the `FolderPath` entry in the ``DjmdContent`` table and the
@@ -2090,16 +2240,19 @@ class Rekordbox6Database:
         >>> cont.FolderPath == file.get("path")
         True
         """
+        cont: DjmdContent
         if isinstance(content, (int, str)):
-            content = self.get_content(ID=content)
+            cont = self.get_content(ID=content)
+        else:
+            cont = content
 
-        old_path = Path(content.FolderPath)
+        old_path = Path(cont.FolderPath)
         ext = old_path.suffix
         new_path = old_path.parent / name
         new_path = new_path.with_suffix(ext)
-        self.update_content_path(content, new_path, save, check_path, commit=commit)
+        self.update_content_path(cont, new_path, save, check_path, commit=commit)
 
-    def to_dict(self, verbose=False):
+    def to_dict(self, verbose: bool = False) -> Dict[str, Any]:
         """Convert the database to a dictionary.
 
         Parameters
@@ -2127,11 +2280,13 @@ class Rekordbox6Database:
             data[table_name] = table_data
         return data
 
-    def to_json(self, file, indent=4, sort_keys=True, verbose=False):
+    def to_json(
+        self, file: PathLike, indent: int = 4, sort_keys: bool = True, verbose: bool = False
+    ) -> None:
         """Convert the database to a JSON file."""
         import json
 
-        def json_serial(obj):
+        def json_serial(obj: Any) -> Any:
             if isinstance(obj, (datetime.datetime, datetime.date)):
                 return obj.isoformat()
             raise TypeError(f"Type {type(obj)} not serializable")
@@ -2140,7 +2295,7 @@ class Rekordbox6Database:
         with open(file, "w") as fp:
             json.dump(data, fp, indent=indent, sort_keys=sort_keys, default=json_serial)
 
-    def copy_unlocked(self, output_file):
+    def copy_unlocked(self, output_file: PathLike) -> None:
         src_engine = self.engine
         src_metadata = MetaData()
         exclude_tables = ("sqlite_master", "sqlite_sequence", "sqlite_temp_master")
@@ -2149,7 +2304,7 @@ class Rekordbox6Database:
         dst_metadata = MetaData()
 
         @event.listens_for(src_metadata, "column_reflect")
-        def genericize_datatypes(inspector, tablename, column_dict):
+        def genericize_datatypes(inspector, tablename, column_dict):  # type: ignore # noqa: ANN202
             type_ = column_dict["type"].as_generic(allow_nulltype=True)
             if isinstance(type_, DateTime):
                 type_ = String

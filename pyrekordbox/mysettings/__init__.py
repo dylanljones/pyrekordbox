@@ -4,6 +4,7 @@
 
 import re
 from pathlib import Path
+from typing import List, Union
 
 from . import structs
 from .file import (
@@ -18,7 +19,7 @@ from .file import (
 RE_MYSETTING = re.compile(".*SETTING[0-9]?.DAT$")
 
 
-def get_mysetting_paths(root, deep=False):
+def get_mysetting_paths(root: Union[str, Path], deep: bool = False) -> List[Path]:
     files = list()
     root = Path(root)
     iteator = root.rglob("*") if deep else root.iterdir()
@@ -28,6 +29,6 @@ def get_mysetting_paths(root, deep=False):
     return files
 
 
-def read_mysetting_file(path) -> SettingsFile:
+def read_mysetting_file(path: Union[str, Path]) -> SettingsFile:
     obj = FILES[str(Path(path).name)]
     return obj.parse_file(path)

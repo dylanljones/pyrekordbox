@@ -18,7 +18,7 @@ import textwrap
 import time
 import xml.etree.cElementTree as xml
 from pathlib import Path
-from typing import Union
+from typing import Any, Dict, List, Union
 
 import blowfish
 import frida
@@ -151,7 +151,7 @@ def get_pioneer_app_dir(path: Union[str, Path] = None) -> Path:  # pragma: no co
     return path
 
 
-def _convert_type(s):
+def _convert_type(s: str) -> Union[str, int, float, List[int], List[float]]:
     # Try to parse as int, float, list of int, list of float
     types_ = int, float
     for type_ in types_:
@@ -167,7 +167,7 @@ def _convert_type(s):
     return s
 
 
-def read_rekordbox_settings(rekordbox_app_dir: Union[str, Path]) -> dict:
+def read_rekordbox_settings(rekordbox_app_dir: Union[str, Path]) -> Dict[str, Any]:
     """Finds and parses the 'rekordbox3.settings' file in the Rekordbox 5 or 6 app-dir.
 
     The settings file usually is called 'rekordbox3.settings' and is
@@ -197,12 +197,12 @@ def read_rekordbox_settings(rekordbox_app_dir: Union[str, Path]) -> dict:
             val = _convert_type(element.attrib["val"])
         except KeyError:
             device_setup = element.find("DEVICESETUP")
-            val = {k: _convert_type(v) for k, v in device_setup.attrib.items()}
+            val = {k: _convert_type(v) for k, v in device_setup.attrib.items()}  # type: ignore
         settings[name] = val
     return settings
 
 
-def read_rekordbox6_options(pioneer_app_dir: Union[str, Path]) -> dict:
+def read_rekordbox6_options(pioneer_app_dir: Union[str, Path]) -> Dict[str, Any]:
     """Finds and parses the Rekordbox 6 `options.json` file with additional settings.
 
     The options file contains additional settings used by Rekordbox 6, for example the
@@ -271,7 +271,7 @@ def read_rekordbox6_asar(rb6_install_dir: Union[str, Path]) -> str:
     return data
 
 
-def _extract_version(name, major_version):
+def _extract_version(name: str, major_version: int) -> str:
     name = name.replace(".app", "")  # Needed for MacOS
     ver_str = name.replace("rekordbox", "").strip()
     if not ver_str:
@@ -284,7 +284,7 @@ def _get_rb_config(
     pioneer_app_dir: Path,
     major_version: int,
     application_dirname: str = "",
-) -> dict:
+) -> Dict[str, Any]:
     """Get the program configuration for a given Rekordbox major version.
 
     Parameters
@@ -378,7 +378,9 @@ def _get_rb_config(
     return conf
 
 
-def _get_rb5_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
+def _get_rb5_config(
+    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
+) -> Dict[str, Any]:
     """Get the program configuration for Rekordbox v5.x.x."""
     major_version = 5
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -417,16 +419,16 @@ class KeyExtractor:
     """)
     # fmt: on
 
-    def __init__(self, rekordbox_executable):
+    def __init__(self, rekordbox_executable: Union[str, Path]):
         self.executable = str(rekordbox_executable)
         self.key = ""
 
-    def on_message(self, message, data):
+    def on_message(self, message: Dict[str, Any], data: Any) -> None:
         payload = message["payload"]
         if payload.startswith("sqlite3_key"):
             self.key = payload.split(": ")[1]
 
-    def run(self):
+    def run(self) -> str:
         pid = get_rekordbox_pid()
         if pid:
             raise RuntimeError(
@@ -489,17 +491,12 @@ def write_db6_key_cache(key: str) -> None:  # pragma: no cover
         fh.write(text)
     # Set the config key to make sure the key is present after calling method
     if __config__["rekordbox6"]:
-        __config__["rekordbox6"]["dp"] = key
+        __config__["rekordbox6"]["dp"] = key  # type: ignore
     if __config__["rekordbox7"]:
-        __config__["rekordbox7"]["dp"] = key
+        __config__["rekordbox7"]["dp"] = key  # type: ignore
 
 
-def _update_sqlite_key(opts, conf):
-    if "RB_KEY" in os.environ:
-        # Found key in environment variables, skip extraction
-        conf["dp"] = os.environ["RB_KEY"]
-        return
-
+def _update_sqlite_key(opts: Dict[str, Any], conf: Dict[str, Any]) -> None:
     cache_version = 0
     pw, dp = "", ""
 
@@ -542,7 +539,7 @@ def _update_sqlite_key(opts, conf):
         if not dp:
             if pw:
                 cipher = blowfish.Cipher(pw.encode())
-                dp = base64.standard_b64decode(opts["dp"])
+                dp = base64.standard_b64decode(opts["dp"])  # type: ignore
                 dp = b"".join(cipher.decrypt_ecb(dp)).decode()
                 logger.debug("Unlocked dp from pw: %s", dp)
             else:
@@ -583,7 +580,9 @@ def _update_sqlite_key(opts, conf):
         conf["dp"] = dp
 
 
-def _get_rb6_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
+def _get_rb6_config(
+    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
+) -> Dict[str, Any]:
     """Get the program configuration for Rekordbox v6.x.x."""
     major_version = 6
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -601,7 +600,9 @@ def _get_rb6_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str 
     return conf
 
 
-def _get_rb7_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = "") -> dict:
+def _get_rb7_config(
+    pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str = ""
+) -> Dict[str, Any]:
     """Get the program configuration for Rekordbox v7.x.x."""
     major_version = 7
     conf = _get_rb_config(pioneer_prog_dir, pioneer_app_dir, major_version, dirname)
@@ -620,7 +621,7 @@ def _get_rb7_config(pioneer_prog_dir: Path, pioneer_app_dir: Path, dirname: str 
 
 
 # noinspection PyPackageRequirements,PyUnresolvedReferences
-def _read_config_file(path: str) -> dict:
+def _read_config_file(path: Union[str, Path]) -> Dict[str, Any]:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"No such file or directory: '{path}'")
@@ -631,20 +632,20 @@ def _read_config_file(path: str) -> dict:
 
         parser = ConfigParser()
         parser.read(path)
-        return parser
+        return {k: v for k, v in parser.items() if v is not None}
     elif ext == ".toml":
         import toml
 
-        return toml.load(path)
+        return dict(toml.load(path))
     elif ext in (".yaml", ".yml"):
         import yaml
 
         with open(path, "r") as stream:
-            return yaml.safe_load(stream)
+            return dict(yaml.safe_load(stream))
     return dict()
 
 
-def read_pyrekordbox_configuration():
+def read_pyrekordbox_configuration() -> Dict[str, Any]:
     """Reads the pyrekordbox configuration.
 
     So far only the `pioneer-install-dir` and `pioneer-app-dir` fileds in the
@@ -682,7 +683,7 @@ def update_config(
     rb5_install_dirname: str = "",
     rb6_install_dirname: str = "",
     rb7_install_dirname: str = "",
-):
+) -> None:
     """Update the pyrekordbox configuration.
 
     This method scans the system for the Rekordbox installation and application data
@@ -763,7 +764,7 @@ def update_config(
         logger.info(e)
 
 
-def get_config(section: str, key: str = None):
+def get_config(section: str, key: str = None) -> Any:
     """Gets a section or value of the pyrekordbox configuration.
 
     Parameters
