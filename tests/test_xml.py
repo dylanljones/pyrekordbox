@@ -675,6 +675,13 @@ def test_playlist_treestr():
     assert isinstance(playlist.treestr(), str)
 
 
+def test_tostring(tmp_path):
+    xml = RekordboxXml(XML5)
+
+    s = xml.tostring()
+    assert isinstance(s, str)
+
+
 def test_save_load(tmp_path):
     xml = RekordboxXml(XML5)
 
