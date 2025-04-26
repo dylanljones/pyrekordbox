@@ -7,6 +7,7 @@
 
 - **xml:** **fix issue with pretty-formatting xml string ([#164](https://github.com/dylanljones/pyrekordbox/issues/164))**  
   For Python>3.8 the built-in indentation is used, for Python3.8 the XML string is returned unformatted if minidom fails
+- **add type hints across the codebase and use mypy for static type checking**
 
 
 <a name="v0.4.2"></a>
