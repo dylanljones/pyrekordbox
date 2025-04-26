@@ -18,3 +18,4 @@ python-dateutil
 mypy
 types-toml
 types-PyYAML
+types-python-dateutil
