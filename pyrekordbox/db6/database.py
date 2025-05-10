@@ -957,6 +957,11 @@ class Rekordbox6Database:
         else:
             plist_song = song
 
+        if not isinstance(plist_song, tables.DjmdSongPlaylist):
+            raise ValueError(
+                "Playlist must be a DjmdSongPlaylist or corresponding playlist song ID!"
+            )
+
         logger.info("Removing song with ID=%s from playlist with ID=%s", plist_song.ID, plist.ID)
         now = datetime.datetime.now()
         # Remove track from playlist
@@ -1356,6 +1361,8 @@ class Rekordbox6Database:
             plist = self.get_playlist(ID=playlist)
         else:
             plist = playlist
+        if not isinstance(plist, DjmdPlaylist):
+            raise ValueError("Playlist must be a DjmdPlaylist or corresponding playlist ID!")
 
         if plist.Attribute == 1:
             logger.info("Deleting playlist folder '%s' with ID=%s", plist.Name, plist.ID)
