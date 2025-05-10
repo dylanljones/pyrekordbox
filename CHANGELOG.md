@@ -5,6 +5,8 @@
 
 ### Improvements/Bug Fixes
 
+- **db:** **add type checks for deleting playlists and playlist songs ([#169](https://github.com/dylanljones/pyrekordbox/issues/169))**  
+  This prevents deleting a content instead of a playlist song by accident
 - **xml:** **fix issue with pretty-formatting xml string ([#164](https://github.com/dylanljones/pyrekordbox/issues/164))**  
   For Python>3.8 the built-in indentation is used, for Python3.8 the XML string is returned unformatted if minidom fails
 - **add type hints across the codebase and use mypy for static type checking**
