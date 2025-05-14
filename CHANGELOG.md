@@ -6,7 +6,10 @@
 ### Improvements/Bug Fixes
 
 - **db:** **add type checks for deleting playlists and playlist songs ([#169](https://github.com/dylanljones/pyrekordbox/issues/169))**  
-  This prevents deleting a content instead of a playlist song by accident
+  This prevents deleting a content instead of a playlist song by accident.
+- **db:** **fix timezone issue when setting datetimes ([#168](https://github.com/dylanljones/pyrekordbox/issues/168))**  
+  Datetime fields are now set with UTC which is the same format that Rekordbox uses. 
+  Timezone agnostic dates or dates with another timezone are converted accordingly.
 - **xml:** **fix issue with pretty-formatting xml string ([#164](https://github.com/dylanljones/pyrekordbox/issues/164))**  
   For Python>3.8 the built-in indentation is used, for Python3.8 the XML string is returned unformatted if minidom fails
 - **add type hints across the codebase and use mypy for static type checking**
