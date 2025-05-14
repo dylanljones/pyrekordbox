@@ -1,7 +1,9 @@
 # What's New
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="v0.4.3"></a>
+## [v0.4.3] - 2025-05-14
+
+This release adds type annotations across the codebase and fixes various bugs.
 
 ### Improvements/Bug Fixes
 
@@ -664,7 +666,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.3...HEAD
+[v0.4.3]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/dylanljones/pyrekordbox/compare/v0.3.2...v0.4.0
