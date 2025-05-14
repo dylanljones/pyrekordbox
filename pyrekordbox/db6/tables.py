@@ -7,7 +7,7 @@
 import math
 import re
 import struct
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import IntEnum
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
@@ -117,13 +117,11 @@ TABLES = [
 
 
 def datetime_to_str(value: datetime) -> str:
-    s = value.isoformat().replace("T", " ")
-    if value.tzinfo is not None:
-        # Get the timezone info (last 6 characters of the string)
-        tzinfo = s[-6:]
-        s = s[:-9] + " " + tzinfo
-    else:
-        s = s[:-3] + " +00:00"
+    # Convert to UTC timezone string
+    s = value.astimezone(timezone.utc).isoformat().replace("T", " ")
+    # Get the timezone info (last 6 characters of the string)
+    tzinfo = s[-6:]
+    s = s[:-9] + " " + tzinfo
     return s
 
 
