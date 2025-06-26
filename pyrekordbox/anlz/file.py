@@ -146,7 +146,7 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
                     raise StructNotInitializedError()
                 tags.append(tag)
                 len_header = tag.struct.len_header
-                
+
                 logger.debug(
                     "Parsed struct '%s' (len_header=%s, len_tag=%s)",
                     tag_type,
@@ -155,7 +155,7 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
                 )
             except KeyError:
                 logger.warning("Tag '%s' not supported!", tag_type)
-            
+
             i += len_tag
 
         self.file_header = file_header
