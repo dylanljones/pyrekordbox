@@ -124,24 +124,26 @@ def datetime_to_str(value: datetime) -> str:
     s = s[:-9] + " " + tzinfo
     return s
 
-
 def string_to_datetime(value: str) -> datetime:
     try:
+        # Normalize 'Z' (Zulu/UTC) to '+00:00' for fromisoformat compatibility
+        if value.endswith('Z'):
+            value = value[:-1] + '+00:00'
         dt = datetime.fromisoformat(value)
     except ValueError:
         if len(value.strip()) > 23:
-            # Assume the format
-            # "2025-04-12 19:11:29.274 -05:00" or
+            # Handles formats like:
             # "2025-04-12 19:11:29.274 -05:00 (Central Daylight Time)"
             datestr, tzinfo = value[:23], value[23:30]
             datestr = datestr.strip()
             tzinfo = tzinfo.strip()
-            assert re.match(r"^[+-]?\d{1,2}:\d{2}", tzinfo)
-            datestr = datestr.strip() + tzinfo
+            if tzinfo == 'Z':
+                tzinfo = '+00:00'
+            assert re.match(r"^[+-]?\d{1,2}:\d{2}", tzinfo), f"Invalid tzinfo: {tzinfo}"
+            datestr = datestr + tzinfo
         else:
-            datestr, tzinfo = value, ""
+            datestr = value.strip()
         dt = datetime.fromisoformat(datestr)
-    # Convert to local timezone and return without timezone
     return dt.astimezone().replace(tzinfo=None)
 
 
