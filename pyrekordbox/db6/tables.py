@@ -124,11 +124,12 @@ def datetime_to_str(value: datetime) -> str:
     s = s[:-9] + " " + tzinfo
     return s
 
+
 def string_to_datetime(value: str) -> datetime:
     try:
         # Normalize 'Z' (Zulu/UTC) to '+00:00' for fromisoformat compatibility
-        if value.endswith('Z'):
-            value = value[:-1] + '+00:00'
+        if value.endswith("Z"):
+            value = value[:-1] + "+00:00"
         dt = datetime.fromisoformat(value)
     except ValueError:
         if len(value.strip()) > 23:
@@ -137,8 +138,8 @@ def string_to_datetime(value: str) -> datetime:
             datestr, tzinfo = value[:23], value[23:30]
             datestr = datestr.strip()
             tzinfo = tzinfo.strip()
-            if tzinfo == 'Z':
-                tzinfo = '+00:00'
+            if tzinfo == "Z":
+                tzinfo = "+00:00"
             assert re.match(r"^[+-]?\d{1,2}:\d{2}", tzinfo), f"Invalid tzinfo: {tzinfo}"
             datestr = datestr + tzinfo
         else:
