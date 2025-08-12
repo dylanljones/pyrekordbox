@@ -22,11 +22,9 @@ Pioneers Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Setting files
 
-Tested Rekordbox versions: ``5.8.6 | 6.7.7 | 7.0.9``
+Check the [changelog][CHANGELOG] for recent changes!
 
-> [!WARNING]
-> This project is still under development and might contain bugs or have breaking API changes in the future.
-> Check the [changelog][CHANGELOG] for recent changes!
+Tested Rekordbox versions: ``5.8.6 | 6.7.7 | 7.0.9``
 
 
 ## 🔧 Installation
@@ -251,6 +249,12 @@ instead of opening an issue.
 
 Pyrekordbox is tested on Windows and MacOS, however some features can't be tested in
 the CI setup since it requires a working Rekordbox installation.
+
+## ♡ Sponsor
+
+If pyrekordbox has helped you or saved you time, consider supporting its development - every coffee makes a difference!
+
+[![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-white.svg)](https://www.buymeacoffee.com/dylanljones)
 
 
 ## 🔗 Related Projects and References
