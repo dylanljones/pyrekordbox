@@ -1,5 +1,19 @@
 # What's New
 
+
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **db:** **enhance datetime parsing for timezone handling ([#176](https://github.com/dylanljones/pyrekordbox/pull/176))**  
+  Updated the string_to_datetime function to normalize 'Z' to '+00:00' and improved handling of 
+  timezone information. This ensures compatibility with various datetime formats and maintains 
+  consistency with UTC representation.
+- **anlz**: **enhance PSSI tag handling to improve garbled file detection and deobfuscation ([#175](https://github.com/dylanljones/pyrekordbox/pull/175))**  
+  Updated logic for mood and bank validation, and refined XOR deobfuscation process for garbled tags.
+
+
 <a name="v0.4.3"></a>
 ## [v0.4.3] - 2025-05-14
 
