@@ -196,9 +196,6 @@ Changing and creating the Rekordbox analysis files is planned as well, but for t
 full structure of the analysis files has to be understood.
 
 Unsupported ANLZ tags:
-  - PCOB
-  - PCO2
-  - PSSI
   - PWV6
   - PWV7
   - PWVC
