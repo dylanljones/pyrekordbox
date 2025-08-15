@@ -17,7 +17,7 @@ from sqlalchemy.sql.sqltypes import DateTime, String
 
 from ..anlz import AnlzFile, get_anlz_paths, read_anlz_files  # type: ignore[attr-defined]
 from ..config import get_config
-from ..utils import get_rekordbox_pid
+from ..utils import deobfuscate, get_rekordbox_pid
 from . import tables
 from .aux_files import MasterPlaylistXml
 from .registry import RekordboxAgentRegistry
@@ -38,6 +38,8 @@ SPECIAL_PLAYLIST_IDS = [
     "100000",  # Cloud Library Sync
     "200000",  # CUE Analysis Playlist
 ]
+
+BLOB = b"PN_Pq^*N>(JYe*u^8;Yg76HuZ<mR13S?=>)b9;DpoTXV(6ItkU`}8*m6tx_I{Solh_N#dfe{v="
 
 logger = logging.getLogger(__name__)
 
@@ -143,24 +145,15 @@ class Rekordbox6Database:
         if unlock:
             if not _sqlcipher_available:  # pragma: no cover
                 raise ImportError("Could not unlock database: 'sqlcipher3' package not found")
-            if not key:  # pragma: no cover
-                try:
-                    key = rb_config["dp"]
-                except KeyError:
-                    raise NoCachedKey(
-                        "Could not unlock database: No key found\n"
-                        f"If you are using Rekordbox>{MAX_VERSION} the key cannot be "
-                        f"extracted automatically!\n"
-                        "Please use the CLI of pyrekordbox to download the key or "
-                        "use the `key` parameter to manually provide it."
-                    )
-            else:
-                # Check if key looks like a valid key
-                if not key.startswith("402fd"):
-                    raise ValueError("The provided database key doesn't look valid!")
 
-            logger.debug("Key: %s", key)
+            if not key:  # pragma: no cover
+                key = deobfuscate(BLOB)
+            elif not key.startswith("402fd"):
+                # Check if key looks like a valid key
+                raise ValueError("The provided database key doesn't look valid!")
+
             # Unlock database and create engine
+            logger.debug("Key: %s", key)
             url = f"sqlite+pysqlcipher://:{key}@/{db_path}?"
             engine = create_engine(url, module=sqlite3)
         else:

@@ -1,7 +1,6 @@
 # Development requirements, see pyproject.toml for the build dependencies
 
 bidict>=0.21.0
-blowfish>=0.6.0
 construct>=2.10.0
 hypothesis>=6.0.0
 numpy>=1.19.0
@@ -12,7 +11,6 @@ setuptools>=61.0.0
 setuptools-scm[toml]>=4
 sqlalchemy[mypy]>=2.0.0
 sqlcipher3-wheels
-frida-tools
 python-dateutil
 
 mypy

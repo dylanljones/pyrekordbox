@@ -30,14 +30,12 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "bidict>=0.21.0",
-    "blowfish>=0.6.0",
     "construct>=2.10.0",
     "numpy>=1.19.0",
     "packaging",
     "psutil>=5.9.0",
     "sqlalchemy>=2.0.0",
     "sqlcipher3-wheels",
-    "frida-tools",
     "python-dateutil",
 ]
 

@@ -76,10 +76,6 @@ from pyrekordbox.config import update_config
 update_config("<pioneer_install_dir>", "<pioneer_app_dir>")
 ````
 
-Alternatively the two paths can be specified in a configuration file under the section
-`rekordbox`. Supported configuration files are pyproject.toml, setup.cfg, pyrekordbox.toml,
-pyrekordbox.cfg and pyrekordbox.yaml.
-
 
 ### Rekordbox 6/7 database
 
@@ -125,19 +121,6 @@ So far only a few tables support adding or deleting entries:
 - ``DjmdArtist``: Artists
 - ``DjmdGenre``: Genres
 - ``DjmdLabel``: Labels
-
-If the automatic key extraction fails the command line interface of ``pyrekordbox``
-provides a command for downloading the key from known sources and writing it to the
-cache file:
-````shell
-python -m pyrekordbox download-key
-````
-Once the key is cached the database can be opened without providing the key.
-The key can also be provided manually:
-````python
-db = Rekordbox6Database(key="<insert key here>")
-````
-
 
 ### Rekordbox XML
 

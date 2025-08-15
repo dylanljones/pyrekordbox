@@ -6,6 +6,11 @@
 
 ### Improvements/Bug Fixes
 
+- **db:** **improve database key handling ([#181](https://github.com/dylanljones/pyrekordbox/issues/181))**  
+  The database handling is now much more robust. This also improves the config performance of the 
+  library and reduces the number of dependencies. The 'download_key' CLI command was removed as well.
+
+  Note: The app-data directory of pyrekordbox can be removed as it is no longer used.
 - **db:** **enhance datetime parsing for timezone handling ([#176](https://github.com/dylanljones/pyrekordbox/pull/176))**  
   Updated the string_to_datetime function to normalize 'Z' to '+00:00' and improved handling of 
   timezone information. This ensures compatibility with various datetime formats and maintains 

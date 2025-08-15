@@ -3,29 +3,9 @@
 # Date:   2023-08-15
 
 import os
-import re
 import shutil
 import sys
-import urllib.request
 from pathlib import Path
-
-from pyrekordbox.config import get_cache_file, write_db6_key_cache
-
-KEY_SOURCES = [
-    {
-        "url": r"https://raw.githubusercontent.com/mganss/CueGen/19878e6eb3f586dee0eb3eb4f2ce3ef18309de9d/CueGen/Generator.cs",  # noqa: E501
-        "regex": re.compile(
-            r'((.|\n)*)Config\.UseSqlCipher.*\?.*"(?P<dp>.*)".*:.*null',
-            flags=re.IGNORECASE | re.MULTILINE,
-        ),
-    },
-    {
-        "url": r"https://raw.githubusercontent.com/dvcrn/go-rekordbox/8be6191ba198ed7abd4ad6406d177ed7b4f749b5/cmd/getencryptionkey/main.go",  # noqa: E501
-        "regex": re.compile(
-            r'((.|\n)*)fmt\.Print\("(?P<dp>.*)"\)', flags=re.IGNORECASE | re.MULTILINE
-        ),
-    },
-]
 
 
 class WorkingDir:
@@ -130,39 +110,11 @@ def install_pysqlcipher(
             print(f"Could not remove temporary directory '{tmpdir}'!")
 
 
-def download_db6_key():
-    dp = ""
-    for source in KEY_SOURCES:
-        url = source["url"]
-        regex = source["regex"]
-        print(f"Looking for key: {url}")
-
-        res = urllib.request.urlopen(url)
-        data = res.read().decode("utf-8")
-        match = regex.match(data)
-        if match:
-            dp = match.group("dp")
-            break
-    if dp:
-        cache_file = get_cache_file()
-        print(f"Found key, updating cache file {cache_file}")
-        write_db6_key_cache(dp)
-    else:
-        print("No key found in the online sources.")
-
-
 def main():
     from argparse import ArgumentParser
 
     parser = ArgumentParser("pyrekordbox")
     subparsers = parser.add_subparsers(dest="command")
-
-    # Download Rekordbx 6 database key command
-    subparsers.add_parser(
-        "download-key",
-        help="Download the Rekordbox 6 database key from the internet "
-        "and write it to the cache file.",
-    )
 
     # Install pysqlcipher3 command (Windows only)
     install_parser = subparsers.add_parser(
@@ -192,9 +144,7 @@ def main():
 
     # Parse args and handle command
     args = parser.parse_args(sys.argv[1:])
-    if args.command == "download-key":
-        download_db6_key()
-    elif args.command == "install-sqlcipher":
+    if args.command == "install-sqlcipher":
         install_pysqlcipher(args.tmpdir, args.cryptolib, install=not args.buildonly)
 
 

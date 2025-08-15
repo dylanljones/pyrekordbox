@@ -4,14 +4,18 @@
 
 """This module contains common constants and methods used in other modules."""
 
+import base64
 import os
 import warnings
 import xml.etree.cElementTree as xml
+import zlib
 from xml.dom import minidom
 
 import psutil
 
 warnings.simplefilter("always", DeprecationWarning)
+
+BLOB_KEY = b"657f48f84c437cc1"
 
 
 def warn_deprecated(name: str, new_name: str = "", hint: str = "", remove_in: str = "") -> None:
@@ -162,3 +166,19 @@ def pretty_xml(element: xml.Element, indent: str = None, encoding: str = "utf-8"
     # Remove annoying empty lines
     string = "\n".join([line for line in string.splitlines() if line.strip()])
     return string
+
+
+def obfuscate(plaintext: str) -> bytes:
+    """Obfuscates a plaintext string using zlib compression and XOR encryption."""
+    key = BLOB_KEY
+    data = zlib.compress(plaintext.encode("utf-8"))
+    xored = bytes(b ^ key[i % len(key)] for i, b in enumerate(data))
+    return base64.b85encode(xored)  # bytes
+
+
+def deobfuscate(blob: bytes) -> str:
+    """Deobfuscates a previously obfuscated string."""
+    key = BLOB_KEY
+    data = base64.b85decode(blob)
+    xored = bytes(b ^ key[i % len(key)] for i, b in enumerate(data))
+    return zlib.decompress(xored).decode("utf-8")
