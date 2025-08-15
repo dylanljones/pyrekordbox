@@ -20,10 +20,6 @@ import packaging.version
 
 logger = logging.getLogger(__name__)
 
-# Cache file for pyrekordbox data
-_cache_file_version = 2
-_cache_file_name = "rb.cache"
-
 # Define empty pyrekordbox configuration
 __config__ = {
     "pioneer": {
