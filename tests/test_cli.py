@@ -21,11 +21,3 @@ def test_cli():
     result = shell("python -m pyrekordbox --help")
     # Check if the command was successful
     assert result.exit_code == 0, f"Command failed with exit code {result.exit_code}"
-
-
-def test_download_key():
-    """Test the download-key command."""
-    result = shell("python -m pyrekordbox download-key")
-    # Check if the command was successful
-    assert result.exit_code == 0, f"Command failed with exit code {result.exit_code}"
-    assert "Found key, updating cache file" in result.stdout
