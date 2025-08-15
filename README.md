@@ -242,16 +242,8 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 - [crate-digger]: Java library for fetching and parsing rekordbox exports and track analysis files.
 - [rekordcrate]: Library for parsing Pioneer Rekordbox device exports
 - [supbox]: Get the currently playing track from Rekordbox v6 as Audio Hijack Shoutcast/Icecast metadata, display in your OBS video broadcast or export as JSON.
-- Deep Symmetry has an extensive analysis of Rekordbox's ANLZ and .edb export file formats
+- [Deep Symmetry] has an extensive analysis of Rekordbox's ANLZ and .edb export file formats
   https://djl-analysis.deepsymmetry.org/djl-analysis
-- rekordcrate reverse engineered the format of the Rekordbox MySetting files
-  https://holzhaus.github.io/rekordcrate/rekordcrate/setting/index.html
-- rekordcloud went into detail about the internals of Rekordbox 6
-  https://rekord.cloud/blog/technical-inspection-of-rekordbox-6-and-its-new-internals.
-- supbox has a nice implementation on finding the Rekordbox 6 database key
-  https://github.com/gabek/supbox
-
-
 
 
 [tests-badge]: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=master&label=tests&logo=github&style=flat
@@ -298,3 +290,4 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 [rekordcrate]: https://github.com/Holzhaus/rekordcrate
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
+[Deep Symmetry]: https://deepsymmetry.org/
