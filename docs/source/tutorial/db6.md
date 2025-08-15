@@ -1,42 +1,20 @@
 # Rekordbox 6 Database
 
 Pyrekordbox uses [SQLALchemy](https://www.sqlalchemy.org/) as ORM-Framework to handle the
-Rekordbox v6 database file (``master.db``). The table declarations can be found in
+Rekordbox database file (``master.db``). The table declarations can be found in
 ``pyrekordbox.db6.tables``.
 
 ```{seealso}
 See the {ref}`Rekordbox 6 Database Format <Rekordbox 6 Database Format>` documentation for more information.
 ```
 
-Since the Rekordbox v6 database handler automatically finds the ``master.db`` database file
+Since the Rekordbox database handler automatically finds the ``master.db`` database file
 (see configuration), it can be initialized without any arguments:
 ````python
 from pyrekordbox import Rekordbox6Database
 
 db = Rekordbox6Database()
 ````
-
-If the automatic key extraction fails the command line interface of ``pyrekordbox``
-provides a command for downloading the key from known sources and writing it to the
-cache file:
-````shell
-python -m pyrekordbox download-key
-````
-Once the key is cached the database can be opened without providing the key.
-If you obtained the key from another source, you can also pass it to the database handler
-````python
-db = Rekordbox6Database(key="<insert key here>")
-````
-or write it to the cache file manually:
-````python
-from pyrekordbox.config import write_db6_key_cache
-
-write_db6_key_cache("<insert key here>")  # call once
-db = Rekordbox6Database()
-````
-The key can be found in some other projects (see issue
-[#77](https://github.com/dylanljones/pyrekordbox/issues/77)), for example [here][rb6-key].
-
 
 ## Querying the database
 
@@ -203,4 +181,3 @@ More coming soon!
 [DjmdPlaylist]: pyrekordbox.db6.tables.DjmdPlaylist
 [djmdSongPlaylist-table]: #djmdSongPlaylist
 [DjmdSongPlaylist]: pyrekordbox.db6.tables.DjmdSongPlaylist
-[rb6-key]: https://github.com/mganss/CueGen/blob/19878e6eb3f586dee0eb3eb4f2ce3ef18309de9d/CueGen/Generator.cs#L31
