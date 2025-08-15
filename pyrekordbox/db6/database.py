@@ -33,7 +33,6 @@ except ImportError:  # pragma: no cover
 
     _sqlcipher_available = False
 
-MAX_VERSION = "6.6.5"
 SPECIAL_PLAYLIST_IDS = [
     "100000",  # Cloud Library Sync
     "200000",  # CUE Analysis Playlist
@@ -46,12 +45,6 @@ logger = logging.getLogger(__name__)
 PathLike = Union[str, Path]
 ContentLike = Union[DjmdContent, int, str]
 PlaylistLike = Union[DjmdPlaylist, int, str]
-
-
-class NoCachedKey(Exception):
-    pass
-
-
 T = TypeVar("T", bound=tables.Base)
 
 
