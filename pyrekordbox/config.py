@@ -36,25 +36,6 @@ class InvalidApplicationDirname(Exception):
     pass
 
 
-def get_appdata_dir() -> Path:
-    """Returns the path of the application data directory.
-
-    On Windows, the application data is stored in `/Users/user/AppData/Roaming`.
-    On macOS the application data is stored in `~/Libary/Application Support`.
-    """
-    if sys.platform == "win32":
-        # Windows: located in /Users/user/AppData/Roaming/
-        app_data = Path(os.environ["AppData"])
-    elif sys.platform == "darwin":
-        # MacOS: located in ~/Library/Application Support/
-        app_data = Path("~").expanduser() / "Library" / "Application Support"
-    else:
-        # Linux: not supported
-        logger.warning(f"OS {sys.platform} not supported!")
-        return Path("~").expanduser() / ".local" / "share"
-    return app_data
-
-
 def get_pioneer_install_dir(path: Union[str, Path] = None) -> Path:  # pragma: no cover
     """Returns the path of the Pioneer program installation directory.
 
