@@ -382,19 +382,6 @@ def update_config(
         The name of the Rekordbox 7 installation directory. By default, the normal
         directory name is used (Windows: 'rekordbox 7.x.x', macOS: 'rekordbox 7.app').
     """
-    # Read config file
-    conf = dict()
-    if pioneer_install_dir is None and "pioneer-install-dir" in conf:
-        pioneer_install_dir = conf["pioneer-install-dir"]
-    if pioneer_app_dir is None and "pioneer-app-dir" in conf:
-        pioneer_app_dir = conf["pioneer-app-dir"]
-    if not rb5_install_dirname and "rekordbox5-install-dirname" in conf:
-        rb5_install_dirname = conf["rekordbox5-install-dirname"]
-    if not rb6_install_dirname and "rekordbox6-install-dirname" in conf:
-        rb6_install_dirname = conf["rekordbox6-install-dirname"]
-    if not rb7_install_dirname and "rekordbox7-install-dirname" in conf:
-        rb7_install_dirname = conf["rekordbox7-install-dirname"]
-
     # Pioneer installation directory
     try:
         pioneer_install_dir = get_pioneer_install_dir(pioneer_install_dir)
