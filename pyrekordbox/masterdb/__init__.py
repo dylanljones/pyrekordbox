@@ -2,10 +2,8 @@
 # Author: Dylan Jones
 # Date:   2022-05-07
 
-from ..utils import warn_deprecated as _warn_deprecated
-from .database import Rekordbox6Database
-from .smartlist import SmartList
-from .tables import (
+from .database import MasterDatabase
+from .models import (
     AgentRegistry,
     CloudAgentRegistry,
     ContentActiveCensor,
@@ -44,10 +42,4 @@ from .tables import (
     SettingFile,
     UuidIDMap,
 )
-
-_warn_deprecated(
-    "pyrekordbox.db6",
-    "pyrekordbox.masterdb",
-    hint="The db6 package was renamed to masterdb!",
-    remove_in="0.6.0",
-)
+from .smartlist import SmartList

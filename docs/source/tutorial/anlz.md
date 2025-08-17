@@ -41,9 +41,10 @@ anlz.save("path/to/ANLZXXXX.DAT")
 
 To find the ANLZ files corresponding to a specific track in the Rekordbox collection,
 the database handler includes a method that returnes the directory containing the ANLZ files:
+
 ```python
->>> from pyrekordbox import Rekordbox6Database
->>> db = Rekordbox6Database()
+>>> from pyrekordbox import MasterDatabase
+>>> db = MasterDatabase()
 >>> content = db.get_content().first()
 >>> db.get_anlz_dir(content)
 C:\Users\user\AppData\Roaming\Pioneer\rekordbox\share\PIONEER\USBANLZ\0e8\0d4cc-06a6-4574-ba18-1c2301ea9924

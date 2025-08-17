@@ -38,9 +38,9 @@ Alternatively the two paths can be specified in a configuration file under the s
 pyrekordbox.cfg and pyrekordbox.yaml.
 
 
-## Rekordbox 6 database
+## Rekordbox master database
 
-Rekordbox 6 now uses a SQLite database for storing the collection content.
+Rekordbox now uses a SQLite database for storing the collection content.
 Unfortunatly, the new `master.db` SQLite database is encrypted using
 [SQLCipher][sqlcipher], which means it can't be used without the encryption key.
 However, since your data is stored and used locally, the key must be present on the
@@ -50,9 +50,9 @@ Pyrekordbox can unlock the new Rekordbox `master.db` SQLite database and provide
 an easy interface for accessing the data stored in it:
 
 ````python
-from pyrekordbox import Rekordbox6Database
+from pyrekordbox import MasterDatabase
 
-db = Rekordbox6Database()
+db = MasterDatabase()
 
 for content in db.get_content():
     print(content.Title, content.Artist.Name)
@@ -77,23 +77,6 @@ So far only a few tables support adding or deleting entries:
 - ``DjmdArtist``: Artists
 - ``DjmdGenre``: Genres
 - ``DjmdLabel``: Labels
-
-````{important}
-Starting from Rekordbox version ``6.6.5`` Pioneer obfuscated the ``app.asar`` file
-contents, breaking the key extraction (see [this discussion](https://github.com/dylanljones/pyrekordbox/discussions/97) for more details).
-If you are using a later version of Rekorbox and have no cached key from a previous
-version, the database can not be unlocked automatically.
-The command line interface of ``pyrekordbox`` provides a command for downloading
-the key from known sources and writing it to the cache file:
-```shell
-python -m pyrekordbox download-key
-```
-Once the key is cached the database can be opened without providing the key.
-The key can also be provided manually:
-```python
-db = Rekordbox6Database(key="<insert key here>")
-```
-````
 
 
 ## Rekordbox XML
