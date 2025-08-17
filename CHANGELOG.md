@@ -1,15 +1,14 @@
 # What's New
 
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="v0.4.4"></a>
+## [v0.4.4] - 2025-08-17
 
 ### Improvements/Bug Fixes
 
 - **db:** **improve database key handling ([#181](https://github.com/dylanljones/pyrekordbox/issues/181))**  
   The database handling is now much more robust. This also improves the config performance of the 
   library and reduces the number of dependencies. The 'download_key' CLI command was removed as well.
-
   Note: The app-data directory of pyrekordbox can be removed as it is no longer used.
 - **db:** **enhance datetime parsing for timezone handling ([#176](https://github.com/dylanljones/pyrekordbox/pull/176))**  
   Updated the string_to_datetime function to normalize 'Z' to '+00:00' and improved handling of 
@@ -685,7 +684,8 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.4...HEAD
+[v0.4.4]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.3...v0.4.4
 [v0.4.3]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.0...v0.4.1
