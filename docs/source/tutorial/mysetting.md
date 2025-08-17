@@ -34,8 +34,8 @@ file4 = DevSettingFile.parse_file("DEVSETTING.DAT")
 To find the My-Settings files, the database handler includes a method that returnes the
 paths of all four files:
 ````python
->>> from pyrekordbox import Rekordbox6Database
->>> db = Rekordbox6Database()
+>>> from pyrekordbox import MasterDatabase
+>>> db = MasterDatabase()
 >>> db.get_mysetting_paths()
 [
     'C:/Users/user/AppData/Roaming/Pioneer/rekordbox/DEVSETTING.DAT',

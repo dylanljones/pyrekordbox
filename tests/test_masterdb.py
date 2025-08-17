@@ -13,10 +13,10 @@ from pytest import mark
 from sqlalchemy import text
 from sqlalchemy.orm.query import Query
 
-from pyrekordbox import Rekordbox6Database
-from pyrekordbox.db6 import tables
-from pyrekordbox.db6.smartlist import LogicalOperator, Operator, Property, SmartList
-from pyrekordbox.db6.tables import datetime_to_str, string_to_datetime
+from pyrekordbox import MasterDatabase
+from pyrekordbox.masterdb import models
+from pyrekordbox.masterdb.models import datetime_to_str, string_to_datetime
+from pyrekordbox.masterdb.smartlist import LogicalOperator, Operator, Property, SmartList
 
 TEST_ROOT = Path(__file__).parent.parent / ".testdata"
 LOCKED = TEST_ROOT / "rekordbox 6" / "master_locked.db"
@@ -28,7 +28,7 @@ MASTER_PLAYLIST_DST = TEST_ROOT / "rekordbox 6" / "masterPlaylists6.xml"
 # Create a copy of the masterPlaylists6.xml file
 shutil.copy(MASTER_PLAYLIST_SRC, MASTER_PLAYLIST_DST)
 
-DB = Rekordbox6Database(UNLOCKED, unlock=False)
+DB = MasterDatabase(UNLOCKED, unlock=False)
 
 # Content IDs
 CID1 = 178162577  # Demo Track 1
@@ -45,25 +45,25 @@ def db():
     """Return a clean Rekordbox v6 database instance and close it after tests."""
     shutil.copy(UNLOCKED, UNLOCKED_COPY)
     shutil.copy(MASTER_PLAYLIST_SRC, MASTER_PLAYLIST_DST)
-    db = Rekordbox6Database(UNLOCKED_COPY, unlock=False)
+    db = MasterDatabase(UNLOCKED_COPY, unlock=False)
     yield db
     db.close()
 
 
 def test_open_rekordbox_database():
-    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    db = MasterDatabase(UNLOCKED, unlock=False)
     db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table';"))
     db.close()
 
 
 def test_unlock_rekordbox_database():
-    db = Rekordbox6Database(LOCKED, unlock=True)
+    db = MasterDatabase(LOCKED, unlock=True)
     db.session.execute(text("SELECT name FROM sqlite_master WHERE type='table';"))
     db.close()
 
 
 def test_close_open():
-    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    db = MasterDatabase(UNLOCKED, unlock=False)
     db.close()
     db.open()
     _ = db.get_content()[0]  # Try to query the database
@@ -93,36 +93,36 @@ def test_string_to_datetime(s):
 @mark.parametrize(
     "name,cls",
     [
-        ("get_active_censor", tables.DjmdActiveCensor),
-        ("get_album", tables.DjmdAlbum),
-        ("get_artist", tables.DjmdArtist),
-        ("get_category", tables.DjmdCategory),
-        ("get_color", tables.DjmdColor),
-        ("get_content", tables.DjmdContent),
-        ("get_cue", tables.DjmdCue),
-        ("get_device", tables.DjmdDevice),
-        ("get_genre", tables.DjmdGenre),
-        ("get_history", tables.DjmdHistory),
-        ("get_hot_cue_banklist", tables.DjmdHotCueBanklist),
-        ("get_key", tables.DjmdKey),
-        ("get_label", tables.DjmdLabel),
-        ("get_menu_items", tables.DjmdMenuItems),
-        ("get_mixer_param", tables.DjmdMixerParam),
-        ("get_my_tag", tables.DjmdMyTag),
-        ("get_playlist", tables.DjmdPlaylist),
-        ("get_property", tables.DjmdProperty),
-        ("get_related_tracks", tables.DjmdRelatedTracks),
-        ("get_sampler", tables.DjmdSampler),
-        ("get_sort", tables.DjmdSort),
-        ("get_agent_registry", tables.AgentRegistry),
-        ("get_cloud_agent_registry", tables.CloudAgentRegistry),
-        ("get_content_active_censor", tables.ContentActiveCensor),
-        ("get_content_cue", tables.ContentCue),
-        ("get_content_file", tables.ContentFile),
-        ("get_hot_cue_banklist_cue", tables.HotCueBanklistCue),
-        ("get_image_file", tables.ImageFile),
-        ("get_setting_file", tables.SettingFile),
-        ("get_uuid_map", tables.UuidIDMap),
+        ("get_active_censor", models.DjmdActiveCensor),
+        ("get_album", models.DjmdAlbum),
+        ("get_artist", models.DjmdArtist),
+        ("get_category", models.DjmdCategory),
+        ("get_color", models.DjmdColor),
+        ("get_content", models.DjmdContent),
+        ("get_cue", models.DjmdCue),
+        ("get_device", models.DjmdDevice),
+        ("get_genre", models.DjmdGenre),
+        ("get_history", models.DjmdHistory),
+        ("get_hot_cue_banklist", models.DjmdHotCueBanklist),
+        ("get_key", models.DjmdKey),
+        ("get_label", models.DjmdLabel),
+        ("get_menu_items", models.DjmdMenuItems),
+        ("get_mixer_param", models.DjmdMixerParam),
+        ("get_my_tag", models.DjmdMyTag),
+        ("get_playlist", models.DjmdPlaylist),
+        ("get_property", models.DjmdProperty),
+        ("get_related_tracks", models.DjmdRelatedTracks),
+        ("get_sampler", models.DjmdSampler),
+        ("get_sort", models.DjmdSort),
+        ("get_agent_registry", models.AgentRegistry),
+        ("get_cloud_agent_registry", models.CloudAgentRegistry),
+        ("get_content_active_censor", models.ContentActiveCensor),
+        ("get_content_cue", models.ContentCue),
+        ("get_content_file", models.ContentFile),
+        ("get_hot_cue_banklist_cue", models.HotCueBanklistCue),
+        ("get_image_file", models.ImageFile),
+        ("get_setting_file", models.SettingFile),
+        ("get_uuid_map", models.UuidIDMap),
     ],
 )
 def test_getter(name, cls):
@@ -140,36 +140,36 @@ def test_getter(name, cls):
 @mark.parametrize(
     "name,cls",
     [
-        ("get_active_censor", tables.DjmdActiveCensor),
-        ("get_album", tables.DjmdAlbum),
-        ("get_artist", tables.DjmdArtist),
-        ("get_category", tables.DjmdCategory),
-        ("get_color", tables.DjmdColor),
-        ("get_content", tables.DjmdContent),
-        ("get_cue", tables.DjmdCue),
-        ("get_device", tables.DjmdDevice),
-        ("get_genre", tables.DjmdGenre),
-        ("get_history", tables.DjmdHistory),
-        ("get_hot_cue_banklist", tables.DjmdHotCueBanklist),
-        ("get_key", tables.DjmdKey),
-        ("get_label", tables.DjmdLabel),
-        ("get_menu_items", tables.DjmdMenuItems),
-        ("get_mixer_param", tables.DjmdMixerParam),
-        ("get_my_tag", tables.DjmdMyTag),
-        ("get_playlist", tables.DjmdPlaylist),
-        # ("get_property", tables.DjmdProperty),
-        ("get_related_tracks", tables.DjmdRelatedTracks),
-        ("get_sampler", tables.DjmdSampler),
-        ("get_sort", tables.DjmdSort),
-        # ("get_agent_registry", tables.AgentRegistry),
-        ("get_cloud_agent_registry", tables.CloudAgentRegistry),
-        ("get_content_active_censor", tables.ContentActiveCensor),
-        ("get_content_cue", tables.ContentCue),
-        ("get_content_file", tables.ContentFile),
-        ("get_hot_cue_banklist_cue", tables.HotCueBanklistCue),
-        ("get_image_file", tables.ImageFile),
-        ("get_setting_file", tables.SettingFile),
-        ("get_uuid_map", tables.UuidIDMap),
+        ("get_active_censor", models.DjmdActiveCensor),
+        ("get_album", models.DjmdAlbum),
+        ("get_artist", models.DjmdArtist),
+        ("get_category", models.DjmdCategory),
+        ("get_color", models.DjmdColor),
+        ("get_content", models.DjmdContent),
+        ("get_cue", models.DjmdCue),
+        ("get_device", models.DjmdDevice),
+        ("get_genre", models.DjmdGenre),
+        ("get_history", models.DjmdHistory),
+        ("get_hot_cue_banklist", models.DjmdHotCueBanklist),
+        ("get_key", models.DjmdKey),
+        ("get_label", models.DjmdLabel),
+        ("get_menu_items", models.DjmdMenuItems),
+        ("get_mixer_param", models.DjmdMixerParam),
+        ("get_my_tag", models.DjmdMyTag),
+        ("get_playlist", models.DjmdPlaylist),
+        # ("get_property", models.DjmdProperty),
+        ("get_related_tracks", models.DjmdRelatedTracks),
+        ("get_sampler", models.DjmdSampler),
+        ("get_sort", models.DjmdSort),
+        # ("get_agent_registry", models.AgentRegistry),
+        ("get_cloud_agent_registry", models.CloudAgentRegistry),
+        ("get_content_active_censor", models.ContentActiveCensor),
+        ("get_content_cue", models.ContentCue),
+        ("get_content_file", models.ContentFile),
+        ("get_hot_cue_banklist_cue", models.HotCueBanklistCue),
+        ("get_image_file", models.ImageFile),
+        ("get_setting_file", models.SettingFile),
+        ("get_uuid_map", models.UuidIDMap),
     ],
 )
 def test_getter_by_id(name, cls):
@@ -190,12 +190,12 @@ def test_getter_by_id(name, cls):
 @mark.parametrize(
     "parent_name,key,cls",
     [
-        ("get_history", "HistoryID", tables.DjmdSongHistory),
-        ("get_hot_cue_banklist", "HotCueBanklistID", tables.DjmdSongHotCueBanklist),
-        ("get_my_tag", "MyTagID", tables.DjmdSongMyTag),
-        ("get_playlist", "PlaylistID", tables.DjmdSongPlaylist),
-        ("get_related_tracks", "RelatedTracksID", tables.DjmdSongPlaylist),
-        ("get_sampler", "SamplerID", tables.DjmdSongPlaylist),
+        ("get_history", "HistoryID", models.DjmdSongHistory),
+        ("get_hot_cue_banklist", "HotCueBanklistID", models.DjmdSongHotCueBanklist),
+        ("get_my_tag", "MyTagID", models.DjmdSongMyTag),
+        ("get_playlist", "PlaylistID", models.DjmdSongPlaylist),
+        ("get_related_tracks", "RelatedTracksID", models.DjmdSongPlaylist),
+        ("get_sampler", "SamplerID", models.DjmdSongPlaylist),
     ],
 )
 def test_songs_getters(parent_name, key, cls):
@@ -315,7 +315,7 @@ def _check_playlist_xml_delete(db):
         if plxml["Lib_Type"] != 0:
             continue
         pid = int(plxml["Id"], 16)
-        if db.query(tables.DjmdPlaylist).filter_by(ID=pid).count() != 1:
+        if db.query(models.DjmdPlaylist).filter_by(ID=pid).count() != 1:
             return False
     return True
 
@@ -756,7 +756,7 @@ def test_delete_playlist_non_empty(db):
     db.commit()
     usn_old = db.get_local_usn()
 
-    assert db.query(tables.DjmdSongPlaylist).count() == 4
+    assert db.query(models.DjmdSongPlaylist).count() == 4
 
     # Delete playlist
     pl = db.get_playlist(Name="sub playlist 2").one()
@@ -768,11 +768,11 @@ def test_delete_playlist_non_empty(db):
     pl = db.get_playlist(ID=pid)
     assert pl is None
     # Check if songs in playlist were deleted
-    assert db.query(tables.DjmdSongPlaylist).count() == 2
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid1).count() == 1
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
+    assert db.query(models.DjmdSongPlaylist).count() == 2
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid1).count() == 1
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
     # Check if USN is correct (+1 for deleting with contents)
     assert db.get_local_usn() == usn_old + 1
 
@@ -795,7 +795,7 @@ def test_delete_playlist_folder_non_empty(db):
     db.commit()
     usn_old = db.get_local_usn()
 
-    assert db.query(tables.DjmdSongPlaylist).count() == 4
+    assert db.query(models.DjmdSongPlaylist).count() == 4
 
     # Delete playlist
     pl = db.get_playlist(Name="sub playlist folder").one()
@@ -812,11 +812,11 @@ def test_delete_playlist_folder_non_empty(db):
     pl = db.get_playlist(ID=pid2)
     assert pl is None
     # Check if songs in playlist were deleted
-    assert db.query(tables.DjmdSongPlaylist).count() == 2
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid1).count() == 1
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
+    assert db.query(models.DjmdSongPlaylist).count() == 2
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid1).count() == 1
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid4).count() == 1
 
     # Check if USN is correct (+1 for deleting with Seq update, +1 for children)
     assert db.get_local_usn() == usn_old + 2
@@ -860,10 +860,10 @@ def test_delete_playlist_folder_chained(db):
     assert db.get_playlist(ID=pid5) is None
     assert db.get_playlist(ID=pid4) is None
     assert db.get_playlist(ID=pid6) is None
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid1).count() == 0
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
-    assert db.query(tables.DjmdSongPlaylist).filter_by(ID=sid4).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid1).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid2).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid3).count() == 0
+    assert db.query(models.DjmdSongPlaylist).filter_by(ID=sid4).count() == 0
 
     # Check all the corresponding xml entries were deleted
     assert db.playlist_xml.get(pid1) is None
@@ -895,12 +895,12 @@ def test_move_playlist_seq(db):
     db.create_playlist("sub pl 4", parent=f1)
     db.commit()
 
-    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 1", "pl 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
 
-    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
@@ -912,7 +912,7 @@ def test_move_playlist_seq(db):
     db.move_playlist(pl, seq=5)
     db.commit()
 
-    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 2", "pl 3", "pl 1", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
@@ -937,7 +937,7 @@ def test_move_playlist_seq(db):
     db.move_playlist(pl, seq=2)
     db.commit()
 
-    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["f 1", "pl 3", "f 2", "pl 2", "pl 1", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
@@ -973,12 +973,12 @@ def test_move_playlist_parent(db):
     db.create_playlist("sub pl 4", parent=f1)
     db.commit()
 
-    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 1", "pl 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
 
-    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
@@ -990,11 +990,11 @@ def test_move_playlist_parent(db):
     db.move_playlist(pl, parent=f1)
     db.commit()
 
-    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5]
-    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "sub pl 2", "sub pl 3", "sub pl 4", "pl 1"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5]
@@ -1012,11 +1012,11 @@ def test_move_playlist_parent(db):
     db.move_playlist(pl, seq=2, parent=f1)
     db.commit()
 
-    playlists = db.get_playlist(ParentID=folder.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=folder.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["f 1", "f 2", "pl 3", "pl 4"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4]
-    playlists = db.get_playlist(ParentID=f1.ID).order_by(tables.DjmdPlaylist.Seq)
+    playlists = db.get_playlist(ParentID=f1.ID).order_by(models.DjmdPlaylist.Seq)
     expected = ["sub pl 1", "pl 2", "sub pl 2", "sub pl 3", "sub pl 4", "pl 1"]
     assert [p.Name for p in playlists] == expected
     assert [pl.Seq for pl in playlists] == [1, 2, 3, 4, 5, 6]
@@ -1217,13 +1217,13 @@ def test_to_json():
 
 
 def test_copy_unlocked():
-    db = Rekordbox6Database(UNLOCKED, unlock=False)
+    db = MasterDatabase(UNLOCKED, unlock=False)
     db.copy_unlocked(UNLOCKED_OUT)
 
-    db2 = Rekordbox6Database(UNLOCKED_OUT, unlock=False)
+    db2 = MasterDatabase(UNLOCKED_OUT, unlock=False)
     # Check everything got copied
-    for name in tables.TABLES:
-        table = getattr(tables, name)
+    for name in models.TABLES:
+        table = getattr(models, name)
         for row in db.query(table):
             data = row.to_dict()
             if name == "AgentRegistry":

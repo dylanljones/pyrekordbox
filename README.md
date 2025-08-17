@@ -17,7 +17,7 @@ in any way and has been written independently! Pyrekordbox is licensed under the
 
 Pyrekordbox is a Python package for interacting with the library and export data of
 Pioneers Rekordbox DJ Software. It currently supports
-- Rekordbox v6 master.db database
+- Rekordbox master.db database
 - Rekordbox XML database
 - Analysis files (ANLZ)
 - My-Setting files
@@ -43,7 +43,7 @@ where `VERSION` is a release, tag or branch name.
 ### Dependencies
 
 
-Unlocking the new Rekordbox 6 `master.db` database file requires [SQLCipher][sqlcipher].
+Unlocking the new Rekordbox `master.db` database file requires [SQLCipher][sqlcipher].
 Pyrekordbox tries to install pre-built wheels with included sqlcipher binaries via the [sqlcipher3-wheels] package.
 If this fails, it can be installed manually following the [installation guide][installation].
 
@@ -77,7 +77,7 @@ update_config("<pioneer_install_dir>", "<pioneer_app_dir>")
 ````
 
 
-### Rekordbox 6/7 database
+### Rekordbox master database
 
 Rekordbox 6 and 7 use a SQLite database for storing the collection content.
 Unfortunatly, the `master.db` SQLite database is encrypted using
@@ -89,9 +89,9 @@ Pyrekordbox can unlock the new Rekordbox `master.db` SQLite database and provide
 an easy interface for accessing the data stored in it:
 
 ````python
-from pyrekordbox import Rekordbox6Database
+from pyrekordbox import MasterDatabase
 
-db = Rekordbox6Database()
+db = MasterDatabase()
 
 for content in db.get_content():
     print(content.Title, content.Artist.Name)

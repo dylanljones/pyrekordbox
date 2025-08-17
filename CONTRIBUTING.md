@@ -50,7 +50,7 @@ The following is a list of possible scopes:
 
 - **config**: Configuration handling
 - **xml**: Rekordbox XML database handling
-- **db**: Rekordbox v6 database handling
+- **db**: Rekordbox database handling
 - **anlz**: ANLZ file handling
 - **mysetting**: MySettings file handling
 

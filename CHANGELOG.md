@@ -1,6 +1,23 @@
 # What's New
 
 
+<a name="unreleased"></a>
+## [Unreleased]
+
+### Improvements/Bug Fixes
+
+- **db:** **rename the master db handler and update related references**  
+  The Rekordbox ``master.db`` handler is renamed to better reflect Rekordbox 6 and 7 support. Renaming includes the package name and the database handler class.
+  
+
+### DEPRECATED
+
+The ``db6`` package and the ``Rekordbox6Database`` class is deprecated
+- Use the ``masterdb`` package instead of the ``db6`` package
+- The ``Rekordbox6Database`` class was renamed to ``MasterDatabase``
+- The ``tables`` module was renamed to ``models``
+
+
 <a name="v0.4.4"></a>
 ## [v0.4.4] - 2025-08-17
 

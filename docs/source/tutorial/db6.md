@@ -10,10 +10,11 @@ See the {ref}`Rekordbox 6 Database Format <Rekordbox 6 Database Format>` documen
 
 Since the Rekordbox database handler automatically finds the ``master.db`` database file
 (see configuration), it can be initialized without any arguments:
-````python
-from pyrekordbox import Rekordbox6Database
 
-db = Rekordbox6Database()
+````python
+from pyrekordbox import MasterDatabase
+
+db = MasterDatabase()
 ````
 
 ## Querying the database
@@ -21,13 +22,13 @@ db = Rekordbox6Database()
 A query can be executed on any table by calling the ``query()`` method. The result is
 a SQLAlchemy query object, which can be used to filter and sort the results.
 ````python
-from pyrekordbox.db6 import tables
+from pyrekordbox.masterdb import models
 
-query = db.query(tables.DjmdContent)
-results = query.filter(tables.DjmdContent.Title == "My Song").all()
+query = db.query(models.DjmdContent)
+results = query.filter(models.DjmdContent.Title == "My Song").all()
 ````
 
-To simplify querying the database, the ``Rekordbox6Database`` class provides simple
+To simplify querying the database, the ``MasterDatabase`` class provides simple
 getters for executing queries on all the tables. The parameters of the getters are
 passed to the ``query.filter_by()`` method. If the query is filtered by a *unique* key
 (e.g. ``ID``), the query will be executed using the ``query.one()`` method, returning the
@@ -40,7 +41,7 @@ content = db.get_content(ID=0)
 In all other cases the query is returned, allowing to further filter and sort the results:
 ````python
 # Query and sort entries in DjmdHistory table
-for history in db.get_history().order_by(tables.DjmdHistory.DateCreated):
+for history in db.get_history().order_by(models.DjmdHistory.DateCreated):
     print(history)
 ````
 
