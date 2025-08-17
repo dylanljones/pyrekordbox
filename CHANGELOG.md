@@ -4,6 +4,9 @@
 <a name="v0.4.4"></a>
 ## [v0.4.4] - 2025-08-17
 
+This update strengthens database key management, optimizes datetime parsing for consistent timezone 
+handling, and improves PSSI tag processing to better detect and deobfuscate garbled ANLZ files.
+
 ### Improvements/Bug Fixes
 
 - **db:** **improve database key handling ([#181](https://github.com/dylanljones/pyrekordbox/issues/181))**  
