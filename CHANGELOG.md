@@ -4,6 +4,12 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### New Features
+
+- **devicelib-plus:** **add device library plus support**  
+  The Device Library Plus export database is now supported by pyrekordbox. 
+  It has a similar interface to the master.db handler. It supports both reading and writing.
+
 ### Improvements/Bug Fixes
 
 - **db:** **rename the master db handler and update related references**  
