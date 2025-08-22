@@ -5,6 +5,7 @@
 # mypy: disable-error-code="attr-defined"
 from .anlz import AnlzFile, get_anlz_paths, read_anlz_files, walk_anlz_paths
 from .config import get_config, show_config, update_config
+from .devicelib_plus import DeviceLibraryPlus
 from .logger import logger
 from .masterdb import MasterDatabase
 from .masterdb.database import Rekordbox6Database

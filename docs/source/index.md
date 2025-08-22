@@ -20,19 +20,14 @@ The maintainers of the project are not liable for any damages to your Rekordbox 
 ```
 
 Pyrekordbox is a Python package for interacting with the library and export data of
-Pioneer's Rekordbox DJ Software. It currently supports
-
-- Rekordbox 6 `master.db` database
+Pioneers Rekordbox DJ Software. It currently supports
+- Rekordbox `master.db` database
 - Rekordbox XML database
 - Analysis files (ANLZ)
-- My-Settings files
+- My-Setting files
+- Device library plus
 
-Tested Rekordbox versions: `5.8.6 | 6.5.3 | 6.7.7`
-
-```{warning}
-This project is still under development and might contain bugs or
-have breaking API changes in the future.
-```
+Tested Rekordbox versions: `5.8.6 | 6.7.7 | 7.0.9`
 
 ## Contents
 
@@ -58,6 +53,7 @@ formats/db6
 formats/xml
 formats/anlz
 formats/mysetting
+formats/devicelib_plus
 ```
 
 ```{toctree}

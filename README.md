@@ -17,10 +17,12 @@ in any way and has been written independently! Pyrekordbox is licensed under the
 
 Pyrekordbox is a Python package for interacting with the library and export data of
 Pioneers Rekordbox DJ Software. It currently supports
-- Rekordbox master.db database
+
+- Rekordbox `master.db` database
 - Rekordbox XML database
 - Analysis files (ANLZ)
 - My-Setting files
+- Device library plus
 
 Check the [changelog][CHANGELOG] for recent changes!
 
@@ -206,6 +208,30 @@ quant = mysett.get("quantize")
 The `DEVSETTING.DAT` file is still not supported
 
 
+### Device Library Plus
+
+For newer generation Pioneer DJ devices, Rekordbox exports a new library format to the USB storage
+device (or SD card), called ``Device Library Plus``.
+As of 2025, this format is only supported by the [OPUS-QUAD], [OMNIS-DUO], and [XDJ-AZ] devices.
+The database schema is similar to the main Rekordbox database. It contains a selection of tables
+from the main database, with similar columns and data types.
+
+Pyrekordbox can unlock the new Rekordbox `exportLibrary.db` Device Library Plus database and provides
+an easy interface for accessing the data stored in it:
+````python
+from pyrekordbox import DeviceLibraryPlus
+
+db = DeviceLibraryPlus("exportLibrary.db")
+
+for content in db.get_content():
+    print(content.title, content.artist.name)
+
+playlist = db.get_playlist()[0]
+for song in playlist.songs:
+    content = song.content
+    print(content.title, content.artist.name)
+````
+
 ## 💡 File formats
 
 A summary of the Rekordbox file formats can be found in the [documentation]:
@@ -213,8 +239,8 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 - [Rekordbox XML format][xml-doc]
 - [ANLZ file format][anlz-doc]
 - [My-Setting file format][mysettings-doc]
-- [Rekordbox 6 database][db6-doc]
-
+- [Rekordbox database][db6-doc]
+- [Device Library Plus][devicelib_plus_doc]
 
 
 ## 💻 Development
@@ -274,6 +300,7 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 [documentation-dev]: https://pyrekordbox.readthedocs.io/en/dev/
 [tutorial]: https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html
 [db6-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/db6.html
+[devicelib_plus_doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/devicelib_plus.html
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
 [mysettings-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/mysetting.html
@@ -291,3 +318,7 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
 [Deep Symmetry]: https://deepsymmetry.org/
+
+[OPUS-QUAD]: https://www.pioneerdj.com/en/product/all-in-one-system/opus-quad/black/overview/
+[OMNIS-DUO]: https://alphatheta.com/en/product/all-in-one-dj-system/omnis-duo/indigo/
+[XDJ-AZ]: https://alphatheta.com/en/product/all-in-one-dj-system/xdj-az/black/

@@ -1,8 +1,8 @@
-# Rekordbox 6 Database
+# Rekordbox Master Database
 
 Pyrekordbox uses [SQLALchemy](https://www.sqlalchemy.org/) as ORM-Framework to handle the
 Rekordbox database file (``master.db``). The table declarations can be found in
-``pyrekordbox.db6.tables``.
+``pyrekordbox.masterdb.models``.
 
 ```{seealso}
 See the {ref}`Rekordbox 6 Database Format <Rekordbox 6 Database Format>` documentation for more information.
@@ -176,6 +176,7 @@ More coming soon!
 [db-format]: #db6-format
 [djmdArtist-table]: #djmdArtist
 [DjmdArtist]: pyrekordbox.db6.tables.DjmdArtist
+[DjmdAlbum]: pyrekordbox.db6.tables.DjmdAlbum
 [djmdContent-table]: #djmdContent
 [DjmdContent]: pyrekordbox.db6.tables.DjmdContent
 [djmdPlaylist-table]: #djmdPlaylist
