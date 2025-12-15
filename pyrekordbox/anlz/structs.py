@@ -42,7 +42,7 @@ AnlzQuantizeTick2 = Struct(
 # len_header: 56
 PQT2 = Struct(
     Padding(4), # -> 16
-    "u1" / Int32ub,  # -> 20, observed values: 0x01000002, 0x02000002 (possibly version indicator)
+    "u1" / Const(0x01000002, Int32ub),  # -> 20, count of "bpm" objects?
     Padding(4), # -> 24
     "bpm" / Array(2, AnlzQuantizeTick),  # -> 40 (2 * 8 bytes = 16 bytes)
     "entry_count" / Int32ub,  # -> 44 number of entries of 2 bytes
