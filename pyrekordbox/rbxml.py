@@ -1165,6 +1165,8 @@ class RekordboxXml:
             el = self._collection.find(f".//{Track.TAG}[{index + 1}]")
         else:
             raise ValueError("Either index, TrackID or Location has to be specified!")
+        if el is None:
+            return None
         return Track(element=el)
 
     def get_track_ids(self) -> List[int]:
