@@ -90,6 +90,15 @@ def test_string_to_datetime(s):
     assert dt.tzinfo is None
 
 
+@mark.parametrize("value", [0, None, 12345])
+def test_string_to_datetime_returns_none_for_non_string_input(value):
+    # Rekordbox 6 has been observed to store integer 0 in DateTime columns
+    # (e.g. DjmdAlbum.created_at). Without a type-guard the function would
+    # raise AttributeError on `value.endswith("Z")` and break the entire
+    # query that touched the row.
+    assert string_to_datetime(value) is None
+
+
 @mark.parametrize(
     "name,cls",
     [
