@@ -210,7 +210,10 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
         return [tag.get() for tag in self.__getitem__(key)]
 
     def __len__(self) -> int:
-        return len(self.keys())
+        # Count distinct tag types directly. Delegating to ``keys()`` recurses:
+        # ``keys()`` comes from ``abc.Mapping`` and returns a ``KeysView`` whose
+        # ``__len__`` calls back into this method (consistent with ``__iter__``).
+        return len(set(tag.type for tag in self.tags))
 
     def __iter__(self) -> Iterator[str]:
         return iter(set(tag.type for tag in self.tags))

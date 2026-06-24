@@ -12,6 +12,11 @@
 
 ### Improvements/Bug Fixes
 
+- **anlz:** **fix infinite recursion in ``AnlzFile.__len__``**  
+  ``len(file)`` and ``list(file.keys())`` raised ``RecursionError`` on any ANLZ
+  file (even an empty ``AnlzFile``) because ``__len__`` delegated to ``keys()``,
+  whose ``abc.Mapping`` ``KeysView.__len__`` called back into ``__len__``.
+  ``__len__`` now counts distinct tag types directly, matching ``__iter__``.
 - **db:** **rename the master db handler and update related references**  
   The Rekordbox ``master.db`` handler is renamed to better reflect Rekordbox 6 and 7 support. Renaming includes the package name and the database handler class.
   
