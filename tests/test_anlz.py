@@ -119,13 +119,16 @@ def test_pvbr_tag_parse():
     assert np.all(tag.get() == 0)
 
 
-def test_pvdi_tag_parse():
-    confidence = [0, 1, 2, 3, 4] * 4
+@pytest.mark.parametrize("size", [20, 3731])
+def test_pvdi_tag_parse(size, caplog):
+    confidence = [i % 5 for i in range(size)]
     file = anlz.AnlzFile.parse(_build_pvdi_analysis_file(confidence))
     assert file.tag_types == ["PVDI"]
     tag = file.get_tag("PVDI")
     assert tag.type == "PVDI"
     assert tag.get() == confidence
+    assert not caplog.records
+    assert file.build() == _build_pvdi_analysis_file(confidence)
 
 
 # -- Tags ------------------------------------------------------------------------------

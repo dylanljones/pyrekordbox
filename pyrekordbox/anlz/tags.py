@@ -383,10 +383,12 @@ class PVBRAnlzTag(AbstractAnlzTag):
         return np.array(self.content.idx, dtype=np.uint64)
 
 
-class PVDIAnlzTag(PVBRAnlzTag):
+class PVDIAnlzTag(AbstractAnlzTag):
     """Vocal detection struct handler used by newer Rekordbox exports."""
 
     type = "PVDI"
+    name = "vocal_detection"
+    LEN_HEADER = 24
 
     def get(self) -> list[int]:
         if self.struct is None:
