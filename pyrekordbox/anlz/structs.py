@@ -143,6 +143,14 @@ PVBR = Struct(
     "u2" / Int32ub
 )
 
+# len_header: 24
+PVDI = Struct(
+    "u1" / Int32ub,
+    "u2" / Int32ub,
+    "len_confidence" / Int32ub,
+    "confidence" / Bytes(this.len_confidence),
+)
+
 
 # -- (Tiny) Waveform Preview Tag (PWAV / PWV2) -----------------------------------------
 
@@ -282,6 +290,7 @@ AnlzTag = Struct(
             "PCO2": PCO2,  # seen in EXT files
             "PPTH": PPTH,
             "PVBR": PVBR,
+            "PVDI": PVDI,
             "PSSI": PSSI,  # seen in EXT files
             "PWAV": PWAV,
             "PWV2": PWV2,

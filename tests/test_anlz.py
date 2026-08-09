@@ -3,6 +3,7 @@
 # Date:   2023-02-01
 
 import os
+import struct
 
 import numpy as np
 import pytest
@@ -14,6 +15,63 @@ TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata"
 ANLZ_ROOT = os.path.join(TEST_ROOT, "export", "PIONEER", "USBANLZ")
 ANLZ_DIRS = list(anlz.walk_anlz_paths(ANLZ_ROOT))
 ANLZ_FILES = [paths for _, paths in ANLZ_DIRS]
+
+
+def _build_vbr_analysis_file(tag_type: str) -> bytes:
+    if tag_type == "PVBR":
+        tag_content = struct.pack(
+            ">I400II",
+            0,
+            *([0] * 400),
+            0,
+        )
+        tag = struct.pack(
+            ">4sII",
+            tag_type.encode("ascii"),
+            16,
+            1620,
+        ) + tag_content
+    else:
+        tag_content = b"PVDI-test-payload"
+        tag = struct.pack(
+            ">4sII",
+            tag_type.encode("ascii"),
+            16,
+            12 + len(tag_content),
+        ) + tag_content
+    return struct.pack(
+        ">4s6I",
+        b"PMAI",
+        28,
+        28 + len(tag),
+        0,
+        0,
+        0,
+        0,
+    ) + tag
+
+
+def _build_pvdi_analysis_file(confidence: list[int]) -> bytes:
+    body = bytes(confidence)
+    tag = struct.pack(
+        ">4sIIIII",
+        b"PVDI",
+        24,
+        24 + len(body),
+        0x400,
+        0x56220001,
+        len(body),
+    ) + body
+    return struct.pack(
+        ">4s6I",
+        b"PMAI",
+        28,
+        28 + len(tag),
+        0,
+        0,
+        0,
+        0,
+    ) + tag
 
 
 def test_parse():
@@ -35,6 +93,24 @@ def test_read_anlz_files():
     for root, files in ANLZ_DIRS:
         anlz_files = anlz.read_anlz_files(root)
         assert len(files) == len(anlz_files)
+
+
+def test_pvbr_tag_parse():
+    file = anlz.AnlzFile.parse(_build_vbr_analysis_file("PVBR"))
+    assert file.tag_types == ["PVBR"]
+    tag = file.get_tag("PVBR")
+    assert tag.type == "PVBR"
+    assert len(tag.get()) == 400
+    assert np.all(tag.get() == 0)
+
+
+def test_pvdi_tag_parse():
+    confidence = [0, 1, 2, 3, 4] * 4
+    file = anlz.AnlzFile.parse(_build_pvdi_analysis_file(confidence))
+    assert file.tag_types == ["PVDI"]
+    tag = file.get_tag("PVDI")
+    assert tag.type == "PVDI"
+    assert tag.get() == confidence
 
 
 # -- Tags ------------------------------------------------------------------------------
