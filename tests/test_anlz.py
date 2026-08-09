@@ -25,53 +25,68 @@ def _build_vbr_analysis_file(tag_type: str) -> bytes:
             *([0] * 400),
             0,
         )
-        tag = struct.pack(
-            ">4sII",
-            tag_type.encode("ascii"),
-            16,
-            1620,
-        ) + tag_content
+        tag = (
+            struct.pack(
+                ">4sII",
+                tag_type.encode("ascii"),
+                16,
+                1620,
+            )
+            + tag_content
+        )
     else:
         tag_content = b"PVDI-test-payload"
-        tag = struct.pack(
-            ">4sII",
-            tag_type.encode("ascii"),
-            16,
-            12 + len(tag_content),
-        ) + tag_content
-    return struct.pack(
-        ">4s6I",
-        b"PMAI",
-        28,
-        28 + len(tag),
-        0,
-        0,
-        0,
-        0,
-    ) + tag
+        tag = (
+            struct.pack(
+                ">4sII",
+                tag_type.encode("ascii"),
+                16,
+                12 + len(tag_content),
+            )
+            + tag_content
+        )
+    return (
+        struct.pack(
+            ">4s6I",
+            b"PMAI",
+            28,
+            28 + len(tag),
+            0,
+            0,
+            0,
+            0,
+        )
+        + tag
+    )
 
 
 def _build_pvdi_analysis_file(confidence: list[int]) -> bytes:
     body = bytes(confidence)
-    tag = struct.pack(
-        ">4sIIIII",
-        b"PVDI",
-        24,
-        24 + len(body),
-        0x400,
-        0x56220001,
-        len(body),
-    ) + body
-    return struct.pack(
-        ">4s6I",
-        b"PMAI",
-        28,
-        28 + len(tag),
-        0,
-        0,
-        0,
-        0,
-    ) + tag
+    tag = (
+        struct.pack(
+            ">4sIIIII",
+            b"PVDI",
+            24,
+            24 + len(body),
+            0x400,
+            0x56220001,
+            len(body),
+        )
+        + body
+    )
+    return (
+        struct.pack(
+            ">4s6I",
+            b"PMAI",
+            28,
+            28 + len(tag),
+            0,
+            0,
+            0,
+            0,
+        )
+        + tag
+    )
 
 
 def test_parse():
