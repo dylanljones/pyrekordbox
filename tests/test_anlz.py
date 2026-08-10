@@ -89,6 +89,38 @@ def _build_pvdi_analysis_file(confidence: list[int]) -> bytes:
     )
 
 
+def _build_pvb2_analysis_file(entries: list[bytes]) -> bytes:
+    entry_size = len(entries[0])
+    body = b"".join(entries)
+    tag = (
+        struct.pack(
+            ">4sII5I",
+            b"PVB2",
+            32,
+            32 + len(body),
+            0,
+            0,
+            123456,
+            len(entries),
+            entry_size,
+        )
+        + body
+    )
+    return (
+        struct.pack(
+            ">4s6I",
+            b"PMAI",
+            28,
+            28 + len(tag),
+            0,
+            0,
+            0,
+            0,
+        )
+        + tag
+    )
+
+
 def test_parse():
     for root, files in ANLZ_DIRS:
         for path in files.values():
@@ -129,6 +161,18 @@ def test_pvdi_tag_parse(size, caplog):
     assert tag.get() == confidence
     assert not caplog.records
     assert file.build() == _build_pvdi_analysis_file(confidence)
+
+
+def test_pvb2_tag_parse(caplog):
+    entries = [bytes([i]) * 20 for i in range(3)]
+    data = _build_pvb2_analysis_file(entries)
+    file = anlz.AnlzFile.parse(data)
+    assert file.tag_types == ["PVB2"]
+    tag = file.get_tag("PVB2")
+    assert tag.type == "PVB2"
+    assert tag.get() == entries
+    assert not caplog.records
+    assert file.build() == data
 
 
 # -- Tags ------------------------------------------------------------------------------
