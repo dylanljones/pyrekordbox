@@ -34,9 +34,12 @@ This table stores the album data of the export library.
    * - `name`
      - Name of the album
      -
-   * - `artist_id
+   * - `artist_id`
      - The ID of the artist of the album
      - FK to `artist`
+   * - `image_id`
+     - The ID of the image of the album
+     - FK to `image`
    * - `isComplation`
      - Indicates if the album is a compilation
      - Boolean value stored as integer (0 or 1)
@@ -224,6 +227,9 @@ This table stores the content (track) data of the export library.
      -
    * - `isrc`
      - ISRC code
+     -
+   * - `djPlayCount`
+     - Number of times the track has been played
      -
    * - `isHotCueAutoLoadOn`
      - Hot cue auto load flag
