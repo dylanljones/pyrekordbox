@@ -552,6 +552,23 @@ class PWVCAnlzTag(AbstractAnlzTag):
     LEN_HEADER = 14
 
 
+class UnknownAnlzTag(AbstractAnlzTag):
+    """Fallback handler holding the raw contents of a tag with no known structure.
+
+    Keeps the tag byte-for-byte so that rebuilding a file preserves tag types
+    pyrekordbox does not understand.
+    """
+
+    def __init__(self, tag_data: bytes) -> None:
+        self.type = tag_data[:4].decode("ascii")
+        self.name = self.type
+        super().__init__(tag_data)
+
+    def get(self) -> bytes:
+        data: bytes = self.content
+        return data
+
+
 TAGS = {
     "PQTZ": PQTZAnlzTag,
     "PQT2": PQT2AnlzTag,

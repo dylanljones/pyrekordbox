@@ -10,7 +10,7 @@ from typing import Any, Iterator, List, Union
 from construct import Int16ub, Struct
 
 from . import structs
-from .tags import TAGS, AbstractAnlzTag, StructNotInitializedError
+from .tags import TAGS, AbstractAnlzTag, StructNotInitializedError, UnknownAnlzTag
 
 logger = logging.getLogger(__name__)
 
@@ -140,21 +140,25 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
                     tag_data = bytes(mutable_tag_data)
 
             try:
-                # Parse the struct
-                tag = TAGS[tag_type](tag_data)
-                if tag.struct is None:
-                    raise StructNotInitializedError()
-                tags.append(tag)
-                len_header = tag.struct.len_header
-
-                logger.debug(
-                    "Parsed struct '%s' (len_header=%s, len_tag=%s)",
-                    tag_type,
-                    len_header,
-                    len_tag,
-                )
+                handler = TAGS[tag_type]
             except KeyError:
-                logger.warning("Tag '%s' not supported!", tag_type)
+                # Keep the raw contents so that rebuilding the file preserves the tag
+                logger.warning("Tag '%s' not supported, keeping it unparsed!", tag_type)
+                handler = UnknownAnlzTag
+
+            # Parse the struct
+            tag = handler(tag_data)
+            if tag.struct is None:
+                raise StructNotInitializedError()
+            tags.append(tag)
+            len_header = tag.struct.len_header
+
+            logger.debug(
+                "Parsed struct '%s' (len_header=%s, len_tag=%s)",
+                tag_type,
+                len_header,
+                len_tag,
+            )
 
             i += len_tag
 

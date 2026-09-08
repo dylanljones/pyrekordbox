@@ -239,3 +239,15 @@ def test_pvb2_rebuild():
     data = _build_file(_build_pvb2([(0, 0, 4608), (4608, 9000, 4608)], 9216))
     file = anlz.AnlzFile.parse(data)
     assert file.build() == data
+
+
+def test_rebuild_keeps_unsupported_tags():
+    # A tag type pyrekordbox has no struct for must survive a parse/build round trip
+    payload = bytes(range(24))
+    unknown = b"PZZZ" + struct.pack(">II", 12, 12 + len(payload)) + payload
+    data = _build_file(_build_pvb2([(0, 0, 4096)], 4096), unknown)
+
+    file = anlz.AnlzFile.parse(data)
+    assert "PZZZ" in file.tag_types
+    assert file.get("PZZZ") == payload
+    assert file.build() == data
