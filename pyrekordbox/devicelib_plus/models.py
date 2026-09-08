@@ -55,12 +55,21 @@ class PlaylistType(IntEnum):
 
 
 class FileType(IntEnum):
+    # Content Rekordbox could not read
+    INVALID = 0
     MP3 = 1
+    # The .mp4 container, whether it holds audio only or video
+    MP4 = 3
+    # 4 and 6 are both usually .m4a: Rekordbox distinguishes them by codec
     M4A = 4
+    AAC = 4
     FLAC = 5
+    ALAC = 6
     WAV = 11
     AIFF = 12
     AIF = 12
+    # Video containers other than .mp4 (.avi, .m4v, .mov, .mpg)
+    VIDEO = 16
 
 
 def datetime_to_str(value: datetime) -> str:

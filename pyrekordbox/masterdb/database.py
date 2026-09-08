@@ -1929,8 +1929,8 @@ class MasterDatabase:
 
         file_type_string = path.suffix.lstrip(".").upper()
         try:
-            file_type = getattr(FileType, file_type_string)
-        except ValueError:
+            file_type = FileType[file_type_string]
+        except KeyError:
             raise ValueError(f"Invalid file type: {path.suffix}")
 
         content: DjmdContent = models.DjmdContent.create(
