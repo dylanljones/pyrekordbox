@@ -3,6 +3,7 @@
 # Date:   2023-02-01
 
 import os
+import struct
 
 import numpy as np
 import pytest
@@ -14,6 +15,18 @@ TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata"
 ANLZ_ROOT = os.path.join(TEST_ROOT, "export", "PIONEER", "USBANLZ")
 ANLZ_DIRS = list(anlz.walk_anlz_paths(ANLZ_ROOT))
 ANLZ_FILES = [paths for _, paths in ANLZ_DIRS]
+
+
+def _build_file(*tags):
+    """Wraps raw tag sections in a minimal ANLZ file header."""
+    body = b"".join(tags)
+    return b"PMAI" + struct.pack(">II", 28, 28 + len(body)) + bytes(16) + body
+
+
+def _build_pvb2(entries, total_samples):
+    body = b"".join(struct.pack(">QQI", *entry) for entry in entries)
+    header = struct.pack(">IQII", 0, total_samples, len(entries), 20)
+    return b"PVB2" + struct.pack(">II", 32, 32 + len(body)) + header + body
 
 
 def test_parse():
@@ -206,3 +219,23 @@ def test_anlzfile_getall():
     values = file.getall(key)
     assert len(values) == 1
     assert values[0] == tag.get()
+
+
+def test_pvb2_tag_getters():
+    entries = [(0, 0, 4096), (4096, 8192, 4096), (8192, 15000, 4096)]
+    file = anlz.AnlzFile.parse(_build_file(_build_pvb2(entries, 12288)))
+    tag = file.get_tag("PVB2")
+
+    assert tag.count == len(entries)
+    assert tag.total_samples == 12288
+
+    samples, offsets, frame_samples = tag.get()
+    assert_equal(samples, [0, 4096, 8192])
+    assert_equal(offsets, [0, 8192, 15000])
+    assert_equal(frame_samples, [4096, 4096, 4096])
+
+
+def test_pvb2_rebuild():
+    data = _build_file(_build_pvb2([(0, 0, 4608), (4608, 9000, 4608)], 9216))
+    file = anlz.AnlzFile.parse(data)
+    assert file.build() == data
