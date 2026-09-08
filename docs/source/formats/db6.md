@@ -269,8 +269,9 @@ corresponding ID.
      - The comments of the track
      -
    * - `FileType`
-     - Type of audio file
-     - mp3= `0` / `1` , m4a= `4` , flac= `5` , wav= `11` , aiff= `12`
+     - Type of the track's file
+     - invalid= `0` , mp3= `1` , mp4= `3` , aac= `4` , flac= `5` , alac= `6` ,
+       wav= `11` , aiff= `12` , video= `16`
    * - `Rating`
      - Rating of the track
      -
