@@ -53,7 +53,7 @@ of the start of the tag to find the start of the next tag.
 The order of the tags in the corresponding files is usually something like:
 
 - `.DAT`: PPTH, PVBR, PQTZ, PWAV, PWV2, PCOB, PCOB
-- `.EXT`: PPTH, PCOB, PCOB, PCO2, PCO2, PQT2, PWV3, PWV4, PWV5, PSSI
+- `.EXT`: PPTH, PCOB, PCOB, PCO2, PCO2, PQT2, PWV3, PWV4, PWV5, PVB2, PSSI
 - `.2EX`: PPTH, PWV6, PWV7, PWVC
 
 ### PQTZ: Beat Grid Tag
@@ -239,6 +239,45 @@ Since the tag length seems to always be 1620 the body of the tag consists of 400
 integer values. It is believed that these values are the frame-indices of the
 times  within variable-bit-rate tracks. However, in most of the cases the entries
 of the tag are all `0`.
+
+### PVB2: Seek Index Tag
+
+Seen in `.EXT` analysis files, and only for FLAC tracks. Where a constant-rate
+format lets a player compute the byte offset of any sample arithmetically, FLAC
+frames are variable in length, so this tag records where each encoded frame begins.
+MP3 and MP4 tracks carry no `PVB2`; they have a frame or container index of their own.
+
+`len_header` is 32. The first four bytes after `len_tag` are zero. They are followed
+by `total_samples`, an eight-byte count of the samples in the whole track, which equals
+the track duration multiplied by its sample rate. `len_entries` gives the number of
+entries and `len_entry_bytes` how many bytes each takes up; so far the latter always
+has the value 20.
+
+Each entry indexes one encoded audio frame with the three values a FLAC seek point
+carries:
+
+```{eval-rst}
+.. list-table:: Seek index entry.
+   :header-rows: 1
+
+   * - Field
+     - Size
+     - Meaning
+   * - ``sample``
+     - 8 bytes
+     - Number of the first sample in the frame, counting from the start of the track
+   * - ``offset``
+     - 8 bytes
+     - Byte offset of the frame from the start of the audio file
+   * - ``frame_samples``
+     - 4 bytes
+     - Number of samples the frame holds, which is the FLAC block size
+```
+
+The entries are ordered by ascending `sample`. A track of 400 frames or fewer gets one
+entry per frame. Longer tracks are indexed sparsely by a fixed 400 entries whatever
+their duration, so the step between entries is a whole number of frames that grows with
+the length of the track.
 
 ### PSSI: Song Structure Tag
 

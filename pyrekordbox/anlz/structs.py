@@ -10,7 +10,7 @@ References
    https://djl-analysis.deepsymmetry.org/rekordbox-export-analysis/anlz.html
 """
 
-from construct import Int8ub, Int16ub, Int32ub, PaddedString, Int32sb, StopIf
+from construct import Int8ub, Int16ub, Int32ub, Int64ub, PaddedString, Int32sb, StopIf
 from construct import Const, Array, Padding, Bytes
 from construct import Default, Enum, GreedyRange, Struct, Switch, this
 
@@ -141,6 +141,27 @@ PVBR = Struct(
     "u1" / Int32ub,
     "idx" / Array(400, Int32ub),
     "u2" / Int32ub
+)
+
+
+# -- Seek Index Tag (PVB2) -------------------------------------------------------------
+
+# Each entry indexes the start of one encoded audio frame, in the same terms a FLAC
+# seek table uses: the sample the frame starts on, where the frame begins in the file,
+# and how many samples it holds.
+AnlzSeekPoint = Struct(
+    "sample" / Int64ub,
+    "offset" / Int64ub,
+    "frame_samples" / Int32ub,
+)
+
+# len_header: 32
+PVB2 = Struct(
+    "u1" / Int32ub,
+    "total_samples" / Int64ub,
+    "entry_count" / Int32ub,
+    "len_entry_bytes" / Int32ub,
+    "entries" / Array(this.entry_count, AnlzSeekPoint),
 )
 
 
@@ -282,6 +303,7 @@ AnlzTag = Struct(
             "PCO2": PCO2,  # seen in EXT files
             "PPTH": PPTH,
             "PVBR": PVBR,
+            "PVB2": PVB2,  # seen in EXT files
             "PSSI": PSSI,  # seen in EXT files
             "PWAV": PWAV,
             "PWV2": PWV2,

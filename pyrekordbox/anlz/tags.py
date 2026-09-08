@@ -383,6 +383,39 @@ class PVBRAnlzTag(AbstractAnlzTag):
         return np.array(self.content.idx, dtype=np.uint64)
 
 
+class PVB2AnlzTag(AbstractAnlzTag):
+    """Seek index struct handler.
+
+    Only written for FLAC tracks, whose variable-length frames cannot be located
+    arithmetically the way constant-rate PCM can.
+    """
+
+    type = "PVB2"
+    name = "seek_index"
+    LEN_HEADER = 32
+
+    @property
+    def count(self) -> int:
+        return len(self.content.entries)
+
+    @property
+    def total_samples(self) -> int:
+        total: int = self.content.total_samples
+        return total
+
+    def get(self) -> Tuple[npt.NDArray[np.uint64], npt.NDArray[np.uint64], npt.NDArray[np.uint32]]:
+        entries = self.content.entries
+        samples = np.array([e.sample for e in entries], dtype=np.uint64)
+        offsets = np.array([e.offset for e in entries], dtype=np.uint64)
+        frame_samples = np.array([e.frame_samples for e in entries], dtype=np.uint32)
+        return samples, offsets, frame_samples
+
+    def check_parse(self) -> None:
+        if self.struct is None:
+            raise StructNotInitializedError()
+        assert self.struct.content.entry_count == len(self.struct.content.entries)
+
+
 class PSSIAnlzTag(AbstractAnlzTag):
     """Song structure struct handler."""
 
@@ -519,6 +552,23 @@ class PWVCAnlzTag(AbstractAnlzTag):
     LEN_HEADER = 14
 
 
+class UnknownAnlzTag(AbstractAnlzTag):
+    """Fallback handler holding the raw contents of a tag with no known structure.
+
+    Keeps the tag byte-for-byte so that rebuilding a file preserves tag types
+    pyrekordbox does not understand.
+    """
+
+    def __init__(self, tag_data: bytes) -> None:
+        self.type = tag_data[:4].decode("ascii")
+        self.name = self.type
+        super().__init__(tag_data)
+
+    def get(self) -> bytes:
+        data: bytes = self.content
+        return data
+
+
 TAGS = {
     "PQTZ": PQTZAnlzTag,
     "PQT2": PQT2AnlzTag,
@@ -526,6 +576,7 @@ TAGS = {
     "PCO2": PCO2AnlzTag,  # seen in EXT files
     "PPTH": PPTHAnlzTag,
     "PVBR": PVBRAnlzTag,
+    "PVB2": PVB2AnlzTag,  # seen in EXT files
     "PSSI": PSSIAnlzTag,  # seen in EXT files
     "PWAV": PWAVAnlzTag,
     "PWV2": PWV2AnlzTag,
