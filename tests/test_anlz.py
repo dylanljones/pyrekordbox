@@ -4,6 +4,7 @@
 
 import os
 import struct
+from typing import List
 
 import numpy as np
 import pytest
@@ -29,6 +30,110 @@ def _build_pvb2(entries, total_samples):
     return b"PVB2" + struct.pack(">II", 32, 32 + len(body)) + header + body
 
 
+def _build_vbr_analysis_file(tag_type: str) -> bytes:
+    if tag_type == "PVBR":
+        tag_content = struct.pack(
+            ">I400II",
+            0,
+            *([0] * 400),
+            0,
+        )
+        tag = (
+            struct.pack(
+                ">4sII",
+                tag_type.encode("ascii"),
+                16,
+                1620,
+            )
+            + tag_content
+        )
+    else:
+        tag_content = b"PVDI-test-payload"
+        tag = (
+            struct.pack(
+                ">4sII",
+                tag_type.encode("ascii"),
+                16,
+                12 + len(tag_content),
+            )
+            + tag_content
+        )
+    return (
+        struct.pack(
+            ">4s6I",
+            b"PMAI",
+            28,
+            28 + len(tag),
+            0,
+            0,
+            0,
+            0,
+        )
+        + tag
+    )
+
+
+def _build_pvdi_analysis_file(confidence: List[int]) -> bytes:
+    body = bytes(confidence)
+    tag = (
+        struct.pack(
+            ">4sIIIII",
+            b"PVDI",
+            24,
+            24 + len(body),
+            0x400,
+            0x56220001,
+            len(body),
+        )
+        + body
+    )
+    return (
+        struct.pack(
+            ">4s6I",
+            b"PMAI",
+            28,
+            28 + len(tag),
+            0,
+            0,
+            0,
+            0,
+        )
+        + tag
+    )
+
+
+def _build_pvb2_analysis_file(entries: List[bytes]) -> bytes:
+    entry_size = len(entries[0])
+    body = b"".join(entries)
+    tag = (
+        struct.pack(
+            ">4sII5I",
+            b"PVB2",
+            32,
+            32 + len(body),
+            0,
+            0,
+            123456,
+            len(entries),
+            entry_size,
+        )
+        + body
+    )
+    return (
+        struct.pack(
+            ">4s6I",
+            b"PMAI",
+            28,
+            28 + len(tag),
+            0,
+            0,
+            0,
+            0,
+        )
+        + tag
+    )
+
+
 def test_parse():
     for root, files in ANLZ_DIRS:
         for path in files.values():
@@ -48,6 +153,56 @@ def test_read_anlz_files():
     for root, files in ANLZ_DIRS:
         anlz_files = anlz.read_anlz_files(root)
         assert len(files) == len(anlz_files)
+
+
+def test_pvbr_tag_parse():
+    file = anlz.AnlzFile.parse(_build_vbr_analysis_file("PVBR"))
+    assert file.tag_types == ["PVBR"]
+    tag = file.get_tag("PVBR")
+    assert tag.type == "PVBR"
+    assert len(tag.get()) == 400
+    assert np.all(tag.get() == 0)
+
+
+@pytest.mark.parametrize("size", [20, 3731])
+def test_pvdi_tag_parse(size, caplog):
+    confidence = [i % 5 for i in range(size)]
+    file = anlz.AnlzFile.parse(_build_pvdi_analysis_file(confidence))
+    assert file.tag_types == ["PVDI"]
+    tag = file.get_tag("PVDI")
+    assert tag.type == "PVDI"
+    assert tag.get() == confidence
+    assert not caplog.records
+    assert file.build() == _build_pvdi_analysis_file(confidence)
+
+
+def test_pvb2_tag_parse(caplog):
+    entries = [bytes([i]) * 20 for i in range(3)]
+    data = _build_pvb2_analysis_file(entries)
+    file = anlz.AnlzFile.parse(data)
+    assert file.tag_types == ["PVB2"]
+    tag = file.get_tag("PVB2")
+    assert tag.type == "PVB2"
+    assert tag.get() == entries
+    assert not caplog.records
+    assert file.build() == data
+
+
+def test_len_and_keys_do_not_recurse():
+    # Regression: AnlzFile.__len__ returned len(self.keys()), but keys() comes
+    # from the abc.Mapping base and returns a KeysView whose __len__ delegates
+    # back to AnlzFile.__len__, so len(file)/list(file.keys()) recursed until
+    # RecursionError on any AnlzFile (even an empty one).
+    file = anlz.AnlzFile()
+    assert len(file) == 0
+    assert list(file.keys()) == []
+
+
+@pytest.mark.parametrize("paths", ANLZ_FILES)
+def test_len_matches_distinct_tag_types(paths):
+    file = anlz.AnlzFile.parse_file(paths["DAT"])
+    assert len(file) == len(list(file.keys()))
+    assert len(file) == len(set(file.tag_types))
 
 
 # -- Tags ------------------------------------------------------------------------------

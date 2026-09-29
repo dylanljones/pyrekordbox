@@ -86,6 +86,9 @@ class MasterDatabase:
     unlock: bool, optional
         Flag if the database needs to be decrypted. Set to False if you are opening
         an unencrypted test database.
+    autocommit : bool, optional
+        If True, using the database as a context manager commits on successful exit
+        and rolls back on exceptional exit. By default, only close the database.
 
     Attributes
     ----------
@@ -113,7 +116,12 @@ class MasterDatabase:
     """
 
     def __init__(
-        self, path: PathLike = None, db_dir: PathLike = "", key: str = "", unlock: bool = True
+        self,
+        path: PathLike = None,
+        db_dir: PathLike = "",
+        key: str = "",
+        unlock: bool = True,
+        autocommit: bool = False,
     ):
         # get config of latest supported version
         rb_config = get_config("rekordbox7")
@@ -159,6 +167,7 @@ class MasterDatabase:
             raise FileNotFoundError(f"Database directory '{db_directory}' does not exist!")
 
         self.engine = engine
+        self.autocommit = autocommit
         self.session: Optional[Session] = None
 
         self.registry = RekordboxAgentRegistry(self)
@@ -224,7 +233,14 @@ class MasterDatabase:
         value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> None:
-        self.close()
+        try:
+            if self.autocommit:
+                if type_ is None:
+                    self.commit()
+                else:
+                    self.rollback()
+        finally:
+            self.close()
 
     def register_event(self, identifier: str, fn: Callable[[Any], None]) -> None:
         """Registers a session event callback.
@@ -1693,11 +1709,6 @@ class MasterDatabase:
         ...     album = db.add_album(name=name)
         >>> content.AlbumID = album.ID
         """
-        # Check if album already exists
-        query = self.query(models.DjmdAlbum).filter_by(Name=name)
-        if query.count() > 0:
-            raise ValueError(f"Album '{name}' already exists in database")
-
         # Get artist ID
         artist_id: Optional[str] = None
         if artist is not None:
@@ -1707,6 +1718,14 @@ class MasterDatabase:
             else:
                 art = artist
             artist_id = art.ID
+
+        # Check if album already exists
+        if artist_id:
+            query = self.query(models.DjmdAlbum).filter_by(Name=name, AlbumArtistID=artist_id)
+        else:
+            query = self.query(models.DjmdAlbum).filter_by(Name=name)
+        if query.count() > 0:
+            raise ValueError(f"Album '{name}' already exists in database")
 
         id_ = self.generate_unused_id(models.DjmdAlbum)
         uuid = str(uuid4())
@@ -1929,8 +1948,8 @@ class MasterDatabase:
 
         file_type_string = path.suffix.lstrip(".").upper()
         try:
-            file_type = getattr(FileType, file_type_string)
-        except ValueError:
+            file_type = FileType[file_type_string]
+        except KeyError:
             raise ValueError(f"Invalid file type: {path.suffix}")
 
         content: DjmdContent = models.DjmdContent.create(

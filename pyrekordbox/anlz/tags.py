@@ -5,7 +5,7 @@
 import logging
 from abc import ABC
 from pathlib import Path
-from typing import Any, Sequence, Tuple, Union
+from typing import Any, List, Sequence, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -416,6 +416,19 @@ class PVB2AnlzTag(AbstractAnlzTag):
         assert self.struct.content.entry_count == len(self.struct.content.entries)
 
 
+class PVDIAnlzTag(AbstractAnlzTag):
+    """Vocal detection struct handler used by newer Rekordbox exports."""
+
+    type = "PVDI"
+    name = "vocal_detection"
+    LEN_HEADER = 24
+
+    def get(self) -> List[int]:
+        if self.struct is None:
+            raise StructNotInitializedError()
+        return list(self.content.confidence)
+
+
 class PSSIAnlzTag(AbstractAnlzTag):
     """Song structure struct handler."""
 
@@ -576,7 +589,8 @@ TAGS = {
     "PCO2": PCO2AnlzTag,  # seen in EXT files
     "PPTH": PPTHAnlzTag,
     "PVBR": PVBRAnlzTag,
-    "PVB2": PVB2AnlzTag,  # seen in EXT files
+    "PVDI": PVDIAnlzTag,
+    "PVB2": PVB2AnlzTag,
     "PSSI": PSSIAnlzTag,  # seen in EXT files
     "PWAV": PWAVAnlzTag,
     "PWV2": PWV2AnlzTag,
