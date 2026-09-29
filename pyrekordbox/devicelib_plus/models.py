@@ -367,6 +367,8 @@ class Content(Base):
     """The sampling rate of the track in Hz."""
     isrc: Mapped[str] = mapped_column(VARCHAR(12), default=None)
     """The ISRC (International Standard Recording Code) of the track."""
+    djPlayCount: Mapped[int] = mapped_column(Integer, default=None)
+    """The number of times the track was played."""
     isHotCueAutoLoadOn: Mapped[int] = mapped_column(Integer, default=None)
     """The hot cue auto load flag of the track."""
     isKuvoDeliverStatusOn: Mapped[int] = mapped_column(Integer, default=None)
