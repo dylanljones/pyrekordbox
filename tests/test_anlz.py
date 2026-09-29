@@ -102,38 +102,6 @@ def _build_pvdi_analysis_file(confidence: List[int]) -> bytes:
     )
 
 
-def _build_pvb2_analysis_file(entries: List[bytes]) -> bytes:
-    entry_size = len(entries[0])
-    body = b"".join(entries)
-    tag = (
-        struct.pack(
-            ">4sII5I",
-            b"PVB2",
-            32,
-            32 + len(body),
-            0,
-            0,
-            123456,
-            len(entries),
-            entry_size,
-        )
-        + body
-    )
-    return (
-        struct.pack(
-            ">4s6I",
-            b"PMAI",
-            28,
-            28 + len(tag),
-            0,
-            0,
-            0,
-            0,
-        )
-        + tag
-    )
-
-
 def test_parse():
     for root, files in ANLZ_DIRS:
         for path in files.values():
@@ -177,13 +145,22 @@ def test_pvdi_tag_parse(size, caplog):
 
 
 def test_pvb2_tag_parse(caplog):
-    entries = [bytes([i]) * 20 for i in range(3)]
-    data = _build_pvb2_analysis_file(entries)
+    entries = [(0, 128, 4096), (4096, 8192, 4608), (2**32 + 1, 2**33 + 2, 1024)]
+    total_samples = 2**32 + 1025
+    data = _build_file(_build_pvb2(entries, total_samples))
     file = anlz.AnlzFile.parse(data)
     assert file.tag_types == ["PVB2"]
     tag = file.get_tag("PVB2")
     assert tag.type == "PVB2"
-    assert tag.get() == entries
+    assert tag.count == len(entries)
+    assert tag.total_samples == total_samples
+    samples, offsets, frame_samples = tag.get()
+    assert_equal(samples, [0, 4096, 2**32 + 1])
+    assert_equal(offsets, [128, 8192, 2**33 + 2])
+    assert_equal(frame_samples, [4096, 4608, 1024])
+    assert samples.dtype == np.dtype(np.uint64)
+    assert offsets.dtype == np.dtype(np.uint64)
+    assert frame_samples.dtype == np.dtype(np.uint32)
     assert not caplog.records
     assert file.build() == data
 

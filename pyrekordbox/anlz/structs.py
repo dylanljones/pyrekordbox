@@ -151,17 +151,6 @@ PVDI = Struct(
     "confidence" / Bytes(this.len_confidence),
 )
 
-# len_header: 32
-PVB2 = Struct(
-    "u1" / Int32ub,
-    "u2" / Int32ub,
-    "u3" / Int32ub,
-    "entry_count" / Int32ub,
-    "entry_size" / Int32ub,
-    "entries" / Array(this.entry_count, Bytes(this.entry_size)),
-)
-
-
 # -- Seek Index Tag (PVB2) -------------------------------------------------------------
 
 # Each entry indexes the start of one encoded audio frame, in the same terms a FLAC
