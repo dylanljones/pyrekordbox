@@ -20,12 +20,13 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Multimedia :: Sound/Audio",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "bidict>=0.21.0",
     "construct>=2.10.0",
@@ -93,7 +94,7 @@ exclude = [
     "docs/*",
 ]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 indent-width = 4
 
 [tool.ruff.lint]

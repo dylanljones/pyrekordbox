@@ -6,8 +6,8 @@
 
 ### BREAKING CHANGE
 
-- **drop support for Python 3.8 - 3.11**  
-  The minimum supported Python version is now 3.12. Python 3.13 and 3.14 are officially supported.
+- **drop support for Python 3.8 - 3.10**  
+  The minimum supported Python version is now 3.11. Python 3.12, 3.13 and 3.14 are officially supported.
 
 ### New Features
 
