@@ -574,6 +574,10 @@ def test_get_track():
     assert track.Location == expected_loc
     assert track.TrackID == expected_id
 
+    # Missing tracks return None instead of raising on Track(element=None)
+    assert xml.get_track(TrackID=999999999) is None
+    assert xml.get_track(Location="/does/not/exist") is None
+
 
 def test_get_playlist():
     xml = RekordboxXml(XML5)

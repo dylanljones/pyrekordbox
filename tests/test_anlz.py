@@ -174,6 +174,22 @@ def test_pvb2_tag_parse(caplog):
     assert not caplog.records
     assert file.build() == data
 
+def test_len_and_keys_do_not_recurse():
+    # Regression: AnlzFile.__len__ returned len(self.keys()), but keys() comes
+    # from the abc.Mapping base and returns a KeysView whose __len__ delegates
+    # back to AnlzFile.__len__, so len(file)/list(file.keys()) recursed until
+    # RecursionError on any AnlzFile (even an empty one).
+    file = anlz.AnlzFile()
+    assert len(file) == 0
+    assert list(file.keys()) == []
+
+
+@pytest.mark.parametrize("paths", ANLZ_FILES)
+def test_len_matches_distinct_tag_types(paths):
+    file = anlz.AnlzFile.parse_file(paths["DAT"])
+    assert len(file) == len(list(file.keys()))
+    assert len(file) == len(set(file.tag_types))
+
 
 # -- Tags ------------------------------------------------------------------------------
 
