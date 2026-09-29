@@ -383,6 +383,32 @@ class PVBRAnlzTag(AbstractAnlzTag):
         return np.array(self.content.idx, dtype=np.uint64)
 
 
+class PVDIAnlzTag(AbstractAnlzTag):
+    """Vocal detection struct handler used by newer Rekordbox exports."""
+
+    type = "PVDI"
+    name = "vocal_detection"
+    LEN_HEADER = 24
+
+    def get(self) -> list[int]:
+        if self.struct is None:
+            raise StructNotInitializedError()
+        return list(self.content.confidence)
+
+
+class PVB2AnlzTag(AbstractAnlzTag):
+    """Extended VBR struct handler used by newer Rekordbox exports."""
+
+    type = "PVB2"
+    name = "vbr2"
+    LEN_HEADER = 32
+
+    def get(self) -> list[bytes]:
+        if self.struct is None:
+            raise StructNotInitializedError()
+        return list(self.content.entries)
+
+
 class PSSIAnlzTag(AbstractAnlzTag):
     """Song structure struct handler."""
 
@@ -526,6 +552,8 @@ TAGS = {
     "PCO2": PCO2AnlzTag,  # seen in EXT files
     "PPTH": PPTHAnlzTag,
     "PVBR": PVBRAnlzTag,
+    "PVDI": PVDIAnlzTag,
+    "PVB2": PVB2AnlzTag,
     "PSSI": PSSIAnlzTag,  # seen in EXT files
     "PWAV": PWAVAnlzTag,
     "PWV2": PWV2AnlzTag,
