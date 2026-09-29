@@ -1693,11 +1693,6 @@ class MasterDatabase:
         ...     album = db.add_album(name=name)
         >>> content.AlbumID = album.ID
         """
-        # Check if album already exists
-        query = self.query(models.DjmdAlbum).filter_by(Name=name)
-        if query.count() > 0:
-            raise ValueError(f"Album '{name}' already exists in database")
-
         # Get artist ID
         artist_id: Optional[str] = None
         if artist is not None:
@@ -1707,6 +1702,14 @@ class MasterDatabase:
             else:
                 art = artist
             artist_id = art.ID
+
+        # Check if album already exists
+        if artist_id:
+            query = self.query(models.DjmdAlbum).filter_by(Name=name, AlbumArtistID=artist_id)
+        else:
+            query = self.query(models.DjmdAlbum).filter_by(Name=name)
+        if query.count() > 0:
+            raise ValueError(f"Album '{name}' already exists in database")
 
         id_ = self.generate_unused_id(models.DjmdAlbum)
         uuid = str(uuid4())
