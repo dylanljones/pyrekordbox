@@ -5,7 +5,7 @@
 import logging
 from abc import ABC
 from pathlib import Path
-from typing import Any, Sequence, Tuple, Union
+from typing import Any, List, Sequence, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -390,7 +390,7 @@ class PVDIAnlzTag(AbstractAnlzTag):
     name = "vocal_detection"
     LEN_HEADER = 24
 
-    def get(self) -> list[int]:
+    def get(self) -> List[int]:
         if self.struct is None:
             raise StructNotInitializedError()
         return list(self.content.confidence)
@@ -403,7 +403,7 @@ class PVB2AnlzTag(AbstractAnlzTag):
     name = "vbr2"
     LEN_HEADER = 32
 
-    def get(self) -> list[bytes]:
+    def get(self) -> List[bytes]:
         if self.struct is None:
             raise StructNotInitializedError()
         return list(self.content.entries)
