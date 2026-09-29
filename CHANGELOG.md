@@ -4,6 +4,11 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### BREAKING CHANGE
+
+- **drop support for Python 3.8 - 3.11**  
+  The minimum supported Python version is now 3.12. Python 3.13 and 3.14 are officially supported.
+
 ### New Features
 
 - **devicelib-plus:** **add device library plus support**  
