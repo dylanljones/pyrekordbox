@@ -174,6 +174,7 @@ def test_pvb2_tag_parse(caplog):
     assert not caplog.records
     assert file.build() == data
 
+
 def test_len_and_keys_do_not_recurse():
     # Regression: AnlzFile.__len__ returned len(self.keys()), but keys() comes
     # from the abc.Mapping base and returns a KeysView whose __len__ delegates
