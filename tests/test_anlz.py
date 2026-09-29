@@ -4,6 +4,7 @@
 
 import os
 import struct
+from typing import List
 
 import numpy as np
 import pytest
@@ -60,7 +61,7 @@ def _build_vbr_analysis_file(tag_type: str) -> bytes:
     )
 
 
-def _build_pvdi_analysis_file(confidence: list[int]) -> bytes:
+def _build_pvdi_analysis_file(confidence: List[int]) -> bytes:
     body = bytes(confidence)
     tag = (
         struct.pack(
@@ -89,7 +90,7 @@ def _build_pvdi_analysis_file(confidence: list[int]) -> bytes:
     )
 
 
-def _build_pvb2_analysis_file(entries: list[bytes]) -> bytes:
+def _build_pvb2_analysis_file(entries: List[bytes]) -> bytes:
     entry_size = len(entries[0])
     body = b"".join(entries)
     tag = (
