@@ -244,8 +244,12 @@ SongStructureEntry = Struct(
 )
 
 # len_header: 32
+# Content starts with a 16-bit version (0 or 1) followed by a 16-bit entry size.
+# Version 0 looks like the old 32-bit constant 24 (00 00 00 18). Version 1 is
+# 00 01 00 18 and must not be parsed as that constant.
 PSSI = Struct(
-    "len_entry_bytes" /  Const(24, Int32ub),
+    "version" / Int16ub,
+    "len_entry_bytes" / Const(24, Int16ub),
     "len_entries" / Int16ub,
     "mood" / Int16ub,
     "u1" / Bytes(6),

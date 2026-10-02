@@ -383,3 +383,59 @@ def test_rebuild_keeps_unsupported_tags():
     assert "PZZZ" in file.tag_types
     assert file.get("PZZZ") == payload
     assert file.build() == data
+
+
+def _build_pssi(version: int, mood: int, n_entries: int = 1) -> bytes:
+    """Build a PSSI tag. Content starts with version then a 16-bit entry size."""
+    entry = struct.pack(">HHH", 1, 16, 1) + bytes(18)
+    content = (
+        struct.pack(">HHHH", version, 24, n_entries, mood)
+        + bytes(6)
+        + struct.pack(">H", 64)
+        + bytes(2)
+        + bytes(2)
+        + entry * n_entries
+    )
+    return b"PSSI" + struct.pack(">II", 32, 12 + len(content)) + content
+
+
+def _garble_pssi(tag: bytes, version: int, n_entries: int) -> bytes:
+    mask = bytearray.fromhex("CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1")
+    data = bytearray(tag)
+    start = version % len(mask)
+    for x in range(len(data) - 18):
+        value = mask[(x + start) % len(mask)] + n_entries
+        data[18 + x] ^= value & 0xFF
+    return bytes(data)
+
+
+@pytest.mark.parametrize("version", [0, 1])
+def test_pssi_parses_version_0_and_1(version):
+    data = _build_file(_build_pssi(version, mood=2))
+    file = anlz.AnlzFile.parse(data)
+    tag = file.get_tag("PSSI")
+    assert tag.content.version == version
+    assert tag.content.len_entry_bytes == 24
+    assert tag.content.len_entries == 1
+    assert tag.content.mood == 2
+    assert tag.content.entries[0].index == 1
+    assert file.build() == data
+
+
+def test_pssi_version_1_is_not_a_32bit_entry_size_constant():
+    # 00 01 00 18 used to fail Const(24, Int32ub); it is a valid version 1 tag.
+    tag = _build_pssi(1, mood=1)
+    assert tag[12:16] == b"\x00\x01\x00\x18"
+    file = anlz.AnlzFile.parse(_build_file(tag))
+    assert file.get_tag("PSSI").content.version == 1
+
+
+def test_pssi_ungarbles_version_1_with_shifted_mask():
+    tag = _garble_pssi(_build_pssi(1, mood=3), version=1, n_entries=1)
+    # Masked mood must not look valid, otherwise the file is left encrypted.
+    assert not 1 <= struct.unpack(">H", tag[18:20])[0] <= 3
+    file = anlz.AnlzFile.parse(_build_file(tag))
+    tag_obj = file.get_tag("PSSI")
+    assert tag_obj.content.version == 1
+    assert tag_obj.content.mood == 3
+    assert tag_obj.content.entries[0].beat == 16
