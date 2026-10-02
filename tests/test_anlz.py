@@ -439,4 +439,3 @@ def test_pssi_ungarbles_version_1_with_shifted_mask():
     assert tag_obj.content.version == 1
     assert tag_obj.content.mood == 3
     assert tag_obj.content.entries[0].beat == 16
-
