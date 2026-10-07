@@ -15,6 +15,8 @@ from .tags import TAGS, AbstractAnlzTag, StructNotInitializedError, UnknownAnlzT
 logger = logging.getLogger(__name__)
 
 XOR_MASK = bytearray.fromhex("CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1")
+# Equivalent seed: each byte of ASCII "Kanzen-niRikaishita" plus 0x80.
+# Exported version 1 tags start the mask at index ``version % len(XOR_MASK)``.
 
 
 class BuildFileLengthError(Exception):
@@ -127,12 +129,14 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
                 else:
                     logger.debug("PSSI is garbled! (raw_mood=%s)", mood)
                     len_entries = Int16ub.parse(tag_data[16:18])
+                    version = Int16ub.parse(tag_data[12:14])
+                    mask_start = version % len(XOR_MASK)
 
                     # Copy only this tag's data so we don't mutate the remainder of file slice
                     mutable_tag_data = bytearray(tag_data[:len_tag])
 
                     for x in range(len(mutable_tag_data) - 18):
-                        mask = XOR_MASK[x % len(XOR_MASK)] + len_entries
+                        mask = XOR_MASK[(x + mask_start) % len(XOR_MASK)] + len_entries
                         if mask > 255:
                             mask -= 256
                         mutable_tag_data[18 + x] ^= mask
