@@ -8,9 +8,7 @@
 
 - **drop support for Python 3.8 - 3.10 ([#214](https://github.com/dylanljones/pyrekordbox/issues/214))**  
   The minimum supported Python version is now 3.11. Python 3.12, 3.13 and 3.14 are officially supported.
-- **``pyrekordbox.devicelib_plus`` and ``DeviceLibraryPlus`` are deprecated in favor of
-  ``pyrekordbox.onelibrary`` and ``OneLibrary``**.  
-  The ``db6`` package and the ``Rekordbox6Database`` class is deprecated
+- **The ``db6`` package and the ``Rekordbox6Database`` class is deprecated**.  
   - Use the ``masterdb`` package instead of the ``db6`` package
   - The ``Rekordbox6Database`` class was renamed to ``MasterDatabase``
   - The ``tables`` module was renamed to ``models``
