@@ -138,9 +138,11 @@ class RekordboxAgentRegistry:
         """
         enabled = cls.__enabled__
         cls.disable_tracking()
-        yield cls
-        if enabled:
-            cls.enable_tracking()
+        try:
+            yield cls
+        finally:
+            if enabled:
+                cls.enable_tracking()
 
     def get_registries(self) -> Any:
         """Returns all agent registries.

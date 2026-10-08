@@ -566,6 +566,126 @@ def test_move_in_playlist_backward(db):
     assert _check_playlist_xml(db)
 
 
+@pytest.mark.parametrize(
+    ("old_track_no", "new_track_no", "expected_order"),
+    [
+        (1, 4, [CID2, CID3, CID4, CID1]),
+        (4, 1, [CID4, CID1, CID2, CID3]),
+        (2, 3, [CID1, CID3, CID2, CID4]),
+        (3, 2, [CID1, CID3, CID2, CID4]),
+    ],
+)
+def test_move_in_playlist_reorders_contiguously(db, old_track_no, new_track_no, expected_order):
+    songs = [db.add_to_playlist(PID1, cid) for cid in (CID1, CID2, CID3, CID4)]
+    db.commit()
+
+    db.move_song_in_playlist(PID1, songs[old_track_no - 1], new_track_no)
+    db.commit()
+
+    songs = sorted(db.get_playlist(ID=PID1).Songs, key=lambda song: song.TrackNo)
+    assert [int(song.ContentID) for song in songs] == expected_order
+    assert [song.TrackNo for song in songs] == [1, 2, 3, 4]
+
+
+@pytest.mark.parametrize("new_track_no", [0, 5])
+def test_move_in_playlist_rejects_out_of_bounds_track_number(db, new_track_no):
+    songs = [db.add_to_playlist(PID1, cid) for cid in (CID1, CID2, CID3, CID4)]
+    db.commit()
+    usn_old = db.get_local_usn()
+
+    with pytest.raises(ValueError):
+        db.move_song_in_playlist(PID1, songs[0], new_track_no)
+    db.commit()
+
+    songs = sorted(db.get_playlist(ID=PID1).Songs, key=lambda song: song.TrackNo)
+    assert [int(song.ContentID) for song in songs] == [CID1, CID2, CID3, CID4]
+    assert [song.TrackNo for song in songs] == [1, 2, 3, 4]
+    assert db.get_local_usn() == usn_old
+
+
+@pytest.mark.parametrize(
+    ("song_index", "new_track_no", "changed_indices"),
+    [(2, 1, {0, 1, 2}), (0, 4, {0, 1, 2, 3})],
+)
+def test_move_in_playlist_by_id_updates_moved_song_usn(
+    db, song_index, new_track_no, changed_indices
+):
+    songs = [db.add_to_playlist(PID1, cid) for cid in (CID1, CID2, CID3, CID4)]
+    db.commit()
+    usn_old = db.get_local_usn()
+    original_usns = [song.rb_local_usn for song in songs]
+
+    db.move_song_in_playlist(PID1, songs[song_index].ID, new_track_no)
+    db.commit()
+
+    expected_usn = usn_old + 1
+    assert db.get_local_usn() == expected_usn
+    for index, song in enumerate(songs):
+        if index in changed_indices:
+            assert song.rb_local_usn == expected_usn
+        else:
+            assert song.rb_local_usn == original_usns[index]
+
+
+def test_move_in_playlist_to_same_position_keeps_usn_tracking_enabled(db):
+    songs = [db.add_to_playlist(PID1, cid) for cid in (CID1, CID2, CID3, CID4)]
+    db.commit()
+    usn_old = db.get_local_usn()
+
+    db.move_song_in_playlist(PID1, songs[1], 2)
+    db.commit()
+    assert db.get_local_usn() == usn_old
+
+    added = db.add_to_playlist(PID1, CID1)
+    db.commit()
+    assert db.get_local_usn() == usn_old + 1
+    assert added.rb_local_usn == usn_old + 1
+
+
+def test_registry_disabled_restores_usn_tracking_after_error(db):
+    usn_old = db.get_local_usn()
+
+    with pytest.raises(RuntimeError, match="test error"):
+        with db.registry.disabled():
+            raise RuntimeError("test error")
+
+    playlist = db.create_playlist("USN tracking test")
+    db.commit()
+    assert db.get_local_usn() == usn_old + 2
+    assert playlist.rb_local_usn == usn_old + 2
+
+
+def test_move_in_playlist_batch_reordering(db):
+    songs = [db.add_to_playlist(PID1, cid) for cid in (CID1, CID2, CID3, CID4, CID1, CID2)]
+    db.commit()
+    usn_old = db.get_local_usn()
+    original_usns = [song.rb_local_usn for song in songs]
+
+    # Move the songs originally at positions 2 and 4 to position 6 in one batch.
+    db.move_song_in_playlist(PID1, songs[1], 6)
+    db.move_song_in_playlist(PID1, songs[3], 6)
+    db.commit()
+
+    ordered = sorted(db.get_playlist(ID=PID1).Songs, key=lambda song: song.TrackNo)
+    assert [song.ID for song in ordered] == [
+        songs[0].ID,
+        songs[2].ID,
+        songs[4].ID,
+        songs[5].ID,
+        songs[1].ID,
+        songs[3].ID,
+    ]
+    assert [song.TrackNo for song in ordered] == [1, 2, 3, 4, 5, 6]
+
+    assert db.get_local_usn() == usn_old + 2
+    assert songs[0].rb_local_usn == original_usns[0]
+    assert songs[2].rb_local_usn == usn_old + 1
+    for song in (songs[1], songs[3], songs[4], songs[5]):
+        assert song.rb_local_usn == usn_old + 2
+
+    assert _check_playlist_xml(db)
+
+
 def test_create_playlist(db):
     seqs = [pl.Seq for pl in db.get_playlist()]
     assert max(seqs) == 2
@@ -929,6 +1049,173 @@ def test_delete_playlist_folder_chained(db):
 
     assert _check_playlist_xml(db)
     assert _check_playlist_xml_delete(db)
+
+
+def _create_playlist_move_fixture(db, count=6):
+    folder = db.create_playlist_folder("move folder")
+    playlists = [
+        db.create_playlist(f"move playlist {index}", parent=folder) for index in range(1, count + 1)
+    ]
+    db.commit()
+    return folder, playlists
+
+
+def _playlist_order(db, parent):
+    return db.get_playlist(ParentID=parent.ID).order_by(models.DjmdPlaylist.Seq).all()
+
+
+@pytest.mark.parametrize(
+    ("old_seq", "new_seq"),
+    [(1, 6), (6, 1), (2, 3), (3, 2), (2, 6), (4, 6)],
+)
+def test_move_playlist_seq_reorders_contiguously_and_updates_usn(db, old_seq, new_seq):
+    folder, playlists = _create_playlist_move_fixture(db)
+    original_order = playlists.copy()
+    original_usns = {playlist.ID: playlist.rb_local_usn for playlist in playlists}
+    usn_old = db.get_local_usn()
+
+    moved = playlists[old_seq - 1]
+    db.move_playlist(moved.ID, seq=new_seq)
+    db.commit()
+
+    expected_order = original_order.copy()
+    expected_order.insert(new_seq - 1, expected_order.pop(old_seq - 1))
+    ordered = _playlist_order(db, folder)
+    assert [playlist.ID for playlist in ordered] == [playlist.ID for playlist in expected_order]
+    assert [playlist.Seq for playlist in ordered] == [1, 2, 3, 4, 5, 6]
+
+    if old_seq < new_seq:
+        shifted = original_order[old_seq:new_seq]
+    else:
+        shifted = original_order[new_seq - 1 : old_seq - 1]
+    changed = [moved, *shifted]
+    assert db.get_local_usn() == usn_old + len(changed)
+    for increment, playlist in enumerate(changed, start=1):
+        assert playlist.rb_local_usn == usn_old + increment
+    for playlist in set(original_order) - set(changed):
+        assert playlist.rb_local_usn == original_usns[playlist.ID]
+
+
+@pytest.mark.parametrize("new_seq", [0, 7])
+def test_move_playlist_seq_rejects_out_of_bounds_position(db, new_seq):
+    folder, playlists = _create_playlist_move_fixture(db)
+    usn_old = db.get_local_usn()
+
+    with pytest.raises(ValueError):
+        db.move_playlist(playlists[0], seq=new_seq)
+    db.commit()
+
+    ordered = _playlist_order(db, folder)
+    assert [playlist.ID for playlist in ordered] == [playlist.ID for playlist in playlists]
+    assert [playlist.Seq for playlist in ordered] == [1, 2, 3, 4, 5, 6]
+    assert db.get_local_usn() == usn_old
+
+
+def test_move_playlist_seq_to_same_position_is_noop(db):
+    folder, playlists = _create_playlist_move_fixture(db)
+    original_usns = [playlist.rb_local_usn for playlist in playlists]
+    usn_old = db.get_local_usn()
+
+    db.move_playlist(playlists[2], seq=3)
+    db.commit()
+
+    ordered = _playlist_order(db, folder)
+    assert [playlist.ID for playlist in ordered] == [playlist.ID for playlist in playlists]
+    assert [playlist.rb_local_usn for playlist in playlists] == original_usns
+    assert db.get_local_usn() == usn_old
+
+
+def test_move_playlist_seq_batch_reordering(db):
+    folder, playlists = _create_playlist_move_fixture(db)
+    original_usns = [playlist.rb_local_usn for playlist in playlists]
+    usn_old = db.get_local_usn()
+
+    # Move the playlists originally at positions 2 and 4 to position 6.
+    db.move_playlist(playlists[1].ID, seq=6)
+    db.move_playlist(playlists[3].ID, seq=6)
+    db.commit()
+
+    ordered = _playlist_order(db, folder)
+    assert [playlist.ID for playlist in ordered] == [
+        playlists[0].ID,
+        playlists[2].ID,
+        playlists[4].ID,
+        playlists[5].ID,
+        playlists[1].ID,
+        playlists[3].ID,
+    ]
+    assert [playlist.Seq for playlist in ordered] == [1, 2, 3, 4, 5, 6]
+
+    assert db.get_local_usn() == usn_old + 9
+    assert playlists[0].rb_local_usn == original_usns[0]
+    assert playlists[2].rb_local_usn == usn_old + 2
+    assert playlists[3].rb_local_usn == usn_old + 6
+    assert playlists[4].rb_local_usn == usn_old + 7
+    assert playlists[5].rb_local_usn == usn_old + 8
+    assert playlists[1].rb_local_usn == usn_old + 9
+
+    assert _check_playlist_xml(db)
+
+
+@pytest.mark.parametrize("new_seq", [1, 4])
+def test_move_playlist_between_parents_at_boundaries(db, new_seq):
+    source = db.create_playlist_folder("source folder")
+    destination = db.create_playlist_folder("destination folder")
+    source_playlists = [
+        db.create_playlist(f"source {index}", parent=source) for index in range(1, 4)
+    ]
+    destination_playlists = [
+        db.create_playlist(f"destination {index}", parent=destination) for index in range(1, 4)
+    ]
+    db.commit()
+    usn_old = db.get_local_usn()
+    moved = source_playlists[1]
+
+    db.move_playlist(moved.ID, parent=destination.ID, seq=new_seq)
+    db.commit()
+
+    source_order = _playlist_order(db, source)
+    assert [playlist.ID for playlist in source_order] == [
+        source_playlists[0].ID,
+        source_playlists[2].ID,
+    ]
+    assert [playlist.Seq for playlist in source_order] == [1, 2]
+
+    expected_destination = destination_playlists.copy()
+    expected_destination.insert(new_seq - 1, moved)
+    destination_order = _playlist_order(db, destination)
+    assert [playlist.ID for playlist in destination_order] == [
+        playlist.ID for playlist in expected_destination
+    ]
+    assert [playlist.Seq for playlist in destination_order] == [1, 2, 3, 4]
+
+    shifted_count = len(destination_playlists) - new_seq + 1
+    assert db.get_local_usn() == usn_old + 1 + shifted_count
+    assert moved.rb_local_usn == usn_old + 1
+
+    assert _check_playlist_xml(db)
+
+
+@pytest.mark.parametrize("new_seq", [0, 5])
+def test_move_playlist_between_parents_rejects_out_of_bounds_position(db, new_seq):
+    source = db.create_playlist_folder("source folder")
+    destination = db.create_playlist_folder("destination folder")
+    moved = db.create_playlist("source playlist", parent=source)
+    destination_playlists = [
+        db.create_playlist(f"destination {index}", parent=destination) for index in range(1, 4)
+    ]
+    db.commit()
+    usn_old = db.get_local_usn()
+
+    with pytest.raises(ValueError):
+        db.move_playlist(moved, parent=destination, seq=new_seq)
+    db.commit()
+
+    assert [playlist.ID for playlist in _playlist_order(db, source)] == [moved.ID]
+    assert [playlist.ID for playlist in _playlist_order(db, destination)] == [
+        playlist.ID for playlist in destination_playlists
+    ]
+    assert db.get_local_usn() == usn_old
 
 
 def test_move_playlist_seq(db):

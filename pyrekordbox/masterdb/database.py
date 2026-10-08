@@ -1008,8 +1008,8 @@ class MasterDatabase:
             The song to move inside the playlist. Can either be a
             :class:`DjmdSongPlaylist` object or a song ID.
         new_track_no : int
-            The new track number of the song. Must be greater than 0 and less than
-            the number of songs in the playlist.
+            The new track number of the song. Must be greater than 0 and no greater
+            than the number of songs in the playlist.
 
         Examples
         --------
@@ -1051,7 +1051,7 @@ class MasterDatabase:
         nsongs = self.query(models.DjmdSongPlaylist).filter_by(PlaylistID=plist.ID).count()
         if new_track_no < 1:
             raise ValueError("Track number must be greater than 0")
-        if new_track_no > nsongs + 1:
+        if new_track_no > nsongs:
             raise ValueError(f"Track number too high, parent contains {nsongs} items")
         logger.info(
             "Moving song with ID=%s in playlist with ID=%s to %s",
@@ -1062,40 +1062,39 @@ class MasterDatabase:
         now = datetime.datetime.now()
         old_track_no = plist_song.TrackNo
 
-        self.registry.disable_tracking()
         moved = list()
-        if new_track_no > old_track_no:
-            query = (
-                self.query(models.DjmdSongPlaylist)
-                .filter(
-                    models.DjmdSongPlaylist.PlaylistID == plist.ID,
-                    old_track_no < models.DjmdSongPlaylist.TrackNo,
-                    models.DjmdSongPlaylist.TrackNo <= new_track_no,
+        with self.registry.disabled():
+            if new_track_no > old_track_no:
+                query = (
+                    self.query(models.DjmdSongPlaylist)
+                    .filter(
+                        models.DjmdSongPlaylist.PlaylistID == plist.ID,
+                        old_track_no < models.DjmdSongPlaylist.TrackNo,
+                        models.DjmdSongPlaylist.TrackNo <= new_track_no,
+                    )
+                    .order_by(models.DjmdSongPlaylist.TrackNo)
                 )
-                .order_by(models.DjmdSongPlaylist.TrackNo)
-            )
-            for other_song in query:
-                other_song.TrackNo -= 1
-                other_song.updated_at = now
-                moved.append(other_song)
-        elif new_track_no < old_track_no:
-            query = self.query(models.DjmdSongPlaylist).filter(
-                models.DjmdSongPlaylist.PlaylistID == plist.ID,
-                new_track_no <= models.DjmdSongPlaylist.TrackNo,
-                models.DjmdSongPlaylist.TrackNo < old_track_no,
-            )
-            for other_song in query:
-                other_song.TrackNo += 1
-                other_song.updated_at = now
-                moved.append(other_song)
-        else:
-            return
+                for other_song in query:
+                    other_song.TrackNo -= 1
+                    other_song.updated_at = now
+                    moved.append(other_song)
+            elif new_track_no < old_track_no:
+                query = self.query(models.DjmdSongPlaylist).filter(
+                    models.DjmdSongPlaylist.PlaylistID == plist.ID,
+                    new_track_no <= models.DjmdSongPlaylist.TrackNo,
+                    models.DjmdSongPlaylist.TrackNo < old_track_no,
+                )
+                for other_song in query:
+                    other_song.TrackNo += 1
+                    other_song.updated_at = now
+                    moved.append(other_song)
+            else:
+                return
 
-        plist_song.TrackNo = new_track_no
-        plist_song.updated_at = now
-        moved.append(song)
+            plist_song.TrackNo = new_track_no
+            plist_song.updated_at = now
+            moved.append(plist_song)
 
-        self.registry.enable_tracking()
         self.registry.on_move(moved)
 
     def _create_playlist(
@@ -1540,20 +1539,19 @@ class MasterDatabase:
 
             # Update seq numbers higher than the old seq number in *old* parent
             # USN is not updated here
-            self.registry.disable_tracking()
-            query = (
-                self.query(models.DjmdPlaylist)
-                .filter(
-                    models.DjmdPlaylist.ParentID == old_parent_id,
-                    models.DjmdPlaylist.Seq > old_seq,
+            with self.registry.disabled():
+                query = (
+                    self.query(models.DjmdPlaylist)
+                    .filter(
+                        models.DjmdPlaylist.ParentID == old_parent_id,
+                        models.DjmdPlaylist.Seq > old_seq,
+                    )
+                    .order_by(models.DjmdPlaylist.Seq)
                 )
-                .order_by(models.DjmdPlaylist.Seq)
-            )
-            for pl in query:
-                # Update time of other playlists are left unchanged
-                pl.Seq -= 1
-                pl.updated_at = now
-            self.registry.enable_tracking()
+                for pl in query:
+                    # Update time of other playlists are left unchanged
+                    pl.Seq -= 1
+                    pl.updated_at = now
 
         else:
             # Keep parent, only change seq number
@@ -1562,7 +1560,7 @@ class MasterDatabase:
             seqence = seq
             if seqence < 1:
                 raise ValueError("Sequence number must be greater than 0")
-            elif seqence > n + 1:
+            elif seqence > n:
                 raise ValueError(f"Sequence number too high, parent contains {n} items")
 
             if seqence > old_seq:
