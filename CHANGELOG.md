@@ -6,33 +6,63 @@
 
 ### BREAKING CHANGE
 
-- **drop support for Python 3.8 - 3.10**  
+- **drop support for Python 3.8 - 3.10 ([#214](https://github.com/dylanljones/pyrekordbox/issues/214))**  
   The minimum supported Python version is now 3.11. Python 3.12, 3.13 and 3.14 are officially supported.
+- **``pyrekordbox.devicelib_plus`` and ``DeviceLibraryPlus`` are deprecated in favor of
+  ``pyrekordbox.onelibrary`` and ``OneLibrary``**.  
+  The ``db6`` package and the ``Rekordbox6Database`` class is deprecated
+  - Use the ``masterdb`` package instead of the ``db6`` package
+  - The ``Rekordbox6Database`` class was renamed to ``MasterDatabase``
+  - The ``tables`` module was renamed to ``models``
 
 ### New Features
 
-- **devicelib-plus:** **add device library plus support**  
-  The Device Library Plus export database is now supported by pyrekordbox. 
+- **onelib:** **add OneLibrary (device library plus) support**  
+  The OneLibrary (formerly Device Library Plus) export database is now supported by pyrekordbox. 
   It has a similar interface to the master.db handler. It supports both reading and writing.
+- **anlz:** **Add support for the PVB2 seek index tag**  
+  PVB2 had no struct, so it was parsed as opaque bytes and had no handler.
+  It appears in the .EXT file of FLAC tracks, whose variable-length frames a
+  player cannot locate arithmetically, and indexes each encoded frame by its
+  first sample, its byte offset in the audio file and its length in samples.
+- **db:** **Add the missing FileType codes**
+  `FileType` covered only MP3, M4A, FLAC, WAV and AIFF, so reading back any other
+  code raised a ValueError. Add INVALID (0), MP4 (3), ALAC (6) and VIDEO (16),
+  plus AAC as an alias of M4A, in both the masterdb and the device library plus
+  enum.
 
 ### Improvements/Bug Fixes
 
-- **anlz:** **fix infinite recursion in ``AnlzFile.__len__``**  
+- **anlz:** **fix infinite recursion in ``AnlzFile.__len__`` ([203](https://github.com/dylanljones/pyrekordbox/pull/203))**  
   ``len(file)`` and ``list(file.keys())`` raised ``RecursionError`` on any ANLZ
   file (even an empty ``AnlzFile``) because ``__len__`` delegated to ``keys()``,
   whose ``abc.Mapping`` ``KeysView.__len__`` called back into ``__len__``.
   ``__len__`` now counts distinct tag types directly, matching ``__iter__``.
+- **anlz:** **Keep unsupported tags when rebuilding a file**  
+  A tag whose four-character code has no handler was dropped while parsing, so
+  rebuilding the file silently wrote it away and shortened the file. Fall back to
+  a handler that holds the raw contents, so an unrecognized tag survives a parse
+  and build round trip byte for byte.
+- **db:** **ArtistID not checked when adding album ([#196](https://github.com/dylanljones/pyrekordbox/pull/196))**  
+  If an artist is specified as argument when adding album, it will be used to check album name duplication
 - **db:** **rename the master db handler and update related references**  
   The Rekordbox ``master.db`` handler is renamed to better reflect Rekordbox 6 and 7 support. Renaming includes the package name and the database handler class.
-  
-
-### DEPRECATED
-
-The ``db6`` package and the ``Rekordbox6Database`` class is deprecated
-- Use the ``masterdb`` package instead of the ``db6`` package
-- The ``Rekordbox6Database`` class was renamed to ``MasterDatabase``
-- The ``tables`` module was renamed to ``models``
-
+- **rbxml:** **Return None from get_track when track is not found ([#200](https://github.com/dylanljones/pyrekordbox/pull/200))**  
+  When the requested TrackID, Location, or index does not match any
+  element, Track(element=None) propagates a None into ElementTree's
+  SubElement, which raised an unclear TypeError later. Return None
+  instead so callers can detect a missing track.
+- **onelib:** **Add missing djPlayCount column to the content model**
+  The `content` table of a USB export written by rekordbox 7.0.9 carries a
+  `djPlayCount` column, which the `Content` model did not map, so the play
+  count of a track could not be read through it.
+- **db:** **Correct track number validation and improve registry handling ([#209](https://github.com/dylanljones/pyrekordbox/issues/209))**
+- **anlz:** **Parse PSSI version 1 song structure tags ([#217](https://github.com/dylanljones/pyrekordbox/pull/217))**  
+  Version 1 tags start with 00 01 00 18, which failed the 32-bit entry-size constant. Split that word into version and entry size, and start the export XOR mask at version % 19.
+- **anlz:** **Parse PSSI version and entry size separately**  
+  Replace the placeholder file with the version/entry-size split so version 1 tags are accepted.
+- **anlz:** **Start the PSSI export mask at version % 19**  
+  Version 1 exports rotate the Kanzen-niRikaishita mask. Version 0 keeps the existing index.
 
 <a name="v0.4.4"></a>
 ## [v0.4.4] - 2025-08-17

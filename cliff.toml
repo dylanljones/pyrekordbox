@@ -1,0 +1,61 @@
+[remote.github]
+owner = "dylanljones"
+repo = "pyrekordbox"
+
+[changelog]
+header = """
+# What's New
+
+"""
+
+body = """
+{% if version %}
+<a name="{{ version }}"></a>
+## [{{ version }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}
+<a name="unreleased"></a>
+## [Unreleased]
+{% endif %}
+
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}**{{ commit.message | upper_first }}**{% if commit.body %}
+  {{ commit.body | replace(from="\n", to="\n  ") }}{% endif %}
+{% endfor %}
+{% endfor %}
+"""
+
+footer = """
+{% for release in releases -%}
+{% if not release.version -%}
+[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/{{ release.previous.version }}...HEAD
+{% elif release.previous.version -%}
+[{{ release.version }}]: https://github.com/dylanljones/pyrekordbox/compare/{{ release.previous.version }}...{{ release.version }}
+{% endif -%}
+{% endfor %}
+"""
+
+trim = true
+output = "CHANGELOG.md"
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+filter_commits = true
+protect_breaking_commits = true
+
+# Both v0.4.4 and older 0.3.0-style tags exist in this repository.
+tag_pattern = '^v?[0-9]+\.[0-9]+\.[0-9]+$'
+sort_commits = "oldest"
+
+commit_parsers = [
+    { footer = "^BREAKING CHANGE", group = "<!-- 0 -->BREAKING CHANGE" },
+    { message = "^feat", group = "<!-- 1 -->New Features" },
+    { message = "^fix", group = "<!-- 2 -->Improvements/Bug Fixes" },
+    { message = "^perf", group = "<!-- 3 -->Performance Improvements" },
+    { message = "^refactor", group = "<!-- 4 -->Code Refactoring" },
+    { message = "^docs", group = "<!-- 5 -->Documentation" },
+    { footer = "^DEPRECATED", group = "<!-- 6 -->DEPRECATED" },
+]
