@@ -208,20 +208,19 @@ quant = mysett.get("quantize")
 The `DEVSETTING.DAT` file is still not supported
 
 
-### Device Library Plus
+### OneLibrary
 
 For newer generation Pioneer DJ devices, Rekordbox exports a new library format to the USB storage
-device (or SD card), called ``Device Library Plus``.
-As of 2025, this format is only supported by the [OPUS-QUAD], [OMNIS-DUO], and [XDJ-AZ] devices.
+device (or SD card), called ``OneLibrary`` (formerly ``Device Library Plus``).
 The database schema is similar to the main Rekordbox database. It contains a selection of tables
 from the main database, with similar columns and data types.
 
-Pyrekordbox can unlock the new Rekordbox `exportLibrary.db` Device Library Plus database and provides
+Pyrekordbox can unlock the Rekordbox `exportLibrary.db` OneLibrary database and provides
 an easy interface for accessing the data stored in it:
 ````python
-from pyrekordbox import DeviceLibraryPlus
+from pyrekordbox import OneLibrary
 
-db = DeviceLibraryPlus("exportLibrary.db")
+db = OneLibrary("exportLibrary.db")
 
 for content in db.get_content():
     print(content.title, content.artist.name)
@@ -240,7 +239,7 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 - [ANLZ file format][anlz-doc]
 - [My-Setting file format][mysettings-doc]
 - [Rekordbox database][db6-doc]
-- [Device Library Plus][devicelib_plus_doc]
+- [OneLibrary][onelibrary-doc]
 
 
 ## 💻 Development
@@ -300,7 +299,7 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 [documentation-dev]: https://pyrekordbox.readthedocs.io/en/dev/
 [tutorial]: https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html
 [db6-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/db6.html
-[devicelib_plus_doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/devicelib_plus.html
+[onelibrary-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/onelibrary.html
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
 [mysettings-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/mysetting.html

@@ -53,7 +53,7 @@ formats/db6
 formats/xml
 formats/anlz
 formats/mysetting
-formats/devicelib_plus
+formats/onelibrary
 ```
 
 ```{toctree}

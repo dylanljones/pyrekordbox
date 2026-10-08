@@ -1,11 +1,10 @@
-(devicelib-plus-format)=
-# Rekordbox Device Library Plus Format
+(onelibrary-format)=
+# Rekordbox OneLibrary Format
 
 For newer generation Pioneer DJ devices, Rekordbox exports a new library format to the USB storage
-device (or SD card), called ``Device Library Plus``.
-As of 2025, this format is only supported by the [OPUS-QUAD], [OMNIS-DUO], and [XDJ-AZ] devices.
+device (or SD card), called ``OneLibrary`` (formerly ``Device Library Plus``).
 
-Similar to the main database of Rekordbox (``master.db``), the Device Library Plus is a SQLite database
+Similar to the main database of Rekordbox (``master.db``), OneLibrary is a SQLite database
 encrypted via the [SQLCipher](https://www.zetetic.net/sqlcipher/) library.
 Luckily, it appears that the key of the database is not license or machine dependent and all
 Device Libraries are encrypted with the same key.

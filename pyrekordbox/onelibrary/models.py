@@ -196,7 +196,7 @@ class Base(DeclarativeBase):
 
 
 class Album(Base):
-    """Table for storing the album data of the Device Library Plus contents.
+    """Table for storing the album data of the OneLibrary contents.
 
     See Also
     --------
@@ -234,7 +234,7 @@ class Album(Base):
 
 
 class Artist(Base):
-    """Table for storing the artist data of the Device Library Plus contents."""
+    """Table for storing the artist data of the OneLibrary contents."""
 
     __tablename__ = "artist"
 
@@ -251,7 +251,7 @@ class Artist(Base):
 
 
 class Category(Base):
-    """Table for storing the category data of the Device Library Plus contents."""
+    """Table for storing the category data of the OneLibrary contents."""
 
     __tablename__ = "category"
 
@@ -277,7 +277,7 @@ class Category(Base):
 
 
 class Color(Base):
-    """Table for storing the color data of the Device Library Plus contents."""
+    """Table for storing the color data of the OneLibrary contents."""
 
     __tablename__ = "color"
 
@@ -292,7 +292,7 @@ class Color(Base):
 
 
 class Content(Base):
-    """Table for storing the content data of the Device Library Plus contents."""
+    """Table for storing the content data of the OneLibrary contents."""
 
     __tablename__ = "content"
 
@@ -453,7 +453,7 @@ class Content(Base):
 
 
 class Cue(Base):
-    """Table for storing the cue data of the Device Library Plus contents."""
+    """Table for storing the cue data of the OneLibrary contents."""
 
     __tablename__ = "cue"
 
@@ -511,7 +511,7 @@ class Cue(Base):
 
 
 class Genre(Base):
-    """Table for storing the genre data of the Device Library Plus contents."""
+    """Table for storing the genre data of the OneLibrary contents."""
 
     __tablename__ = "genre"
 
@@ -526,7 +526,7 @@ class Genre(Base):
 
 
 class History(Base):
-    """Table for storing the history data of the Device Library Plus contents."""
+    """Table for storing the history data of the OneLibrary contents."""
 
     __tablename__ = "history"
 
@@ -562,7 +562,7 @@ class History(Base):
 
 
 class HistoryContent(Base):
-    """Table for storing the history content data of the Device Library Plus contents."""
+    """Table for storing the history content data of the OneLibrary contents."""
 
     __tablename__ = "history_content"
 
@@ -588,7 +588,7 @@ class HistoryContent(Base):
 
 
 class HotCueBankList(Base):
-    """Table for storing the hot cue bank list data of the Device Library Plus contents."""
+    """Table for storing the hot cue bank list data of the OneLibrary contents."""
 
     __tablename__ = "hotCueBankList"
 
@@ -626,7 +626,7 @@ class HotCueBankList(Base):
 
 
 class HotCueBankListCue(Base):
-    """Table for storing the hot cue bank list cue data of the Device Library Plus contents."""
+    """Table for storing the hot cue bank list cue data of the OneLibrary contents."""
 
     __tablename__ = "hotCueBankList_cue"
 
@@ -652,7 +652,7 @@ class HotCueBankListCue(Base):
 
 
 class Image(Base):
-    """Table for storing the image data of the Device Library Plus contents."""
+    """Table for storing the image data of the OneLibrary contents."""
 
     __tablename__ = "image"
 
@@ -667,7 +667,7 @@ class Image(Base):
 
 
 class Key(Base):
-    """Table for storing the key data of the Device Library Plus contents."""
+    """Table for storing the key data of the OneLibrary contents."""
 
     __tablename__ = "key"
 
@@ -682,7 +682,7 @@ class Key(Base):
 
 
 class Label(Base):
-    """Table for storing the label data of the Device Library Plus contents."""
+    """Table for storing the label data of the OneLibrary contents."""
 
     __tablename__ = "label"
 
@@ -697,7 +697,7 @@ class Label(Base):
 
 
 class MenuItem(Base):
-    """Table for storing the menu item data of the Device Library Plus contents."""
+    """Table for storing the menu item data of the OneLibrary contents."""
 
     __tablename__ = "menuItem"
 
@@ -714,7 +714,7 @@ class MenuItem(Base):
 
 
 class MyTag(Base):
-    """Table for storing the custom tag data of the Device Library Plus contents."""
+    """Table for storing the custom tag data of the OneLibrary contents."""
 
     __tablename__ = "myTag"
 
@@ -747,7 +747,7 @@ class MyTag(Base):
 
 
 class MyTagContent(Base):
-    """Table for storing the custom tag content data of the Device Library Plus contents."""
+    """Table for storing the custom tag content data of the OneLibrary contents."""
 
     __tablename__ = "myTag_content"
 
@@ -771,7 +771,7 @@ class MyTagContent(Base):
 
 
 class Playlist(Base):
-    """Table for storing the playlist data of the Device Library Plus contents."""
+    """Table for storing the playlist data of the OneLibrary contents."""
 
     __tablename__ = "playlist"
 
@@ -809,7 +809,7 @@ class Playlist(Base):
 
 
 class PlaylistContent(Base):
-    """Table for storing the playlist content data of the Device Library Plus contents."""
+    """Table for storing the playlist content data of the OneLibrary contents."""
 
     __tablename__ = "playlist_content"
 
@@ -835,7 +835,7 @@ class PlaylistContent(Base):
 
 
 class Property(Base):
-    """Table for storing the property data of the Device Library Plus contents."""
+    """Table for storing the property data of the OneLibrary contents."""
 
     __tablename__ = "property"
 
@@ -858,7 +858,7 @@ class Property(Base):
 
 
 class RecommendedLike(Base):
-    """Table for storing the recommended like data of the Device Library Plus contents."""
+    """Table for storing the recommended like data of the OneLibrary contents."""
 
     __tablename__ = "recommendedLike"
 
@@ -886,7 +886,7 @@ class RecommendedLike(Base):
 
 
 class Sort(Base):
-    """Table for storing the sort data for menu items of the Device Library Plus contents."""
+    """Table for storing the sort data for menu items of the OneLibrary contents."""
 
     __tablename__ = "sort"
 

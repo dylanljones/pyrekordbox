@@ -51,7 +51,7 @@ The following is a list of possible scopes:
 - **config**: Configuration handling
 - **xml**: Rekordbox XML database handling
 - **db**: Rekordbox database handling
-- **devicelib-plus**: Device Library Plus handling
+- **onelib**: One Library (Device Library Plus) handling
 - **anlz**: ANLZ file handling
 - **mysetting**: MySettings file handling
 

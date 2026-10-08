@@ -2,7 +2,7 @@
 # Author: Dylan Jones
 # Date:   2025-08-13
 
-from .database import DeviceLibraryPlus
+from .database import OneLibrary
 from .models import (
     Album,
     Artist,

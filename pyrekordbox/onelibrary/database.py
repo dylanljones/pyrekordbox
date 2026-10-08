@@ -75,8 +75,8 @@ class SessionNotInitializedError(Exception):
         super().__init__("Sqlite-session not intialized!")
 
 
-class DeviceLibraryPlus:
-    """Rekordbox Device Library Plus database handler.
+class OneLibrary:
+    """Rekordbox OneLibrary database handler.
 
     Parameters
     ----------
@@ -98,7 +98,7 @@ class DeviceLibraryPlus:
 
     See Also
     --------
-    pyrekordbox.device_lib_plus.models: Device Library Plus table definitions
+    pyrekordbox.onelibrary.models: OneLibrary table definitions
     """
 
     def __init__(self, path: PathLike = None, key: str = "", unlock: bool = True):
@@ -144,7 +144,7 @@ class DeviceLibraryPlus:
 
         Examples
         --------
-        >>> db = DeviceLibraryPlus()
+        >>> db = OneLibrary()
         >>> db.close()
         >>> db.open()
         """
@@ -161,7 +161,7 @@ class DeviceLibraryPlus:
         self.session.close()
         self.session = None
 
-    def __enter__(self) -> "DeviceLibraryPlus":
+    def __enter__(self) -> "OneLibrary":
         return self
 
     def __exit__(
@@ -220,12 +220,12 @@ class DeviceLibraryPlus:
         --------
         Query the ``Content`` table
 
-        >>> db = DeviceLibraryPlus()
+        >>> db = OneLibrary()
         >>> query = db.query(Content)
 
         Query the `title` attribute of the ``Content`` table
 
-        >>> db = DeviceLibraryPlus()
+        >>> db = OneLibrary()
         >>> query = db.query(Content.title)
         """
         if self.session is None:
