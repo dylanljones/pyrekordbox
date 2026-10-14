@@ -274,7 +274,7 @@ class SmartList:
                 "ValueRight": str(cond.value_right),
             }
             xml.SubElement(root, "CONDITION", attrib=attrib)
-        return xml.tostring(root).decode("utf-8").replace(" /", "/")
+        return xml.tostring(root).decode("utf-8").replace(" />", "/>")
 
     def add_condition(
         self,
