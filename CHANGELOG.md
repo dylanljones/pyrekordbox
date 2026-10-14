@@ -1,8 +1,12 @@
 # What's New
 
 
-<a name="unreleased"></a>
-## [Unreleased]
+<a name="v0.5.0"></a>
+## [v0.5.0] - 2026-10-14
+
+This update adds OneLibrary support, expands ANLZ format support, improves track
+path handling and fixes various bugs. It also drops support for Python 3.8 - 3.10 and deprecates the
+``db6`` package and the ``Rekordbox6Database`` class.
 
 ### BREAKING CHANGE
 
@@ -752,7 +756,7 @@ This release contains documentation fixes.
 - **add missing djmd tables to `master.db` database documentation**
 
 
-[Unreleased]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.4...HEAD
+[v0.5.0]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.4...v0.5.0
 [v0.4.4]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.3...v0.4.4
 [v0.4.3]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/dylanljones/pyrekordbox/compare/v0.4.1...v0.4.2
