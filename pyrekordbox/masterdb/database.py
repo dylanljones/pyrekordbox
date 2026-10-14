@@ -2177,8 +2177,13 @@ class MasterDatabase:
         # Update path in ANLZ files
         anlz_files = self.read_anlz_files(cid)
         for anlz_path, anlz in anlz_files.items():
-            logger.debug("Updating path of %s: %s", anlz_path, path)
-            anlz.set_path(path)
+            # Newer desktop libraries store only the filename after a "?/" prefix.
+            # Preserve each file's format; exports and older files use full paths.
+            new_anlz_path = path
+            if anlz.get("path").startswith("?/"):
+                new_anlz_path = "?/" + path.rsplit("/", 1)[-1]
+            logger.debug("Updating path of %s: %s", anlz_path, new_anlz_path)
+            anlz.set_path(new_anlz_path)
 
         # Update path in database (DjmdContent)
         logger.debug("Updating database file path: %s", path)

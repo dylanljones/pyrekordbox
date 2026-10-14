@@ -4,6 +4,7 @@
 
 import os
 import shutil
+import struct
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
@@ -16,6 +17,7 @@ from sqlalchemy import text
 from sqlalchemy.orm.query import Query
 
 from pyrekordbox import MasterDatabase
+from pyrekordbox.anlz import AnlzFile
 from pyrekordbox.masterdb import models
 from pyrekordbox.masterdb.models import datetime_to_str, string_to_datetime
 from pyrekordbox.masterdb.smartlist import LogicalOperator, Operator, Property, SmartList
@@ -1642,3 +1644,40 @@ def test_update_and_analysis_paths(tmp_path, monkeypatch):
     assert content.FolderPath == "D:/Music/new.mp3"
     assert content.OrgFolderPath == content.FolderPath
     assert content.FileNameL == "new.mp3"
+
+
+@pytest.mark.parametrize("rename", [False, True])
+@pytest.mark.parametrize("windows_path", [False, True])
+def test_update_preserves_anlz_path_format(tmp_path, monkeypatch, rename, windows_path):
+    db = MasterDatabase.__new__(MasterDatabase)
+    content = SimpleNamespace(
+        ID="1",
+        FolderPath="D:/Music/old.mp3",
+        OrgFolderPath="D:/Music/old.mp3",
+        FileNameL="old.mp3",
+    )
+    files = {}
+    old_paths = ["?/old.mp3", "D:/Music/old.mp3", "?/old.mp3"]
+    for extension, old_path in zip(("DAT", "EXT", "2EX"), old_paths):
+        encoded = old_path.encode("utf-16-be") + b"\x00\x00"
+        tag = b"PPTH" + struct.pack(">III", 16, 16 + len(encoded), len(encoded)) + encoded
+        data = b"PMAI" + struct.pack(">II", 28, 28 + len(tag)) + bytes(16) + tag
+        files[tmp_path / f"ANLZ0000.{extension}"] = AnlzFile.parse(data)
+    monkeypatch.setattr(db, "read_anlz_files", lambda cid: files)
+
+    if rename:
+        # The filename helper delegates to update_content_path.
+        db.update_content_filename(content, "new café 🎵", check_path=False, commit=False)
+        expected = "D:/Music/new café 🎵.mp3"
+    else:
+        expected = "E:/Moved/old.mp3"
+        supplied = expected.replace("/", "\\") if windows_path else expected
+        db.update_content_path(content, supplied, check_path=False, commit=False)
+
+    assert content.FolderPath == expected
+    assert content.OrgFolderPath == expected
+    assert content.FileNameL == expected.rsplit("/", 1)[-1]
+    for (file_path, file), old_path in zip(files.items(), old_paths):
+        expected_anlz = "?/" + content.FileNameL if old_path.startswith("?/") else expected
+        assert file.get("path") == expected_anlz
+        assert AnlzFile.parse_file(file_path).get("path") == expected_anlz
