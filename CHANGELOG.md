@@ -11,7 +11,7 @@ path handling and fixes various bugs. It also drops support for Python 3.8 - 3.1
 ### BREAKING CHANGE
 
 - **drop support for Python 3.8 - 3.10 ([#214](https://github.com/dylanljones/pyrekordbox/issues/214))**  
-  The minimum supported Python version is now 3.11. Python 3.12, 3.13, 3.14 and 3.15 are officially supported.
+  The minimum supported Python version is now 3.11. Python 3.12, 3.13 and 3.14 are officially supported.
 - **The ``db6`` package and the ``Rekordbox6Database`` class is deprecated**.  
   - Use the ``masterdb`` package instead of the ``db6`` package
   - The ``Rekordbox6Database`` class was renamed to ``MasterDatabase``
