@@ -9,6 +9,8 @@ import os
 import warnings
 import xml.etree.cElementTree as xml
 import zlib
+from pathlib import PurePath
+from typing import Union
 from xml.dom import minidom
 
 import psutil
@@ -16,6 +18,17 @@ import psutil
 warnings.simplefilter("always", DeprecationWarning)
 
 BLOB_KEY = b"657f48f84c437cc1"
+
+
+def to_posix_path(path: Union[str, PurePath]) -> str:
+    """Use forward slashes for stored paths, regardless of the host platform."""
+    return str(path).replace("\\", "/")
+
+
+def path_variants(path: Union[str, PurePath]) -> tuple[str, str]:
+    """Return POSIX and Windows spellings for an exact path lookup."""
+    posix = to_posix_path(path)
+    return posix, posix.replace("/", "\\")
 
 
 def warn_deprecated(name: str, new_name: str = "", hint: str = "", remove_in: str = "") -> None:

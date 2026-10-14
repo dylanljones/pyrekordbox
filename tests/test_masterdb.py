@@ -6,7 +6,8 @@ import os
 import shutil
 import tempfile
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -18,6 +19,7 @@ from pyrekordbox import MasterDatabase
 from pyrekordbox.masterdb import models
 from pyrekordbox.masterdb.models import datetime_to_str, string_to_datetime
 from pyrekordbox.masterdb.smartlist import LogicalOperator, Operator, Property, SmartList
+from pyrekordbox.utils import path_variants, to_posix_path
 
 TEST_ROOT = Path(__file__).parent.parent / ".testdata"
 LOCKED = TEST_ROOT / "rekordbox 6" / "master_locked.db"
@@ -1572,3 +1574,71 @@ def test_copy_unlocked():
                 query = db2.query(table).filter_by(ID=row.ID)
             data2 = query.one().to_dict()
             assert data == data2
+
+
+@pytest.fixture
+def path_db(tmp_path, monkeypatch):
+    monkeypatch.setattr("pyrekordbox.masterdb.database.get_config", lambda *args: {})
+    monkeypatch.setattr("pyrekordbox.masterdb.database.get_rekordbox_pid", lambda: 0)
+    path = tmp_path / "test.db"
+    shutil.copyfile(UNLOCKED, path)
+    db = MasterDatabase(path, unlock=False)
+    yield db
+    db.close()
+    db.engine.dispose()
+
+
+@pytest.mark.parametrize("input_style", ["posix", "windows", "path"])
+@pytest.mark.parametrize("stored_style", ["posix", "windows"])
+def test_track_paths(path_db, tmp_path, input_style, stored_style):
+    track_path = tmp_path / "track with spaces.mp3"
+    track_path.write_bytes(b"test")
+    posix, windows = path_variants(track_path)
+    supplied = {"posix": posix, "windows": windows, "path": track_path}[input_style]
+    track = path_db.add_content(supplied)
+    field = "FolderPath"
+    assert getattr(track, field) == posix
+    track = path_db.get_content(**{field: posix}).one()
+
+    # Simulate a database populated by an older version using native Windows paths.
+    setattr(track, field, posix if stored_style == "posix" else windows)
+    path_db.session.flush()
+    filters = {field: supplied}
+    assert path_db.get_content(**filters).one() is track
+    id_field = "ID"
+    filters[id_field] = getattr(track, id_field)
+    assert path_db.get_content(**filters) is track
+    filters[id_field] = -1
+    assert path_db.get_content(**filters) is None
+    with pytest.raises(ValueError, match="already exists"):
+        path_db.add_content(supplied)
+
+
+@pytest.mark.parametrize("path", [r"D:\Music\Track.mp3", PureWindowsPath("D:/Music/Track.mp3")])
+def test_path_normalization_is_platform_independent(path):
+    assert to_posix_path(path) == "D:/Music/Track.mp3"
+    assert path_variants(path) == ("D:/Music/Track.mp3", r"D:\Music\Track.mp3")
+
+
+@pytest.mark.parametrize("path", ["//server/share/track.mp3", "/Music/track.mp3"])
+def test_path_roots_are_preserved(path):
+    assert to_posix_path(path) == path
+    assert to_posix_path(path.replace("/", "\\")) == path
+
+
+def test_update_and_analysis_paths(tmp_path, monkeypatch):
+    db = MasterDatabase.__new__(MasterDatabase)
+    db._share_dir = tmp_path
+    content = SimpleNamespace(
+        ID="1",
+        FolderPath="D:/Music/old.mp3",
+        OrgFolderPath=r"D:\Music\old.mp3",
+        FileNameL="old.mp3",
+        AnalysisDataPath=r"\PIONEER\USBANLZ\ANLZ0000.DAT",
+    )
+    assert db.get_anlz_dir(content) == tmp_path / "PIONEER/USBANLZ"
+    monkeypatch.setattr(db, "read_anlz_files", lambda cid: {})
+    db.update_content_path(content, r"D:\Music\new.mp3", check_path=False, commit=False)
+    assert content.FolderPath == "D:/Music/new.mp3"
+    assert content.OrgFolderPath == content.FolderPath
+    assert content.FileNameL == "new.mp3"
