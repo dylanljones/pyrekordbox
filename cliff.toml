@@ -9,22 +9,23 @@ header = """
 """
 
 body = """
-{% if version %}
+{%- if version %}
 <a name="{{ version }}"></a>
 ## [{{ version }}] - {{ timestamp | date(format="%Y-%m-%d") }}
-{% else %}
+{%- else %}
 <a name="unreleased"></a>
 ## [Unreleased]
-{% endif %}
-
+{%- endif %}
 {% for group, commits in commits | group_by(attribute="group") %}
 ### {{ group | striptags | trim }}
 
-{% for commit in commits %}
-- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}**{{ commit.message | upper_first }}**{% if commit.body %}
-  {{ commit.body | replace(from="\n", to="\n  ") }}{% endif %}
+{% for commit in commits -%}
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}**{{ commit.message | upper_first }}**{% if commit.body %}\\
+{% for line in commit.body | trim | split(pat="\n") %}{{ "  " }}{{ line }}{% if not loop.last %}
+{% endif %}{% endfor %}{% endif %}
 {% endfor %}
-{% endfor %}
+{%- endfor %}
+
 """
 
 footer = """
@@ -38,7 +39,7 @@ footer = """
 """
 
 trim = true
-output = "CHANGELOG.md"
+output = "CHANGELOG-OUT.md"
 
 [git]
 conventional_commits = true
@@ -49,6 +50,11 @@ protect_breaking_commits = true
 # Both v0.4.4 and older 0.3.0-style tags exist in this repository.
 tag_pattern = '^v?[0-9]+\.[0-9]+\.[0-9]+$'
 sort_commits = "oldest"
+
+# Convert issue numbers in commit messages to links to the GitHub issues page.
+commit_preprocessors = [
+    { pattern = '\(#([0-9]+)\)', replace = "([#${1}](https://github.com/dylanljones/pyrekordbox/issues/${1}))" },
+]
 
 commit_parsers = [
     { footer = "^BREAKING CHANGE", group = "<!-- 0 -->BREAKING CHANGE" },

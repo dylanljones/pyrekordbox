@@ -61,6 +61,10 @@
   Replace the placeholder file with the version/entry-size split so version 1 tags are accepted.
 - **anlz:** **Start the PSSI export mask at version % 19**  
   Version 1 exports rotate the Kanzen-niRikaishita mask. Version 0 keeps the existing index.
+- **xml:** **Correct XML output for conditions ([#219](https://github.com/dylanljones/pyrekordbox/pull/219))**  
+- **db:** **Normalize path handling using to_posix_path and path_variants ([#194](https://github.com/dylanljones/pyrekordbox/pull/194))**  
+  All paths are now converted to POSIX when adding to the master db and one library.
+- **db:** **Preserve ANLZ path format during updates**
 
 <a name="v0.4.4"></a>
 ## [v0.4.4] - 2025-08-17
