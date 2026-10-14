@@ -22,7 +22,7 @@ except ImportError:  # pragma: no cover
     _sqlcipher_available = False
 
 from ..masterdb.models import DjmdContent
-from ..utils import deobfuscate
+from ..utils import deobfuscate, path_variants, to_posix_path
 from . import models
 
 logger = logging.getLogger(__name__)
@@ -301,9 +301,14 @@ class OneLibrary:
         return _parse_query_result(query, COLOR_ID, kwargs)
 
     def get_content(self, **kwargs: Any) -> ParsedQuery[models.Content]:
-        """Creates a filtered query for the ``Content`` table."""
+        """Query tracks, matching path filters with either slash convention."""
         _rename_id(kwargs, CONTENT_ID)
-        query = self.query(models.Content).filter_by(**kwargs)
+        query = self.query(models.Content)
+        for name in ("path", "analysisDataFilePath"):
+            if name in kwargs and kwargs[name] is not None:
+                paths = path_variants(kwargs.pop(name))
+                query = query.filter(getattr(models.Content, name).in_(paths))
+        query = query.filter_by(**kwargs)
         return _parse_query_result(query, CONTENT_ID, kwargs)
 
     def get_cue(self, **kwargs: Any) -> ParsedQuery[models.Cue]:
@@ -345,7 +350,10 @@ class OneLibrary:
     def get_image(self, **kwargs: Any) -> ParsedQuery[models.Image]:
         """Creates a filtered query for the ``Image`` table."""
         _rename_id(kwargs, IMAGE_ID)
-        query = self.query(models.Image).filter_by(**kwargs)
+        query = self.query(models.Image)
+        if "path" in kwargs and kwargs["path"] is not None:
+            query = query.filter(models.Image.path.in_(path_variants(kwargs.pop("path"))))
+        query = query.filter_by(**kwargs)
         return _parse_query_result(query, IMAGE_ID, kwargs)
 
     def get_key(self, **kwargs: Any) -> ParsedQuery[models.Key]:
@@ -557,9 +565,11 @@ class OneLibrary:
         models.Content
             The newly created content object.
         """
-        path = Path(path)
-        path_string = str(path)
-        query = self.query(models.Content).filter_by(path=path_string)
+        path = Path(to_posix_path(path))
+        path_string = to_posix_path(path)
+        query = self.query(models.Content).filter(
+            models.Content.path.in_(path_variants(path_string))
+        )
         if query.count() > 0:
             raise ValueError(f"Track with path '{path}' already exists in database")
 
@@ -578,7 +588,7 @@ class OneLibrary:
             cueUpdateCount=0,
             analysisDataUpdateCount=0,
             informationUpdateCount=0,
-            analysisDataFilePath=str(analysis_path) if analysis_path else None,
+            analysisDataFilePath=to_posix_path(analysis_path) if analysis_path else None,
             **kwargs,
         )
         self.add(content)
@@ -674,7 +684,7 @@ class OneLibrary:
         models.Image
             The newly created image object.
         """
-        image = models.Image(path=str(path))
+        image = models.Image(path=to_posix_path(path))
         self.add(image)
         self.flush()
         return image

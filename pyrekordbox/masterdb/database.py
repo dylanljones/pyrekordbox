@@ -17,7 +17,7 @@ from sqlalchemy.sql.sqltypes import DateTime, String
 
 from ..anlz import AnlzFile, get_anlz_paths, read_anlz_files  # type: ignore[attr-defined]
 from ..config import get_config
-from ..utils import deobfuscate, get_rekordbox_pid, warn_deprecated
+from ..utils import deobfuscate, get_rekordbox_pid, path_variants, to_posix_path, warn_deprecated
 from . import models
 from .aux_files import MasterPlaylistXml
 from .models import DjmdContent, DjmdPlaylist, DjmdSongPlaylist, FileType, PlaylistType
@@ -500,8 +500,13 @@ class MasterDatabase:
         return _parse_query_result(query, kwargs)
 
     def get_content(self, **kwargs: Any) -> Any:
-        """Creates a filtered query for the ``DjmdContent`` table."""
-        query = self.query(models.DjmdContent).filter_by(**kwargs)
+        """Query tracks, matching path filters with either slash convention."""
+        query = self.query(models.DjmdContent)
+        for name in ("FolderPath", "OrgFolderPath", "rb_LocalFolderPath", "AnalysisDataPath"):
+            if name in kwargs and kwargs[name] is not None:
+                paths = path_variants(kwargs.pop(name))
+                query = query.filter(getattr(models.DjmdContent, name).in_(paths))
+        query = query.filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
     # noinspection PyUnresolvedReferences
@@ -1929,9 +1934,9 @@ class MasterDatabase:
         >>> db.add_content("/Users/foo/Downloads/banger.mp3", Title="Banger")
         <DjmdContent(123456789 Title=Banger)>
         """
-        path = Path(path)
-        path_string = str(path)
-        query = self.query(models.DjmdContent).filter_by(FolderPath=path_string)
+        path = Path(to_posix_path(path))
+        path_string = to_posix_path(path)
+        query = self.get_content(FolderPath=path_string)
         if query.count() > 0:
             raise ValueError(f"Track with path '{path}' already exists in database")
 
@@ -1950,6 +1955,9 @@ class MasterDatabase:
         except KeyError:
             raise ValueError(f"Invalid file type: {path.suffix}")
 
+        for name in ("OrgFolderPath", "rb_LocalFolderPath", "AnalysisDataPath"):
+            if kwargs.get(name) is not None:
+                kwargs[name] = to_posix_path(kwargs[name])
         content: DjmdContent = models.DjmdContent.create(
             ID=id_,
             UUID=uuid,
@@ -2007,7 +2015,7 @@ class MasterDatabase:
         else:
             cont = content
 
-        dat_path = Path(cont.AnalysisDataPath.strip("\\/"))
+        dat_path = Path(to_posix_path(cont.AnalysisDataPath).strip("/"))
         path: Path = self._share_dir / dat_path.parent
         return path
 
@@ -2158,11 +2166,11 @@ class MasterDatabase:
 
         cid = cont.ID
 
-        path = Path(path)
+        path = Path(to_posix_path(path))
         # Check and format path (the database and ANLZ files use "/" as path delimiter)
         if check_path:
             assert path.exists()
-        path = str(path).replace("\\", "/")
+        path = to_posix_path(path)
         old_path = cont.FolderPath
         logger.info("Replacing '%s' with '%s' of content [%s]", old_path, path, cid)
 
@@ -2179,7 +2187,9 @@ class MasterDatabase:
         # Update the OrgFolderPath column with the new path
         # if the column matches the old_path variable
         org_folder_path = cont.OrgFolderPath
-        if org_folder_path == old_path:
+        if org_folder_path is not None and to_posix_path(org_folder_path) == to_posix_path(
+            old_path
+        ):
             cont.OrgFolderPath = path
 
         # Update the FileNameL column with the new filename if it changed
@@ -2256,7 +2266,7 @@ class MasterDatabase:
         else:
             cont = content
 
-        old_path = Path(cont.FolderPath)
+        old_path = Path(to_posix_path(cont.FolderPath))
         ext = old_path.suffix
         new_path = old_path.parent / name
         new_path = new_path.with_suffix(ext)

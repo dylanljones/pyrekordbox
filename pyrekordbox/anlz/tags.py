@@ -12,6 +12,7 @@ import numpy.typing as npt
 from construct import Struct
 from construct.lib.containers import Container
 
+from ..utils import to_posix_path
 from . import structs
 
 logger = logging.getLogger(__name__)
@@ -360,7 +361,7 @@ class PPTHAnlzTag(AbstractAnlzTag):
         return self.path
 
     def set(self, path: Union[str, Path]) -> None:
-        pathstr = str(path).replace("\\", "/")
+        pathstr = to_posix_path(path)
         len_path = len(pathstr.encode("utf-16-be")) + 2
         self.content.path = pathstr
         self.content.len_path = len_path
