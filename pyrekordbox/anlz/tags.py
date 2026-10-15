@@ -532,7 +532,7 @@ class PWV5AnlzTag(AbstractAnlzTag):
         heights = np.zeros(n, dtype=np.int64)
         colors = np.zeros((n, 3), dtype=np.int64)
         for i, x in enumerate(self.content.entries):
-            red = (x & rmask) >> 12
+            red = (x & rmask) >> 13
             green = (x & gmask) >> 10
             blue = (x & bmask) >> 7
             heights[i] = (x & hmask) >> 2
