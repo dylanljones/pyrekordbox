@@ -139,6 +139,20 @@ song = playlist.Songs[0]
 db.remove_from_playlist(playlist, song)
 ````
 
+By default, removal commits both the deletion and the updated track numbers.
+Pass `commit=False` to combine removals with other changes in one transaction:
+
+```python
+songs = list(playlist.Songs[:2])
+try:
+    for song in songs:
+        db.remove_from_playlist(playlist, song, commit=False)
+    db.commit()
+except Exception:
+    db.rollback()
+    raise
+```
+
 ### Tracks
 
 New tracks can be added to your rekordbox collection by calling the `db.add_content()` method:
