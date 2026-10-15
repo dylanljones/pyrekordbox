@@ -930,6 +930,7 @@ class MasterDatabase:
         self,
         playlist: PlaylistLike,
         song: Union[models.DjmdSongPlaylist, int, str],
+        commit: bool = True,
     ) -> None:
         """Removes a track from a playlist.
 
@@ -941,6 +942,10 @@ class MasterDatabase:
         song : DjmdSongPlaylist or int or str
             The song to remove from the playlist. Can either be a
             :class:`DjmdSongPlaylist` object or a song ID.
+        commit : bool, optional
+            Commit the deletion and updated track numbers together. True by default.
+            If False, leave the changes in the current transaction for the caller
+            to commit or roll back.
 
         Examples
         --------
@@ -951,6 +956,10 @@ class MasterDatabase:
         >>> pl = db.get_playlist(ID=pid)
         >>> song = pl.Songs[0]
         >>> db.remove_from_playlist(pl, song)
+
+        To combine removals in one transaction, pass ``commit=False`` to each call
+        and call ``db.commit()`` when all operations succeed, or ``db.rollback()``
+        on failure.
         """
         plist: DjmdPlaylist
         plist_song: DjmdSongPlaylist
@@ -974,7 +983,8 @@ class MasterDatabase:
         # Remove track from playlist
         track_no = plist_song.TrackNo
         self.delete(plist_song)
-        self.commit()
+        # Make the deletion visible to the query without making it durable yet.
+        self.flush()
         # Update track numbers higher than the removed track
         query = (
             self.query(models.DjmdSongPlaylist)
@@ -993,6 +1003,9 @@ class MasterDatabase:
 
         if moved:
             self.registry.on_move(moved)
+
+        if commit:
+            self.commit()
 
     def move_song_in_playlist(
         self,
