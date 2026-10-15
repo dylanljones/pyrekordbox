@@ -7,7 +7,7 @@ import logging
 import secrets
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union
 from uuid import uuid4
 
 from sqlalchemy import MetaData, create_engine, event, or_, select
@@ -930,6 +930,7 @@ class MasterDatabase:
         self,
         playlist: PlaylistLike,
         song: Union[models.DjmdSongPlaylist, int, str],
+        commit: bool = True,
     ) -> None:
         """Removes a track from a playlist.
 
@@ -941,6 +942,10 @@ class MasterDatabase:
         song : DjmdSongPlaylist or int or str
             The song to remove from the playlist. Can either be a
             :class:`DjmdSongPlaylist` object or a song ID.
+        commit : bool, optional
+            Commit the deletion and updated track numbers together. True by default.
+            If False, leave the changes in the current transaction for the caller
+            to commit or roll back.
 
         Examples
         --------
@@ -951,6 +956,10 @@ class MasterDatabase:
         >>> pl = db.get_playlist(ID=pid)
         >>> song = pl.Songs[0]
         >>> db.remove_from_playlist(pl, song)
+
+        To combine removals in one transaction, pass ``commit=False`` to each call
+        and call ``db.commit()`` when all operations succeed, or ``db.rollback()``
+        on failure.
         """
         plist: DjmdPlaylist
         plist_song: DjmdSongPlaylist
@@ -974,7 +983,8 @@ class MasterDatabase:
         # Remove track from playlist
         track_no = plist_song.TrackNo
         self.delete(plist_song)
-        self.commit()
+        # Make the deletion visible to the query without making it durable yet.
+        self.flush()
         # Update track numbers higher than the removed track
         query = (
             self.query(models.DjmdSongPlaylist)
@@ -993,6 +1003,9 @@ class MasterDatabase:
 
         if moved:
             self.registry.on_move(moved)
+
+        if commit:
+            self.commit()
 
     def move_song_in_playlist(
         self,
@@ -1101,6 +1114,169 @@ class MasterDatabase:
             moved.append(plist_song)
 
         self.registry.on_move(moved)
+
+    def _get_playlist_song_selection(
+        self,
+        playlist: PlaylistLike,
+        songs: Sequence[Union[DjmdSongPlaylist, int, str]],
+    ) -> Tuple[List[DjmdSongPlaylist], List[DjmdSongPlaylist]]:
+        """Resolve playlist members once and validate the entire selection."""
+        if isinstance(playlist, DjmdPlaylist):
+            playlist_id = playlist.ID
+        elif isinstance(playlist, (int, str)) and not isinstance(playlist, bool):
+            playlist_id = str(playlist)
+        else:
+            raise TypeError("Playlist must be a DjmdPlaylist or corresponding playlist ID")
+
+        if isinstance(songs, (str, bytes)):
+            raise TypeError("Songs must be a sequence of playlist song objects or IDs")
+        song_ids: List[str] = []
+        for song in songs:
+            if isinstance(song, DjmdSongPlaylist):
+                song_ids.append(str(song.ID))
+            elif isinstance(song, (int, str)) and not isinstance(song, bool):
+                song_ids.append(str(song))
+            else:
+                raise TypeError("Song must be a DjmdSongPlaylist or corresponding song ID")
+        song_ids = list(dict.fromkeys(song_ids))
+
+        # Resolve the current order even when the caller disabled autoflush.
+        self.flush()
+        plist: Optional[DjmdPlaylist] = self.get_playlist(ID=playlist_id)
+        if plist is None:
+            raise ValueError(f"Playlist with ID={playlist_id} does not exist")
+        if plist.Attribute != 0:
+            raise ValueError("Playlist must be a normal playlist")
+        if not song_ids:
+            return [], []
+
+        entries: List[DjmdSongPlaylist] = (
+            self.get_playlist_songs(PlaylistID=plist.ID).order_by(DjmdSongPlaylist.TrackNo).all()
+        )
+        by_id = {str(entry.ID): entry for entry in entries}
+        for song_id in song_ids:
+            if song_id not in by_id:
+                raise ValueError(f"Song with ID={song_id} is not in playlist with ID={plist.ID}")
+        return entries, [by_id[song_id] for song_id in song_ids]
+
+    def _set_playlist_song_order(self, songs: Sequence[DjmdSongPlaylist]) -> None:
+        """Renumber changed members and register a single move event."""
+        now = datetime.datetime.now()
+        moved = []
+        with self.registry.disabled():
+            for track_no, song in enumerate(songs, start=1):
+                if song.TrackNo != track_no:
+                    song.TrackNo = track_no
+                    song.updated_at = now
+                    moved.append(song)
+        if moved:
+            self.registry.on_move(moved)
+
+    def remove_songs_from_playlist(
+        self,
+        playlist: PlaylistLike,
+        songs: Sequence[Union[DjmdSongPlaylist, int, str]],
+    ) -> None:
+        """Remove multiple playlist members and renumber the survivors in one pass.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The normal playlist to remove members from, or its ID.
+        songs : sequence of DjmdSongPlaylist or int or str
+            Playlist members or their IDs, not content IDs. Repeated member IDs
+            are processed once. An empty selection leaves the playlist unchanged.
+
+        Raises
+        ------
+        TypeError
+            If a playlist or song argument has an unsupported type.
+        ValueError
+            If the playlist does not exist, is a folder or smart playlist, or any
+            selected member does not belong to it.
+
+        Notes
+        -----
+        All members are validated before this operation changes the playlist.
+        Changes remain in the current transaction; call ``commit()`` to persist
+        them or ``rollback()`` to discard them, including after an exception.
+        Pending session changes are flushed before reading the playlist, even
+        inside ``no_autoflush``. This does not commit the transaction.
+        Each deletion uses the existing registry tracking. Renumbered survivors
+        share one move event; unchanged members retain their timestamps and USNs.
+
+        Examples
+        --------
+        >>> songs = list(playlist.Songs[:2])
+        >>> db.remove_songs_from_playlist(playlist, songs)
+        >>> db.commit()
+        """
+        entries, selected = self._get_playlist_song_selection(playlist, songs)
+        if not selected:
+            return
+        selected_ids = {song.ID for song in selected}
+        for song in selected:
+            self.delete(song)
+        self._set_playlist_song_order([song for song in entries if song.ID not in selected_ids])
+
+    def move_songs_in_playlist(
+        self,
+        playlist: PlaylistLike,
+        songs: Sequence[Union[DjmdSongPlaylist, int, str]],
+        new_track_no: int,
+    ) -> None:
+        """Move multiple playlist members as a block, renumbering in one pass.
+
+        Parameters
+        ----------
+        playlist : DjmdPlaylist or int or str
+            The normal playlist containing the members, or its ID.
+        songs : sequence of DjmdSongPlaylist or int or str
+            Playlist members or their IDs, not content IDs. The block follows
+            the order of this sequence, with repeated member IDs processed once.
+        new_track_no : int
+            The final, one-based track number of the first member in the block.
+            Must be between 1 and the playlist size minus the number of distinct
+            selected members plus 1. For an empty selection, any positive integer
+            is accepted and the playlist is left unchanged.
+
+        Raises
+        ------
+        TypeError
+            If an argument has an unsupported type.
+        ValueError
+            If the playlist does not exist, is a folder or smart playlist, a
+            selected member does not belong to it, or the position is out of range.
+
+        Notes
+        -----
+        All arguments are validated before this operation changes the playlist.
+        Changes remain in the current transaction; call ``commit()`` to persist
+        them or ``rollback()`` to discard them, including after an exception.
+        Pending session changes are flushed before reading the playlist, even
+        inside ``no_autoflush``. This does not commit the transaction.
+        Changed members share one registry move event. Members whose track numbers
+        do not change retain their timestamps and USNs.
+
+        Examples
+        --------
+        >>> songs = sorted(playlist.Songs, key=lambda song: song.TrackNo)
+        >>> db.move_songs_in_playlist(playlist, songs[-2:], new_track_no=1)
+        >>> db.commit()
+        """
+        if not isinstance(new_track_no, int) or isinstance(new_track_no, bool):
+            raise TypeError("Track number must be an integer")
+        if new_track_no < 1:
+            raise ValueError("Track number must be greater than 0")
+        entries, selected = self._get_playlist_song_selection(playlist, songs)
+        if not selected:
+            return
+        selected_ids = {song.ID for song in selected}
+        remaining = [song for song in entries if song.ID not in selected_ids]
+        if new_track_no > len(remaining) + 1:
+            raise ValueError(f"Track number too high, maximum is {len(remaining) + 1}")
+        index = new_track_no - 1
+        self._set_playlist_song_order(remaining[:index] + selected + remaining[index:])
 
     def _create_playlist(
         self,
