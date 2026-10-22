@@ -153,6 +153,42 @@ except Exception:
     raise
 ```
 
+For many removals, `remove_songs_from_playlist()` reads the playlist members once
+and renumbers the survivors in one pass. `move_songs_in_playlist()` moves selected
+members as a block and renumbers the final order in one pass. Both methods accept
+`DjmdSongPlaylist` objects or member IDs, rather than content IDs. This distinguishes
+separate occurrences of the same track. Repeated references to the same member
+are processed once. A missing member, a member from another playlist, a missing
+playlist, a folder, or a smart playlist raises `ValueError` before the batch changes
+any members.
+
+Both batch methods leave changes in the current transaction. Combine them with
+other edits and commit once, or roll back the entire transaction on failure.
+They explicitly flush pending session changes before reading the playlist, even
+inside `no_autoflush`, so each batch sees earlier additions, removals and moves.
+This flush includes other pending edits in the session and does not commit them:
+
+```python
+songs = sorted(playlist.Songs, key=lambda song: song.TrackNo)
+try:
+    db.remove_songs_from_playlist(playlist, songs[:2])
+    db.move_songs_in_playlist(playlist, songs[2:4], new_track_no=1)
+    db.commit()
+except Exception:
+    db.rollback()
+    raise
+```
+
+The selected members move in the order passed to `move_songs_in_playlist()`.
+`new_track_no` is the **final, one-based position of the first selected member**.
+For `[A, B, C, D, E]`, moving `[B, D]` to position 3 gives `[A, C, B, D, E]`.
+The maximum position is the playlist size minus the number of distinct selected
+members plus 1. Empty selections do nothing (the move position must still be a
+positive integer). An unchanged order does not update member timestamps or USNs.
+Each removed member is tracked separately, and members renumbered by a batch share
+one registry move event. The existing `commit()` behavior still applies; database
+commits and subsequent auxiliary XML saves are not a single atomic operation.
+
 ### Tracks
 
 New tracks can be added to your rekordbox collection by calling the `db.add_content()` method:
