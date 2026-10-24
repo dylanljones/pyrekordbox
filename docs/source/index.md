@@ -26,8 +26,13 @@ Pioneers Rekordbox DJ Software. It currently supports
 - Analysis files (ANLZ)
 - My-Setting files
 - Device library plus
+- DeviceSQL databases on an exported USB stick (`export.pdb`, `exportExt.pdb`)
+- The DJ profile a stick carries (`djprofile.nxs`)
 
 Tested Rekordbox versions: `5.8.6 | 6.7.7 | 7.0.9`
+
+Device exports written by Rekordbox `7.2.11` and `7.2.19` on Windows are decoded and rebuilt byte for
+byte, verified from commit `6691e6a` onwards: 198 analysis files, 60 databases and 30 player profiles.
 
 ## Contents
 
@@ -54,6 +59,9 @@ formats/xml
 formats/anlz
 formats/mysetting
 formats/onelibrary
+formats/devicesql
+formats/djprofile
+formats/unknowns
 ```
 
 ```{toctree}

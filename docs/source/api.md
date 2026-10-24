@@ -11,6 +11,8 @@ caption: API Reference
 
 generated/pyrekordbox.anlz
 generated/pyrekordbox.db6
+generated/pyrekordbox.devicesql
+generated/pyrekordbox.djprofile
 generated/pyrekordbox.mysettings
 generated/pyrekordbox.config
 generated/pyrekordbox.utils

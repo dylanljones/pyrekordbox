@@ -3,8 +3,10 @@
 # Date:   2022-04-10
 
 # mypy: disable-error-code="attr-defined"
+from . import devicesql
 from .anlz import AnlzFile, get_anlz_paths, read_anlz_files, walk_anlz_paths
 from .config import get_config, show_config, update_config
+from .djprofile import DjProfile, NotAProfileFile
 from .logger import logger
 from .masterdb import MasterDatabase
 from .masterdb.database import Rekordbox6Database

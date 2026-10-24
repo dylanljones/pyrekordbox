@@ -43,6 +43,9 @@ class AbstractAnlzTag(ABC):
 
     def __init__(self, tag_data: bytes) -> None:
         self.struct: Union[Struct, None] = None
+        # Set by the parser when this tag was XOR masked on disk (exported ``PSSI``), so ``build``
+        # can put the mask back instead of writing a plain tag the deck does not expect.
+        self.garbled: Union[Tuple[int, int], None] = None
         if tag_data is not None:
             self.parse(tag_data)
 
@@ -89,6 +92,11 @@ class AbstractAnlzTag(ABC):
         if self.struct is None:
             raise StructNotInitializedError()
         data: bytes = structs.AnlzTag.build(self.struct)
+        if self.garbled is not None:
+            from .file import _apply_pssi_mask
+
+            # A circular import at module level: ``file`` imports ``tags``.
+            data = _apply_pssi_mask(data, *self.garbled)
         len_data = len(data)
         if len_data != self.struct.len_tag:
             raise BuildTagLengthError(self.struct, len_data)

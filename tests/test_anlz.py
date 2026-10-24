@@ -478,3 +478,169 @@ def test_pssi_ungarbles_version_1_with_shifted_mask():
     assert tag_obj.content.version == 1
     assert tag_obj.content.mood == 3
     assert tag_obj.content.entries[0].beat == 16
+
+
+# -- Cue entries -------------------------------------------------------------------------------
+#
+# Built from bytes: the point is the layout, and a stick carries a licence question with it. The
+# cases are the ones that used to fail or, worse, rebuild into a different file.
+
+
+def _pcp2_entry(
+    time=1000,
+    hot_cue=0,
+    cue_type=1,
+    loop_time=0xFFFFFFFF,
+    comment=b"",
+    color=None,
+    unknown1=b"\x00\x00\x00",
+    unknown2=b"\x00" * 7,
+    loop=(0, 0),
+    padding=b"",
+):
+    """One PCP2 entry: a 44 byte header, the comment, the optional colour, then padding."""
+    color_bytes = b"" if color is None else bytes(color)
+    len_entry = 44 + len(comment) + len(color_bytes) + len(padding)
+    return b"".join(
+        (
+            b"PCP2",
+            struct.pack(">III", 16, len_entry, hot_cue),
+            struct.pack(">B", cue_type),
+            unknown1,
+            struct.pack(">I", time),
+            struct.pack(">I", loop_time),
+            struct.pack(">B", 0),
+            unknown2,
+            struct.pack(">HH", *loop),
+            struct.pack(">I", len(comment)),
+            comment,
+            color_bytes,
+            padding,
+        )
+    )
+
+
+def _pco2_section(*entries):
+    body = b"".join(entries)
+    header = struct.pack(">IHH", 0, len(entries), 0)
+    return b"PCO2" + struct.pack(">II", 20, len(header) + len(body) + 12) + header + body
+
+
+def _pcpt_entry(time=1000, hot_cue=0, cue_type=1, unknown1=b"\x00", unknown2=b"\x00" * 16):
+    return b"".join(
+        (
+            b"PCPT",
+            struct.pack(">III", 16, 56, hot_cue),
+            struct.pack(">II", 4, 0x10000),
+            struct.pack(">HH", 0xFFFF, 1),
+            struct.pack(">B", cue_type),
+            unknown1,
+            struct.pack(">H", 1000),
+            struct.pack(">I", time),
+            struct.pack(">I", 0xFFFFFFFF),
+            unknown2,
+        )
+    )
+
+
+def _pcob_section(*entries):
+    body = b"".join(entries)
+    header = struct.pack(">IHHI", 1, 0, len(entries), len(entries))
+    return b"PCOB" + struct.pack(">II", 24, len(header) + len(body) + 12) + header + body
+
+
+def _cues(data):
+    return anlz.AnlzFile.parse(data).get_tag("PCO2").content.entries
+
+
+def test_cue_entry_without_colour_is_exactly_44_bytes():
+    # The deck writes these for a memory cue with no comment and no colour.
+    entry = _pcp2_entry(time=359)
+    assert len(entry) == 44
+
+    cues = _cues(_build_file(_pco2_section(entry)))
+    assert len(cues) == 1
+    assert cues[0].time == 359
+    assert cues[0].color_code is None
+    assert cues[0].padding == b""
+
+
+def test_ten_short_cue_entries_parse():
+    # A whole section of them, the shape that raised "length cannot be negative".
+    data = _build_file(_pco2_section(*[_pcp2_entry(time=i * 1000) for i in range(10)]))
+    cues = _cues(data)
+    assert [cue.time for cue in cues] == [i * 1000 for i in range(10)]
+    assert all(cue.color_code is None for cue in cues)
+
+
+def test_cue_entry_with_colour_still_reads_the_colour():
+    entry = _pcp2_entry(time=5000, color=(1, 255, 0, 0), padding=b"\x00" * 40)
+    assert len(entry) == 88
+
+    cues = _cues(_build_file(_pco2_section(entry)))
+    assert cues[0].color_code == 1
+    assert cues[0].color_red == 255
+    assert cues[0].color_green == 0
+    assert cues[0].color_blue == 0
+    assert cues[0].padding == b"\x00" * 40
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        _pcp2_entry(time=359),
+        _pcp2_entry(time=7000, color=(2, 10, 20, 30), padding=b"\x00" * 40),
+        _pcp2_entry(time=8000, padding=b"\x00" * 44),
+        _pcp2_entry(
+            time=9000,
+            comment="\u017c\u00f3\u0142\u0107".encode("utf-16-be"),
+            color=(3, 1, 2, 3),
+            padding=b"\x00" * 8,
+        ),
+    ],
+    ids=["44-bytes", "88-with-colour", "88-no-colour", "comment-and-colour"],
+)
+def test_cue_entry_round_trips_byte_for_byte(entry):
+    data = _build_file(_pco2_section(entry))
+    assert anlz.AnlzFile.parse(data).build() == data
+
+
+def test_nonzero_bytes_in_a_cue_entry_are_kept():
+    # These runs are padding in name only: the deck stores values there, so a rebuild that writes
+    # zeros changes the file.
+    unknown2 = b"\xad\x0b\x14\x54\x00\x00\x00"
+    entry = _pcp2_entry(time=1234, unknown1=b"\x01\x02\x03", unknown2=unknown2)
+    data = _build_file(_pco2_section(entry))
+
+    cue = _cues(data)[0]
+    assert cue.unknown1 == b"\x01\x02\x03"
+    assert cue.unknown2 == b"\xad\x0b\x14\x54\x00\x00\x00"
+    assert anlz.AnlzFile.parse(data).build() == data
+
+
+def test_nonzero_bytes_in_a_cue_point_entry_are_kept():
+    entry = _pcpt_entry(time=29333, unknown1=b"\x00", unknown2=b"\xad\x0b" + b"\x00" * 14)
+    data = _build_file(_pcob_section(entry))
+
+    cue = anlz.AnlzFile.parse(data).get_tag("PCOB").content.entries[0]
+    assert cue.time == 29333
+    assert cue.unknown2 == b"\xad\x0b" + b"\x00" * 14
+    assert anlz.AnlzFile.parse(data).build() == data
+
+
+def test_masked_pssi_is_written_back_masked():
+    # A rebuild used to write the unmasked tag, which changed 350 bytes of an exported file.
+    masked = _garble_pssi(_build_pssi(1, mood=1), version=1, n_entries=1)
+    data = _build_file(masked)
+
+    parsed = anlz.AnlzFile.parse(data)
+    assert parsed.get_tag("PSSI").garbled == (1, 1)
+    assert parsed.build() == data
+
+
+def test_plain_pssi_is_written_back_plain():
+    data = _build_file(_build_pssi(1, mood=1))
+
+    parsed = anlz.AnlzFile.parse(data)
+    assert parsed.get_tag("PSSI").garbled is None
+    assert parsed.build() == data
