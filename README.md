@@ -177,13 +177,16 @@ beat_grid = anlz.get("beat_grid")
 path_tags = anlz.getall_tags("path")
 ````
 
-Changing and creating the Rekordbox analysis files is planned as well, but for that the
-full structure of the analysis files has to be understood.
+Files can be rebuilt as well: parse one, change what you need, call `build()`. A file that is parsed
+and built again without changes comes back byte for byte, which the test suite checks on synthetic files
+carrying the layouts that are easy to get wrong:
 
-Unsupported ANLZ tags:
-  - PWV6
-  - PWV7
-  - PWVC
+  - a cue entry with no comment and no colour is 44 bytes long, and the deck writes those,
+  - the runs inside a cue entry that look like padding carry values and are kept,
+  - a `PSSI` tag is XOR masked in an exported file and is written back masked.
+
+Every tag measured in an exported file has a handler. A tag that this version does not know is kept
+unparsed rather than dropped, so rebuilding a file never loses a section it could not read.
 
 
 ### Rekordbox My-Settings
@@ -207,6 +210,33 @@ quant = mysett.get("quantize")
 
 The `DEVSETTING.DAT` file is still not supported
 
+
+### Rekordbox USB database
+
+A stick exported by Rekordbox carries two DeviceSQL databases, `export.pdb` and `exportExt.pdb`. They hold
+the track list, the dictionaries behind it, the playlists, the artwork references and the tree of my tags
+the deck shows. Pyrekordbox reads both:
+
+````python
+from pyrekordbox.devicesql import read_file
+from pyrekordbox.devicesql.rows import decode_row
+
+with open("export.pdb", "rb") as fh:
+    database = read_file(fh.read())
+
+for row in database.rows(0):  # table 0 is the track list
+    track = decode_row("pdb", 0, row.data)
+    print(track.fields["id"], track.strings["title"], track.strings["filePath"])
+````
+
+Rows are decoded against the table's own schema: the two databases do not agree on what a table number
+means, so a schema is chosen by database and table type. Anything a row contains that the schema cannot
+explain raises instead of being passed through, which is what keeps a rebuild honest.
+
+What is covered: the page layout, the file header and table chains, and the row codecs for tracks,
+genres, artists, albums, labels, keys, the playlist tree and its entries, artwork, the tag tree in
+`exportExt.pdb` and the row that carries the MyTag master id. Writing the databases back is not
+implemented yet.
 
 ### OneLibrary
 
@@ -240,7 +270,17 @@ A summary of the Rekordbox file formats can be found in the [documentation]:
 - [My-Setting file format][mysettings-doc]
 - [Rekordbox database][db6-doc]
 - [OneLibrary][onelibrary-doc]
+- [DJ profile][djprofile-doc]
+- [Bytes we carry without understanding][unknowns-doc]
 
+### What is not explained
+
+Some fields hold values that no experiment has explained yet: four bytes in every DeviceSQL row set, the
+five settings bytes at offset 129, the three words at the start of a player profile, a short decimal in
+most track rows. They are named after what is known about them, read, and written back exactly as the
+file carried them, which is why a rebuild can be byte for byte while parts of the format remain a
+mystery. The measurements behind each one are in
+[Bytes we carry without understanding][unknowns-doc].
 
 ## 💻 Development
 
@@ -269,6 +309,10 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 - [supbox]: Get the currently playing track from Rekordbox v6 as Audio Hijack Shoutcast/Icecast metadata, display in your OBS video broadcast or export as JSON.
 - [Deep Symmetry] has an extensive analysis of Rekordbox's ANLZ and .edb export file formats
   https://djl-analysis.deepsymmetry.org/djl-analysis
+- [DjManager] by [@radexito]: an application for building a rekordbox USB export with the analysis files
+  the players need. It carries a reader and a writer for the same files in JavaScript, and the cue entry
+  handling and the DeviceSQL codecs in this package were ported from it field by field and checked against
+  the same native captures. The format knowledge behind both comes from that reverse engineering.
 
 
 [tests-badge]: https://img.shields.io/github/actions/workflow/status/dylanljones/pyrekordbox/tests.yml?branch=master&label=tests&logo=github&style=flat
@@ -300,6 +344,7 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 [tutorial]: https://pyrekordbox.readthedocs.io/en/stable/tutorial/index.html
 [db6-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/db6.html
 [onelibrary-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/onelibrary.html
+[djprofile-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/djprofile.html
 [anlz-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/anlz.html
 [xml-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/xml.html
 [mysettings-doc]: https://pyrekordbox.readthedocs.io/en/stable/formats/mysetting.html
@@ -317,6 +362,8 @@ If pyrekordbox has helped you or saved you time, consider supporting its develop
 [crate-digger]: https://github.com/Deep-Symmetry/crate-digger
 [supbox]: https://github.com/gabek/supbox
 [Deep Symmetry]: https://deepsymmetry.org/
+[DjManager]: https://github.com/Radexito/DjManager
+[@radexito]: https://github.com/Radexito
 
 [OPUS-QUAD]: https://www.pioneerdj.com/en/product/all-in-one-system/opus-quad/black/overview/
 [OMNIS-DUO]: https://alphatheta.com/en/product/all-in-one-dj-system/omnis-duo/indigo/

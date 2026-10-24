@@ -140,9 +140,15 @@ themselves, with the following structure:
 Cue list entry.
 ```
 
-Each cue entry is 38 bytes long. It is structured as its own miniature tag,
+Each cue entry is 56 bytes long. It is structured as its own miniature tag,
 starting with the four-character code `PCPT`, and its own internal four-byte
-`len_header` and `len_entry` values (1c and 38 respectively).
+`len_header` and `len_entry` values (28 and 56 respectively). This pair does not
+vary: across 103 entries read from 198 exported analysis files, every one carried
+`len_header` 28 and `len_entry` 56.
+
+Two runs in the entry look like padding and are not: one byte after `type` and sixteen at the
+end of the entry. The deck writes nonzero values there, and a rebuild that zeroed them changed
+415 bytes of one capture, so they are carried through as they were read.
 
 If the cue is an ordinary memory point, `hot_cue` at will be zero, otherwise it
 identifies the number of the hot cue that this entry represents
@@ -201,6 +207,20 @@ themselves, with the following structure:
 
 Extended cue list entry.
 ```
+
+`len_header` is 16, but the fixed fields before the comment take 44 bytes: four for the
+`PCP2` tag, four each for `len_header` and `len_entry`, and 32 of fields. The comment comes
+next, then an optional four byte colour block, then padding up to `len_entry`.
+
+The colour block is not always present. The deck leaves it out when a cue carries neither a
+comment nor a colour, and such an entry is exactly 44 bytes long. Reading the colour
+unconditionally made the remaining padding negative, which is why parsers that assume a
+four byte block fail on files written by the deck rather than on test data. Measured on 198
+exported analysis files, entries came in at 44, 88, 98, 100, 104 and 140 bytes.
+
+Two runs inside the entry hold bytes that are not padding: the three bytes after `type` and
+the seven bytes before the loop counts. The deck writes nonzero values there, so a rebuild
+carries them through instead of zeroing them.
 
 ### PPTH: Path Tag
 
@@ -293,6 +313,10 @@ base pattern:
 
 CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1
 ```
+
+A rebuilt file keeps the mask it was read with: a section that arrives masked is written back
+masked, and one that arrives plain is written back plain, so a file parsed and built again is
+byte for byte what it was.
 
 The section has the folowwing strcture:
 

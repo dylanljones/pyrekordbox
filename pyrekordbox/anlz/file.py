@@ -5,7 +5,7 @@
 import logging
 from collections import abc
 from pathlib import Path
-from typing import Any, Iterator, List, Union
+from typing import Any, Iterator, List, Tuple, Union
 
 from construct import Int16ub, Struct
 
@@ -15,6 +15,26 @@ from .tags import TAGS, AbstractAnlzTag, StructNotInitializedError, UnknownAnlzT
 logger = logging.getLogger(__name__)
 
 XOR_MASK = bytearray.fromhex("CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1")
+
+
+def apply_pssi_mask(data: bytes, version: int, len_entries: int) -> bytes:
+    """XOR the masked part of a ``PSSI`` tag.
+
+    Rekordbox 6 and later write this tag XOR-masked in exported files, and XOR is its own inverse,
+    so the same call both unmasks a tag on read and puts the mask back on write. Without the second
+    call a rebuilt file carried a plain tag where the deck writes a masked one, which changed 350
+    bytes of an otherwise identical ``ANLZ0000.EXT``.
+    """
+    out = bytearray(data)
+    mask_start = version % len(XOR_MASK)
+    for x in range(len(out) - 18):
+        mask = XOR_MASK[(x + mask_start) % len(XOR_MASK)] + len_entries
+        if mask > 255:
+            mask -= 256
+        out[18 + x] ^= mask
+    return bytes(out)
+
+
 # Equivalent seed: each byte of ASCII "Kanzen-niRikaishita" plus 0x80.
 # Exported version 1 tags start the mask at index ``version % len(XOR_MASK)``.
 
@@ -105,6 +125,9 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
         tags = list()
         i = file_header.len_header
         while i < file_header.len_file:
+            # Set per tag: only a masked PSSI tag records this, and it has to be reset or the next
+            # tag would inherit the flag and be masked on write.
+            garbled: Union[Tuple[int, int], None] = None
             # Get data starting from struct
             tag_data = data[i:]
             # Get the four byte struct type
@@ -130,18 +153,10 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
                     logger.debug("PSSI is garbled! (raw_mood=%s)", mood)
                     len_entries = Int16ub.parse(tag_data[16:18])
                     version = Int16ub.parse(tag_data[12:14])
-                    mask_start = version % len(XOR_MASK)
 
                     # Copy only this tag's data so we don't mutate the remainder of file slice
-                    mutable_tag_data = bytearray(tag_data[:len_tag])
-
-                    for x in range(len(mutable_tag_data) - 18):
-                        mask = XOR_MASK[(x + mask_start) % len(XOR_MASK)] + len_entries
-                        if mask > 255:
-                            mask -= 256
-                        mutable_tag_data[18 + x] ^= mask
-
-                    tag_data = bytes(mutable_tag_data)
+                    tag_data = apply_pssi_mask(tag_data[:len_tag], version, len_entries)
+                    garbled = (version, len_entries)
 
             try:
                 handler = TAGS[tag_type]
@@ -152,6 +167,7 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
 
             # Parse the struct
             tag = handler(tag_data)
+            tag.garbled = garbled
             if tag.struct is None:
                 raise StructNotInitializedError()
             tags.append(tag)

@@ -10,9 +10,25 @@ References
    https://djl-analysis.deepsymmetry.org/rekordbox-export-analysis/anlz.html
 """
 
-from construct import Int8ub, Int16ub, Int32ub, Int64ub, PaddedString, Int32sb, StopIf
-from construct import Const, Array, Padding, Bytes
-from construct import Default, Enum, GreedyRange, Struct, Switch, this
+from construct import (
+    Array,
+    Bytes,
+    Const,
+    Default,
+    Enum,
+    If,
+    Int8ub,
+    Int16ub,
+    Int32sb,
+    Int32ub,
+    Int64ub,
+    Padding,
+    PaddedString,
+    StopIf,
+    Struct,
+    Switch,
+    this,
+)
 
 
 # -- Beat Grid Tag (PQTZ) --------------------------------------------------------------
@@ -65,7 +81,9 @@ AnlzCuePointStatus = Enum(Int32ub, disabled=0, enabled=4)
 AnlzTagCueObjectType = Enum(Int32ub, memory=0, hotcue=1)
 
 AnlzCuePoint = Struct(
-    "type" / Const("PCPT", PaddedString(4, encoding="ascii")),
+    # The tag string and the cue type are both called "type" in the format; the second one wins in a
+    # Construct struct, which made every rebuild fail on the Const. The tag keeps its own name.
+    "tag" / Const("PCPT", PaddedString(4, encoding="ascii")),
     "len_header" / Int32ub,
     "len_entry" / Int32ub,
     "hot_cue" / Int32ub,  # 0 for memory
@@ -74,11 +92,13 @@ AnlzCuePoint = Struct(
     "order_first" / Int16ub,  # 0xffff for first cue, 0,1,3 for next
     "order_last" / Int16ub,  # 1,2,3 for first, second, third cue, 0xffff for last
     "type" / AnlzCuePointType,
-    Padding(1),
+    # Not padding: the deck stores nonzero bytes in both of these and a rebuild that writes zeros
+    # changes the file. Measured on a rekordbox 7 capture: 415 bytes differ without them.
+    "unknown1" / Bytes(1),
     "u2" / Const(1000, Int16ub),
     "time" / Int32ub,
     "loop_time" / Default(Int32ub, -1),
-    Padding(16),
+    "unknown2" / Bytes(16),
 )
 
 # len_header: 24
@@ -93,26 +113,51 @@ PCOB = Struct(
 
 # Extended (nxs2) Cue List Tag (PCO2)
 
+# Bytes from the start of an entry to the comment: 4 tag, 4 len_header, 4 len_entry, 32 of fields.
+_PCP2_HEADER = 44
+
+# An entry has a 44 byte header. The comment comes next, then the four colour bytes, then
+# padding. Only the header is always there: the deck leaves the colour block out entirely when
+# a cue carries neither a comment nor a colour, and the entry is then exactly 44 bytes. Ten
+# such entries sit in a single 460 byte section of a capture taken from a rekordbox 7 stick,
+# one per memory cue. Reading the colour unconditionally made the trailing padding negative
+# for those entries, which is where "length cannot be negative" came from.
+
+
+def _pcp2_has_color(ctx) -> bool:
+    """Whether this entry carries the optional four byte colour block."""
+    return ctx.len_entry >= _PCP2_HEADER + ctx.len_comment + 4
+
+
+def _pcp2_padding(ctx) -> int:
+    """Bytes of padding left in the entry, never negative."""
+    used = _PCP2_HEADER + ctx.len_comment
+    if _pcp2_has_color(ctx):
+        used += 4
+    return max(0, ctx.len_entry - used)
+
+
 AnlzCuePoint2 = Struct(
-    "type" / Const("PCP2", PaddedString(4, encoding="ascii")),
+    "tag" / Const("PCP2", PaddedString(4, encoding="ascii")),
     "len_header" / Int32ub,
     "len_entry" / Int32ub,
     "hot_cue" / Int32ub,  # 0 for memory
     "type" / Int8ub,  # spotted: 0x010003e8 0x020003e8
-    Padding(3),
+    # Not padding: the deck keeps nonzero bytes here and drops them if a rebuild writes zeros.
+    "unknown1" / Bytes(3),
     "time" / Int32ub,
     "loop_time" / Default(Int32ub, -1),
     "color_id" / Int8ub,
-    Padding(7),
+    "unknown2" / Bytes(7),
     "loop_enumerator" / Int16ub,
     "loop_denominator" / Int16ub,
     "len_comment" / Int32ub,
     "comment" / PaddedString(this.len_comment, encoding="utf-16-be"),
-    "color_code" / Int8ub,
-    "color_red" / Int8ub,
-    "color_green" / Int8ub,
-    "color_blue" / Int8ub,
-    Padding(this.len_entry - 48 - this.len_comment),
+    "color_code" / If(_pcp2_has_color, Int8ub),
+    "color_red" / If(_pcp2_has_color, Int8ub),
+    "color_green" / If(_pcp2_has_color, Int8ub),
+    "color_blue" / If(_pcp2_has_color, Int8ub),
+    "padding" / Bytes(_pcp2_padding),
 )
 
 # len_header: 20
