@@ -93,10 +93,10 @@ class AbstractAnlzTag(ABC):
             raise StructNotInitializedError()
         data: bytes = structs.AnlzTag.build(self.struct)
         if self.garbled is not None:
-            from .file import apply_pssi_mask
+            from .file import _apply_pssi_mask
 
             # A circular import at module level: ``file`` imports ``tags``.
-            data = apply_pssi_mask(data, *self.garbled)
+            data = _apply_pssi_mask(data, *self.garbled)
         len_data = len(data)
         if len_data != self.struct.len_tag:
             raise BuildTagLengthError(self.struct, len_data)

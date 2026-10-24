@@ -14,6 +14,13 @@ The rule this repository follows:
 That is why a file can be rebuilt byte for byte while parts of it remain unexplained, and why the
 numbers below are measurements rather than descriptions.
 
+## Where the numbers come from
+
+The captures behind every table on this page were taken from a Windows machine with Rekordbox 7.2.11 and
+7.2.19 installed. No file says which of the two wrote it: a DeviceSQL file header has no version string,
+an ANLZ file has none either, and the settings files carry a version field that is empty in every copy
+measured. The version is known by the machine the stick came out of, not by the stick.
+
 ## DeviceSQL databases
 
 Measured over 30 `export.pdb` and 30 `exportExt.pdb` files from the capture set: 1278 rows across 11

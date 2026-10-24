@@ -19,12 +19,26 @@ from .page import (
     ROWSET_SIZE,
     ROWSET_SLOTS,
     SENTINEL,
+    DataHeader,
     Page,
     PageHeader,
     Row,
     RowSet,
     TablePointer,
+    page_rows,
+    page_rowsets,
     parse_page,
+)
+from .rows import (
+    ROW_SCHEMAS,
+    DecodedString,
+    Field,
+    RowData,
+    RowSchema,
+    UnexplainedRow,
+    decode_row,
+    decode_string,
+    decode_track_row,
 )
 from .writer import (
     RowDoesNotFit,
@@ -36,6 +50,15 @@ from .writer import (
 )
 
 __all__ = [
+    "ROW_SCHEMAS",
+    "DecodedString",
+    "Field",
+    "RowData",
+    "RowSchema",
+    "UnexplainedRow",
+    "decode_row",
+    "decode_string",
+    "decode_track_row",
     "RowDoesNotFit",
     "encode_row",
     "encode_string",
@@ -47,6 +70,7 @@ __all__ = [
     "Table",
     "read_file",
     "DATA_HEADER_SIZE",
+    "DataHeader",
     "INDEX_HEADER_SIZE",
     "PAGE_HEADER_SIZE",
     "PAGE_SIZE",
@@ -59,5 +83,7 @@ __all__ = [
     "Row",
     "RowSet",
     "TablePointer",
+    "page_rows",
+    "page_rowsets",
     "parse_page",
 ]

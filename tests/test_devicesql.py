@@ -524,3 +524,49 @@ class DeviceSQLTable:
     @property
     def rows(self):
         return [row for page in self.pages for row in page.rows]
+
+
+def test_everything_the_package_announces_can_be_imported():
+    """``__all__`` is a promise: a name in it that does not exist breaks the caller's import."""
+    import pyrekordbox.devicesql as devicesql
+
+    missing = [name for name in devicesql.__all__ if not hasattr(devicesql, name)]
+    assert missing == []
+
+
+def test_the_row_codec_is_reachable_from_the_package():
+    """A caller edits a row without importing a private module: decode, change, encode."""
+    from pyrekordbox.devicesql import (
+        ROW_SCHEMAS,
+        DecodedString,
+        Field,
+        RowData,
+        RowSchema,
+        UnexplainedRow,
+        decode_row,
+        decode_string,
+        decode_track_row,
+        encode_row,
+    )
+
+    for name in (
+        DecodedString,
+        Field,
+        RowData,
+        RowSchema,
+        UnexplainedRow,
+        decode_row,
+        decode_string,
+        decode_track_row,
+        encode_row,
+    ):
+        assert name is not None
+    assert ("pdb", 0) in ROW_SCHEMAS
+
+
+def test_the_subpackage_is_reachable_from_the_top_level_import():
+    """``import pyrekordbox`` alone has to give a caller the databases and the analysis files."""
+    import pyrekordbox
+
+    assert hasattr(pyrekordbox, "devicesql")
+    assert callable(pyrekordbox.devicesql.read_file)

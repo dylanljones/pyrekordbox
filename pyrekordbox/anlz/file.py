@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 XOR_MASK = bytearray.fromhex("CB E1 EE FA E5 EE AD EE E9 D2 E9 EB E1 E9 F3 E8 E9 F4 E1")
 
 
-def apply_pssi_mask(data: bytes, version: int, len_entries: int) -> bytes:
+def _apply_pssi_mask(data: bytes, version: int, len_entries: int) -> bytes:
     """XOR the masked part of a ``PSSI`` tag.
 
     Rekordbox 6 and later write this tag XOR-masked in exported files, and XOR is its own inverse,
@@ -155,7 +155,7 @@ class AnlzFile(abc.Mapping):  # type: ignore[type-arg]
                     version = Int16ub.parse(tag_data[12:14])
 
                     # Copy only this tag's data so we don't mutate the remainder of file slice
-                    tag_data = apply_pssi_mask(tag_data[:len_tag], version, len_entries)
+                    tag_data = _apply_pssi_mask(tag_data[:len_tag], version, len_entries)
                     garbled = (version, len_entries)
 
             try:

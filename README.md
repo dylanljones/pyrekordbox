@@ -28,6 +28,11 @@ Check the [changelog][CHANGELOG] for recent changes!
 
 Tested Rekordbox versions: ``5.8.6 | 6.7.7 | 7.0.9``
 
+Device exports written by Rekordbox ``7.2.11`` and ``7.2.19`` on Windows are decoded and rebuilt byte for
+byte, verified from commit ``5ac8ac3`` onwards: 198 analysis files, 60 databases and 30 player profiles.
+The format pages record what was measured and what is still
+[unexplained](docs/source/formats/unknowns.md).
+
 
 ## 🔧 Installation
 
