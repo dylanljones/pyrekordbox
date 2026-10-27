@@ -1418,6 +1418,19 @@ def test_get_playlist_contents(db):
     assert {c.ID for c in contents} == {str(CID1), str(CID2)}
 
 
+def test_get_playlist_contents_entities(db):
+    pl = db.create_playlist("Test playlist")
+    db.add_to_playlist(pl, CID1)
+    db.add_to_playlist(pl, CID2)
+    db.commit()
+
+    contents = db.get_playlist_contents(pl, models.DjmdContent).all()
+    assert {c.ID for c in contents} == {str(CID1), str(CID2)}
+
+    ids = db.get_playlist_contents(pl, models.DjmdContent.ID).all()
+    assert set(ids) == {(str(CID1),), (str(CID2),)}
+
+
 def test_get_playlist_contents_smart(db):
     # Singe condition
     smart = SmartList(LogicalOperator.ALL)
