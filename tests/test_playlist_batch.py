@@ -155,6 +155,19 @@ def test_invalid_selection_has_no_partial_changes(batch_db, operation, invalid):
 
 
 @pytest.mark.parametrize("operation", ["remove", "move"])
+@pytest.mark.parametrize("playlist", [None, True, 1.5])
+def test_invalid_playlist_type_has_no_changes(batch_db, operation, playlist):
+    db, path, _, ids, *_ = batch_db
+    before = snapshot(path)
+    with pytest.raises(TypeError, match="Playlist must be a DjmdPlaylist"):
+        operate(db, operation, playlist, ids[:1])
+    assert not db.session.dirty
+    assert not db.session.deleted
+    db.commit()
+    assert snapshot(path) == before
+
+
+@pytest.mark.parametrize("operation", ["remove", "move"])
 @pytest.mark.parametrize("invalid", ["missing", "folder", "smart"])
 def test_rejects_missing_or_non_normal_playlists(batch_db, operation, invalid):
     db, path, _, ids, _, folder, smart = batch_db

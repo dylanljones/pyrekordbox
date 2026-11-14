@@ -33,7 +33,6 @@ from sqlalchemy.engine import Connection
 from sqlcipher3 import dbapi2
 
 import pyrekordbox
-from pyrekordbox import MasterDatabase
 from pyrekordbox.masterdb import models
 from pyrekordbox.masterdb.database import BLOB
 from pyrekordbox.utils import deobfuscate
@@ -147,7 +146,7 @@ def seed_fixture(folder: Path, size: int) -> Path:
 
 
 @contextmanager
-def open_fixture(path: Path, temporary_root: Path) -> Iterator[MasterDatabase]:
+def open_fixture(path: Path, temporary_root: Path) -> Iterator[pyrekordbox.MasterDatabase]:
     """Suppress process/config lookup only for a verified temporary fixture."""
     resolved = path.resolve(strict=True)
     if not resolved.is_relative_to(temporary_root.resolve(strict=True)):
@@ -156,7 +155,7 @@ def open_fixture(path: Path, temporary_root: Path) -> Iterator[MasterDatabase]:
         patch("pyrekordbox.masterdb.database.get_config", return_value={}),
         patch("pyrekordbox.masterdb.database.get_rekordbox_pid", return_value=0),
     ):
-        db = MasterDatabase(path=resolved, db_dir=resolved.parent)
+        db = pyrekordbox.MasterDatabase(path=resolved, db_dir=resolved.parent)
         try:
             yield db
         finally:
@@ -164,7 +163,7 @@ def open_fixture(path: Path, temporary_root: Path) -> Iterator[MasterDatabase]:
             db.engine.dispose()
 
 
-def instrument(db: MasterDatabase) -> Counts:
+def instrument(db: pyrekordbox.MasterDatabase) -> Counts:
     """Count SQL cursor calls and commits on the writer only."""
     counts = Counts()
 
