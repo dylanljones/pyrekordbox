@@ -28,6 +28,10 @@ Check the [changelog][CHANGELOG] for recent changes!
 
 Tested Rekordbox versions: ``5.8.6 | 6.7.7 | 7.0.9``
 
+> [!NOTE]
+> Development of *new* features is moving to [rbox](https://github.com/dylanljones/rbox),
+> a Rust library with Python and JavaScript bindings,
+> while work on pyrekordbox will continue. Read the [announcement](https://github.com/dylanljones/pyrekordbox/discussions/230) for details.
 
 ## 🔧 Installation
 
@@ -176,15 +180,6 @@ anlz = AnlzFile.parse_file("ANLZ0000.DAT")
 beat_grid = anlz.get("beat_grid")
 path_tags = anlz.getall_tags("path")
 ````
-
-Changing and creating the Rekordbox analysis files is planned as well, but for that the
-full structure of the analysis files has to be understood.
-
-Unsupported ANLZ tags:
-  - PWV6
-  - PWV7
-  - PWVC
-
 
 ### Rekordbox My-Settings
 

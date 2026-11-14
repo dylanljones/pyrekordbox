@@ -321,6 +321,45 @@ def test_pwv5_tag_getters(paths):
 
     heights, colors = tag.get()
     assert len(heights) == colors.shape[0]
+    assert np.all((0 <= colors) & (colors <= 7))
+
+
+def _parse_pwv5_entries(entries):
+    body = struct.pack(">III", 2, len(entries), 0x00960305)
+    body += b"".join(struct.pack(">H", entry) for entry in entries)
+    tag = b"PWV5" + struct.pack(">II", 24, 12 + len(body)) + body
+    return anlz.AnlzFile.parse(_build_file(tag)).get("PWV5")
+
+
+@pytest.mark.parametrize(
+    "entry, expected_rgb, expected_height",
+    [
+        (0x0000, (0, 0, 0), 0),
+        (0x2000, (1, 0, 0), 0),
+        (0xE07C, (7, 0, 0), 1),
+        (0x1C7C, (0, 7, 0), 1),
+        (0x03FC, (0, 0, 7), 1),
+        (0x24FC, (1, 1, 1), 1),
+        (0xFFFC, (7, 7, 7), 1),
+        (0xFFFF, (7, 7, 7), 1),
+    ],
+)
+def test_pwv5_extracts_three_bit_channels(entry, expected_rgb, expected_height):
+    heights, colors = _parse_pwv5_entries([entry])
+    assert_equal(colors, [expected_rgb])
+    assert_equal(heights, [expected_height])
+
+
+def test_pwv5_all_entries_match_documented_bit_fields():
+    entries = range(65536)
+    heights, colors = _parse_pwv5_entries(entries)
+    # Read the documented big-endian 3/3/3/5/2-bit layout independently
+    # of the getter's masks and shifts, including all height/reserved bits.
+    bits = [f"{entry:016b}" for entry in entries]
+    expected_colors = [[int(word[:3], 2), int(word[3:6], 2), int(word[6:9], 2)] for word in bits]
+    expected_heights = [int(word[9:14], 2) / 31 for word in bits]
+    assert_equal(colors, expected_colors)
+    assert_equal(heights, expected_heights)
 
 
 # -- File ------------------------------------------------------------------------------

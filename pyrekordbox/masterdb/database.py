@@ -642,7 +642,7 @@ class MasterDatabase:
         query = self.query(models.DjmdSongPlaylist).filter_by(**kwargs)
         return _parse_query_result(query, kwargs)
 
-    def get_playlist_contents(self, playlist: PlaylistLike, *entities: models.Base) -> Any:
+    def get_playlist_contents(self, playlist: PlaylistLike, *entities: Any) -> Any:
         """Return the contents of a regular or smart playlist.
 
         Parameters
@@ -684,9 +684,7 @@ class MasterDatabase:
             raise ValueError(f"Playlist {plist} is a playlist folder.")
 
         if not entities:
-            entities = [
-                DjmdContent,
-            ]  # type: ignore[assignment]
+            entities = (DjmdContent,)
 
         if plist.is_smart_playlist:
             smartlist = SmartList()
