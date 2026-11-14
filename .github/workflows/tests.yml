@@ -8,7 +8,7 @@ on:
   push:
     branches: ["*"]
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 
