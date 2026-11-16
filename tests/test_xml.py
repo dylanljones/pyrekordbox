@@ -7,7 +7,14 @@ import os
 import pytest
 
 from pyrekordbox import RekordboxXml
-from pyrekordbox.rbxml import Node, PositionMark, Tempo, XmlDuplicateError
+from pyrekordbox.rbxml import (
+    Node,
+    PositionMark,
+    Tempo,
+    XmlDuplicateError,
+    decode_path,
+    encode_path,
+)
 
 TEST_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".testdata")
 XML5 = os.path.join(TEST_ROOT, "rekordbox 5", "database.xml")
@@ -460,6 +467,14 @@ def test_marks_v5():
                 assert value == info[attr]
             else:
                 assert value is None
+
+
+def test_macos_location():
+    # rekordbox on macOS writes absolute POSIX paths after file://localhost
+    url = "file://localhost/Users/dj/Music/Song%20One.mp3"
+    path = os.path.normpath("/Users/dj/Music/Song One.mp3")
+    assert decode_path(url) == path
+    assert encode_path("/Users/dj/Music/Song One.mp3") == url
 
 
 def test_add_track():

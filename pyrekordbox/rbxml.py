@@ -82,8 +82,9 @@ def encode_path(path: Union[str, Path]) -> str:
     file://localhost/C:/Music/PioneerDJ/Demo%20Tracks/Demo%20Track%201.mp3
 
     """
-    url_path = urllib.parse.quote(str(path), safe=":/\\")
-    url = URL_PREFIX + url_path.replace("\\", "/")
+    url_path = urllib.parse.quote(str(path), safe=":/\\").replace("\\", "/")
+    # An absolute POSIX path (macOS) already starts with the separating slash
+    url = URL_PREFIX + url_path.removeprefix("/")
     return url
 
 
@@ -108,7 +109,11 @@ def decode_path(url: str) -> str:
 
     """
     path = urllib.parse.unquote(url)
-    path = path.replace(URL_PREFIX, "")
+    if path.startswith(URL_PREFIX):
+        path = path[len(URL_PREFIX) :]
+        # Keep the leading slash of a POSIX path (macOS), not before a drive letter
+        if not (len(path) > 1 and path[1] == ":"):
+            path = "/" + path.lstrip("/")
     return os.path.normpath(path)
 
 
