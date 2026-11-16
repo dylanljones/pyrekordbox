@@ -1076,6 +1076,8 @@ class RekordboxXml:
         self._playlists = playlists
         self._root_node = Node(element=self._playlists.find(Node.TAG))
         self._update_cache()
+        if self._ids:
+            self._last_id = max(self._ids)
 
     def _init(
         self, name: str = None, version: str = None, company: str = None, frmt_version: str = None
@@ -1097,10 +1099,6 @@ class RekordboxXml:
         # Initialize playlist element
         self._playlists = xml.SubElement(self._root, self.PLST_TAG)
         self._root_node = Node.folder(self._playlists, "ROOT")
-
-        track_ids = self.get_track_ids()
-        if track_ids:
-            self._last_id = max(track_ids)
 
     def get_tracks(self) -> List[Track]:
         """Returns the tracks in the collection of the XML file.
