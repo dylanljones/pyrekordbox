@@ -462,6 +462,17 @@ def test_marks_v5():
                 assert value is None
 
 
+def test_add_track_after_loading(tmp_path):
+    path = tmp_path / "db.xml"
+    xml = RekordboxXml()
+    xml.add_track("C:/path/to/file1.wav")
+    xml.save(path)
+
+    xml = RekordboxXml(path)
+    track = xml.add_track("C:/path/to/file2.wav")
+    assert track.TrackID == 2
+
+
 def test_add_track():
     xml = RekordboxXml()
     track1 = xml.add_track("C:/path/to/file1.wav")
