@@ -126,7 +126,13 @@ def datetime_to_str(value: datetime) -> str:
     return s
 
 
-def string_to_datetime(value: str) -> datetime:
+def string_to_datetime(value: str) -> Optional[datetime]:
+    # Rekordbox 6 has been observed to store non-string values (e.g. integer 0)
+    # in DateTime columns. Treat any non-string input as a missing value rather
+    # than crashing the entire result-set with `AttributeError: 'int' object has
+    # no attribute 'endswith'` further down.
+    if not isinstance(value, str):
+        return None
     try:
         # Normalize 'Z' (Zulu/UTC) to '+00:00' for fromisoformat compatibility
         if value.endswith("Z"):
