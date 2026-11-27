@@ -1431,6 +1431,18 @@ def test_get_playlist_contents_entities(db):
     assert set(ids) == {(str(CID1),), (str(CID2),)}
 
 
+@pytest.mark.parametrize(
+    ("operator", "months", "count"),
+    [(Operator.IN_LAST, "1200", 6), (Operator.IN_LAST, "1", 0), (Operator.NOT_IN_LAST, "1", 6)],
+)
+def test_get_playlist_contents_smart_in_last_months(db, operator, months, count):
+    smart = SmartList(LogicalOperator.ALL)
+    smart.add_condition(Property.STOCK_DATE, operator, months, unit="month")
+    pl = db.create_smart_playlist("Smart playlist", smart)
+    db.commit()
+    assert len(db.get_playlist_contents(pl).all()) == count
+
+
 def test_get_playlist_contents_smart(db):
     # Singe condition
     smart = SmartList(LogicalOperator.ALL)

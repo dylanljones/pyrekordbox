@@ -349,7 +349,7 @@ class SmartList:
                         comp = getattr(DjmdContent, colum_name) > t0
                     elif cond.unit == "month":
                         t0 = now - relativedelta(months=val_left)
-                        comp = getattr(DjmdContent, colum_name).month > t0
+                        comp = getattr(DjmdContent, colum_name) > t0
                     else:
                         raise ValueError(f"Unknown unit '{cond.unit}'")
                 elif cond.operator == Operator.NOT_IN_LAST:
@@ -359,7 +359,7 @@ class SmartList:
                         comp = getattr(DjmdContent, colum_name) < t0
                     elif cond.unit == "month":
                         t0 = now - relativedelta(months=val_left)
-                        comp = getattr(DjmdContent, colum_name).month < t0
+                        comp = getattr(DjmdContent, colum_name) < t0
                     else:
                         raise ValueError(f"Unknown unit '{cond.unit}'")
                 else:
